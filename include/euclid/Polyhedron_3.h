@@ -15,11 +15,23 @@ class TriMeshBuilder : public CGAL::Modifier_base<typename Polyhedron_3::Halfedg
 {
 	using FT = typename Polyhedron_3::Traits::Kernel::FT;
 	using HDS = typename Polyhedron_3::HalfedgeDS;
+	using Vec3 = Eigen::Matrix<typename Polyhedron_3::Traits::Kernel::FT, 3, 1>;
 
 public:
 	TriMeshBuilder(const std::vector<FT>& vertices, const std::vector<unsigned>& indices)
 		: _vertices(vertices), _indices(indices)
 	{
+	}
+
+	TriMeshBuilder(const std::vector<Vec3>& vertices, const std::vector<unsigned>& indices)
+		: _indices(indices)
+	{
+		_vertices.reserve(vertices.size() / 3);
+		for (const auto& v : vertices) {
+			_vertices.push_back(v(0));
+			_vertices.push_back(v(1));
+			_vertices.push_back(v(2));
+		}
 	}
 
 	void operator()(HDS& hds)
@@ -44,24 +56,27 @@ public:
 	}
 
 private:
-	const std::vector<FT>& _vertices;
-	const std::vector<unsigned>& _indices;
+	std::vector<FT> _vertices;
+	std::vector<unsigned> _indices;
 };
 
 
 template<typename Polyhedron_3>
-Eigen::Vector3f compute_facet_normal(const typename Polyhedron_3::Face_handle::value_type& f)
+decltype(auto)
+compute_facet_normal(const typename Polyhedron_3::Face_handle::value_type& f)
 {
 	auto n = CGAL::normal(
 		f.facet_begin()->vertex()->point(),
 		f.facet_begin()->next()->vertex()->point(),
 		f.facet_begin()->opposite()->vertex()->point());
-	return Eigen::Vector3f(n.x(), n.y(), n.z()).normalized();
+	return Eigen::Matrix<typename Polyhedron_3::Traits::Kernel::FT, 3, 1>(
+		n.x(), n.y(), n.z()).normalized();
 }
 
 
 template<typename Polyhedron_3>
-float compute_facet_area(const typename Polyhedron_3::Face_handle::value_type& f)
+decltype(auto)
+compute_facet_area(const typename Polyhedron_3::Face_handle::value_type& f)
 {
 	return Polyhedron_3::Traits::Kernel::Compute_area_3()(
 		f.halfedge()->vertex()->point(),
