@@ -5,6 +5,11 @@
 #include <vector>
 #include <cmath>
 
+/*********************************************************
+* Package Overview                                       *
+* (O)beject (O)rientated (B)oundingbox uses pca to build *
+* a object aligned bounding box                          *
+*********************************************************/
 namespace euclid
 {
 

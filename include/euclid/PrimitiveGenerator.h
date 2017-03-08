@@ -5,6 +5,10 @@
 #include <Eigen/Dense>
 #include <algorithm>
 
+/******************************************************************
+* Pacakge Overview:                                               *
+* This package provides convenient functions to create primitives *
+******************************************************************/
 namespace euclid
 {
 

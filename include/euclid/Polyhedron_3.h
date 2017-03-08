@@ -3,6 +3,11 @@
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Polyhedron_incremental_builder_3.h>
 
+/**********************************************************
+* Package Overview:                                       *
+* This package contains functions to build and operate on *
+* Polyhedron_3 mesh in CGAL                               *
+**********************************************************/
 namespace euclid
 {
 

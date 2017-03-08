@@ -9,13 +9,17 @@
 #include <cmath>
 #include <algorithm>
 
+/********************************************************
+* Package Overview:                                     *
+* View selection methods help generate good view points *
+* to observe a 3d model by measuring certain attributes *
+********************************************************/
 namespace euclid
 {
 
-/************************************************************************
-* Reference: "Efficient View Selection by Measuring Proxy Information", *
-*            (Tianhao Gao, etc., CASA2016)                               *
-*************************************************************************/
+// Reference:
+// [1] Tianhao Gao, Wencheng Wang, Honglei Han.
+//     Efficient View Selection by Measuring Proxy Information. CASA'16.
 template<typename Polyhedron_3>
 void proxy_view_selection(
 	const Polyhedron_3& mesh,
