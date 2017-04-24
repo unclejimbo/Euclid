@@ -10,7 +10,7 @@
 * (O)beject (O)rientated (B)oundingbox uses pca to build *
 * a object aligned bounding box                          *
 *********************************************************/
-namespace euclid
+namespace Euclid
 {
 
 template<typename Polyhedron_3>
@@ -280,4 +280,4 @@ OBB<Polyhedron_3>::rtf() const
 	return _center + x + y + z;
 }
 
-} // namespace euclid
+} // namespace Euclid

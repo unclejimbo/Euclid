@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Polyhedron_3.h"
+#include <Euclid/Geometry/PrimitiveGenerator>
 #include <CGAL/Subdivision_method_3.h>
 #include <Eigen/Dense>
 #include <algorithm>
@@ -9,7 +9,7 @@
 * Pacakge Overview:                                               *
 * This package provides convenient functions to create primitives *
 ******************************************************************/
-namespace euclid
+namespace Euclid
 {
 
 template<typename Polyhedron_3>

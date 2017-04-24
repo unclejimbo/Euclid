@@ -1,8 +1,8 @@
 #pragma once
 
-#include "OBB.h"
-#include "PrimitiveGenerator.h"
-#include "Polyhedron_3.h"
+#include <Euclid/Analysis/OBB.h>
+#include <Euclid/Geometry/PrimitiveGenerator.h>
+#include <Euclid/Geometry/Polyhedron_3.h>
 #include <Eigen/Dense>
 #include <array>
 #include <vector>
@@ -14,7 +14,7 @@
 * View selection methods help generate good view points *
 * to observe a 3d model by measuring certain attributes *
 ********************************************************/
-namespace euclid
+namespace Euclid
 {
 
 // Reference:
@@ -149,4 +149,4 @@ void proxy_view_selection(
 	}
 }
 
-} // namespace euclid
+} // namespace Euclid
