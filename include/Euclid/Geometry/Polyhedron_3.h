@@ -7,7 +7,7 @@
 * This package contains functions to build and operate on *
 * Polyhedron_3 mesh in CGAL                               *
 **********************************************************/
-namespace euclid
+namespace Euclid
 {
 
 template<typename Polyhedron_3>
@@ -84,4 +84,4 @@ compute_facet_area(const typename Polyhedron_3::Face_handle::value_type& f)
 		f.halfedge()->opposite()->vertex()->point());
 }
 
-} // namespace euclid
+} // namespace Euclid
