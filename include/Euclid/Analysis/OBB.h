@@ -58,17 +58,11 @@ inline OBB<Polyhedron_3>::OBB(const Polyhedron_3& mesh)
 	}
 	mean /= mesh.size_of_vertices();
 
-	Mat3 covariance;
-	Euclid::covariance_matrix<FT, 3>(points, covariance);
-	
-	Eigen::SelfAdjointEigenSolver<Mat3> eigensolver(covariance);
-	if (eigensolver.info() != Eigen::Success) {
-		assert(-1);
-	}
+	Euclid::PCA<FT, 3> pca(points);
 
-	_directions.col(0) = eigensolver.eigenvectors().col(0);
-	_directions.col(1) = eigensolver.eigenvectors().col(1);
-	_directions.col(2) = eigensolver.eigenvectors().col(2);
+	_directions.col(0) = pca.eigen_vector(0);
+	_directions.col(1) = pca.eigen_vector(1);
+	_directions.col(2) = pca.eigen_vector(2);
 
 	auto xMax = mean.dot(_directions.col(0));
 	auto xMin = xMax;
@@ -101,17 +95,11 @@ inline OBB<Polyhedron_3>::OBB(const std::vector<Vec3>& vertices)
 	}
 	mean /= vertices.size();
 
-	Mat3 covariance;
-	Euclid::covariance_matrix<FT, 3>(vertices, covariance);
+	Euclid::PCA<FT, 3> pca(vertices);
 
-	Eigen::SelfAdjointEigenSolver<Mat3> eigensolver(covariance);
-	if (eigensolver.info() != Eigen::Success) {
-		assert(-1);
-	}
-
-	_directions.col(0) = eigensolver.eigenvectors().col(0);
-	_directions.col(1) = eigensolver.eigenvectors().col(1);
-	_directions.col(2) = eigensolver.eigenvectors().col(2);
+	_directions.col(0) = pca.eigen_vector(0);
+	_directions.col(1) = pca.eigen_vector(1);
+	_directions.col(2) = pca.eigen_vector(2);
 
 	auto xMax = mean.dot(_directions.col(0));
 	auto xMin = xMax;

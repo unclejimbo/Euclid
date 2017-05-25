@@ -35,4 +35,73 @@ inline bool covariance_matrix(
 	}
 }
 
+template<typename FT, int RowSize>
+class PCA
+{
+	using Point = Eigen::Matrix<FT, RowSize, 1>;
+	using Matrix = Eigen::Matrix<FT, RowSize, RowSize>;
+
+public:
+	explicit PCA(const std::vector<Point>& points);
+	~PCA();
+
+	Point eigen_vector(int i) const;
+	const Matrix& eigen_vectors() const;
+	FT eigen_value(int i) const;
+	const Point& eigen_values() const;
+
+private:
+	Matrix _eigen_vectors;
+	Point _eigen_values;
+};
+
+template<typename FT, int RowSize>
+inline PCA<FT, RowSize>::PCA(const std::vector<Point>& points)
+{
+	Matrix covariance;
+	Euclid::covariance_matrix<FT, RowSize>(points, covariance);
+
+	Eigen::SelfAdjointEigenSolver<Matrix> eigensolver(covariance);
+	if (eigensolver.info() != Eigen::Success) {
+		std::cerr << "PCA analysis failed" << std::endl;
+		assert(-1);
+	}
+	else {
+		_eigen_vectors = eigensolver.eigenvectors();
+		_eigen_values = eigensolver.eigenvalues();
+	}
+}
+
+template<typename FT, int RowSize>
+inline PCA<FT, RowSize>::~PCA()
+{
+}
+
+template<typename FT, int RowSize>
+inline typename PCA<FT, RowSize>::Point
+PCA<FT, RowSize>::eigen_vector(int i) const
+{
+	return _eigen_vectors.col(i);
+}
+
+template<typename FT, int RowSize>
+inline const typename PCA<FT, RowSize>::Matrix&
+PCA<FT, RowSize>::eigen_vectors() const
+{
+	return _eigen_vectors;
+}
+
+template<typename FT, int RowSize>
+inline FT PCA<FT, RowSize>::eigen_value(int i) const
+{
+	return _eigen_values(i, 0);
+}
+
+template<typename FT, int RowSize>
+inline const typename PCA<FT, RowSize>::Point&
+PCA<FT, RowSize>::eigen_values() const
+{
+	return _eigen_values();
+}
+
 } // namespace Euclid
