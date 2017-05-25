@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Euclid/Math/Math.h>
 #include <Eigen/Dense>
 #include <array>
 #include <vector>
@@ -47,32 +48,18 @@ private:
 template<typename Polyhedron_3>
 inline OBB<Polyhedron_3>::OBB(const Polyhedron_3& mesh)
 {
-	auto mean = Vec3();
+	std::vector<Vec3> points;
+	points.reserve((mesh.size_of_vertices()));
+	Vec3 mean;
 	mean.setZero();
 	for (auto p = mesh.points_begin(); p != mesh.points_end(); ++p) {
 		mean += Vec3(p->x(), p->y(), p->z());
+		points.emplace_back(p->x(), p->y(), p->z());
 	}
 	mean /= mesh.size_of_vertices();
 
 	Mat3 covariance;
-	covariance.setZero();
-	for (auto p = mesh.points_begin(); p != mesh.points_end(); ++p) {
-		covariance(0, 0) += (p->x() - mean(0)) * (p->x() - mean(0));
-		covariance(0, 1) += (p->x() - mean(0)) * (p->y() - mean(1));
-		covariance(0, 2) += (p->x() - mean(0)) * (p->z() - mean(2));
-		covariance(1, 1) += (p->y() - mean(1)) * (p->y() - mean(1));
-		covariance(1, 2) += (p->y() - mean(1)) * (p->z() - mean(2));
-		covariance(2, 2) += (p->z() - mean(2)) * (p->z() - mean(2));
-	}
-	covariance(0, 0) /= mesh.size_of_vertices();
-	covariance(0, 1) /= mesh.size_of_vertices();
-	covariance(0, 2) /= mesh.size_of_vertices();
-	covariance(1, 1) /= mesh.size_of_vertices();
-	covariance(1, 2) /= mesh.size_of_vertices();
-	covariance(2, 2) /= mesh.size_of_vertices();
-	covariance(1, 0) = covariance(0, 1);
-	covariance(2, 0) = covariance(0, 2);
-	covariance(2, 1) = covariance(1, 2);
+	Euclid::covariance_matrix<FT, 3>(points, covariance);
 	
 	Eigen::SelfAdjointEigenSolver<Mat3> eigensolver(covariance);
 	if (eigensolver.info() != Eigen::Success) {
@@ -107,7 +94,7 @@ inline OBB<Polyhedron_3>::OBB(const Polyhedron_3& mesh)
 template<typename Polyhedron_3>
 inline OBB<Polyhedron_3>::OBB(const std::vector<Vec3>& vertices)
 {
-	auto mean = Vec3();
+	Vec3 mean;
 	mean.setZero();
 	for (const auto& v : vertices) {
 		mean += Vec3(v(0), v(1), v(2));
@@ -115,24 +102,7 @@ inline OBB<Polyhedron_3>::OBB(const std::vector<Vec3>& vertices)
 	mean /= vertices.size();
 
 	Mat3 covariance;
-	covariance.setZero();
-	for (const auto& v : vertices) {
-		covariance(0, 0) += (v(0) - mean(0)) * (v(0) - mean(0));
-		covariance(0, 1) += (v(0) - mean(0)) * (v(1) - mean(1));
-		covariance(0, 2) += (v(0) - mean(0)) * (v(2) - mean(2));
-		covariance(1, 1) += (v(1) - mean(1)) * (v(1) - mean(1));
-		covariance(1, 2) += (v(1) - mean(1)) * (v(2) - mean(2));
-		covariance(2, 2) += (v(2) - mean(2)) * (v(2) - mean(2));
-	}
-	covariance(0, 0) /= vertices.size();
-	covariance(0, 1) /= vertices.size();
-	covariance(0, 2) /= vertices.size();
-	covariance(1, 1) /= vertices.size();
-	covariance(1, 2) /= vertices.size();
-	covariance(2, 2) /= vertices.size();
-	covariance(1, 0) = covariance(0, 1);
-	covariance(2, 0) = covariance(0, 2);
-	covariance(2, 1) = covariance(1, 2);
+	Euclid::covariance_matrix<FT, 3>(vertices, covariance);
 
 	Eigen::SelfAdjointEigenSolver<Mat3> eigensolver(covariance);
 	if (eigensolver.info() != Eigen::Success) {
