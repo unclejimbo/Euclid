@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Euclid/Math/Math.h>
+#include <Euclid/Math/Matrix.h>
 #include <Eigen/Dense>
 #include <array>
 #include <vector>
