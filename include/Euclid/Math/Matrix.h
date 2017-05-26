@@ -2,6 +2,7 @@
 
 #include <Eigen/Dense>
 #include <vector>
+#include <algorithm>
 #include <iostream>
 
 /************************
@@ -45,14 +46,14 @@ public:
 	explicit PCA(const std::vector<Point>& points);
 	~PCA();
 
-	Point eigen_vector(int i) const;
-	const Matrix& eigen_vectors() const;
 	FT eigen_value(int i) const;
-	const Point& eigen_values() const;
+	const std::vector<FT>& eigen_values() const;
+	Point eigen_vector(int i) const;
+	const std::vector<Point>& eigen_vectors() const;
 
 private:
-	Matrix _eigen_vectors;
-	Point _eigen_values;
+	std::vector<FT> _eigen_values;
+	std::vector<Point> _eigen_vectors;
 };
 
 template<typename FT, int RowSize>
@@ -67,8 +68,33 @@ inline PCA<FT, RowSize>::PCA(const std::vector<Point>& points)
 		assert(-1);
 	}
 	else {
-		_eigen_vectors = eigensolver.eigenvectors();
-		_eigen_values = eigensolver.eigenvalues();
+		// Sort the eigen vectors wrt eigen values in descending order
+		auto eigen_values = eigensolver.eigenvalues();
+		std::vector<std::pair<FT, int>> value_index_map;
+		value_index_map.reserve(eigen_values.rows());
+		for (auto i = 0; i < eigen_values.rows(); ++i) {
+			value_index_map.emplace_back(eigen_values(i, 0), i);
+		}
+		std::sort(value_index_map.begin(), value_index_map.end(),
+			[](const std::pair<FT, int>& v1, const std::pair<FT, int>& v2) {
+				return v1.first > v2.first;
+			}
+		);
+
+		_eigen_values.resize(value_index_map.size());
+		std::transform(value_index_map.begin(), value_index_map.end(), _eigen_values.begin(),
+			[](const std::pair<FT, int>& v) {
+				return v.first;
+			}
+		);
+
+		auto eigen_vectors = eigensolver.eigenvectors();
+		_eigen_vectors.resize(value_index_map.size());
+		std::transform(value_index_map.begin(), value_index_map.end(), _eigen_vectors.begin(),
+			[&eigen_vectors](const std::pair<FT, int>& v) {
+				return Point(eigen_vectors.col(v.second));
+			}
+		);
 	}
 }
 
@@ -78,30 +104,31 @@ inline PCA<FT, RowSize>::~PCA()
 }
 
 template<typename FT, int RowSize>
-inline typename PCA<FT, RowSize>::Point
-PCA<FT, RowSize>::eigen_vector(int i) const
+inline FT PCA<FT, RowSize>::eigen_value(int i) const
 {
-	return _eigen_vectors.col(i);
+	return _eigen_values[i];
 }
 
 template<typename FT, int RowSize>
-inline const typename PCA<FT, RowSize>::Matrix&
+inline const std::vector<FT>&
+PCA<FT, RowSize>::eigen_values() const
+{
+	return _eigen_values;
+}
+
+template<typename FT, int RowSize>
+inline typename PCA<FT, RowSize>::Point
+PCA<FT, RowSize>::eigen_vector(int i) const
+{
+	return _eigen_vectors[i];
+}
+
+template<typename FT, int RowSize>
+inline const std::vector<typename PCA<FT, RowSize>::Point>&
 PCA<FT, RowSize>::eigen_vectors() const
 {
 	return _eigen_vectors;
 }
 
-template<typename FT, int RowSize>
-inline FT PCA<FT, RowSize>::eigen_value(int i) const
-{
-	return _eigen_values(i, 0);
-}
-
-template<typename FT, int RowSize>
-inline const typename PCA<FT, RowSize>::Point&
-PCA<FT, RowSize>::eigen_values() const
-{
-	return _eigen_values();
-}
 
 } // namespace Euclid
