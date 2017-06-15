@@ -11,4 +11,4 @@ Euclid is a header only geometry processing library.
 Just include the needed headers
 
 # License
-MIT
+GPL
