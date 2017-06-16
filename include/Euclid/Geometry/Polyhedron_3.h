@@ -1,11 +1,10 @@
-#pragma once
-
-
 /**********************************************************
 * Package Overview:                                       *
-* This package contains functions to build and operate on *
-* Polyhedron_3 mesh in CGAL                               *
+* This package contains helper functions for Polyhedron_3 *
 **********************************************************/
+#pragma once
+#include <Eigen/Dense>
+
 namespace Euclid
 {
 
@@ -26,16 +25,6 @@ private:
 	std::vector<FT> _vertices;
 	std::vector<unsigned> _indices;
 };
-
-
-template<typename Polyhedron_3>
-Eigen::Matrix<typename Polyhedron_3::Traits::Kernel::FT, 3, 1>
-compute_facet_normal(const typename Polyhedron_3::Face_handle::value_type& f);
-
-
-template<typename Polyhedron_3>
-decltype(auto)
-compute_facet_area(const typename Polyhedron_3::Face_handle::value_type& f);
 
 } // namespace Euclid
 

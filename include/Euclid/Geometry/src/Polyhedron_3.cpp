@@ -43,32 +43,4 @@ inline void TriMeshBuilder<Polyhedron_3>::operator()(HDS& hds)
 	builder.end_surface();
 }
 
-template<typename Polyhedron_3>
-Eigen::Matrix<typename Polyhedron_3::Traits::Kernel::FT, 3, 1>
-inline compute_facet_normal(const typename Polyhedron_3::Face_handle::value_type& f)
-{
-	try {
-		auto n = CGAL::normal(
-			f.facet_begin()->vertex()->point(),
-			f.facet_begin()->next()->vertex()->point(),
-			f.facet_begin()->opposite()->vertex()->point());
-		return Eigen::Matrix<typename Polyhedron_3::Traits::Kernel::FT, 3, 1>(
-			n.x(), n.y(), n.z()).normalized();
-	}
-	catch (...) {
-		KLEIN_LOG_WARNING("Facet's vertices are colinear, thus normal is set to zero");
-		return Eigen::Matrix<typename Polyhedron_3::Traits::Kernel::FT, 3, 1>(0.0, 0.0, 0.0);
-	}
-}
-
-template<typename Polyhedron_3>
-decltype(auto)
-inline compute_facet_area(const typename Polyhedron_3::Face_handle::value_type& f)
-{
-	return Polyhedron_3::Traits::Kernel::Compute_area_3()(
-		f.halfedge()->vertex()->point(),
-		f.halfedge()->next()->vertex()->point(),
-		f.halfedge()->opposite()->vertex()->point());
-}
-
 } // namespace Euclid
