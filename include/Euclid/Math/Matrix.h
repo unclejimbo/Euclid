@@ -1,9 +1,10 @@
-#pragma once
-
 /*************************************
 * Package Overview:                  *
 * Common matrix associated utilities *
 *************************************/
+#pragma once
+#include <Eigen/Dense>
+
 namespace Euclid
 {
 
