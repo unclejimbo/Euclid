@@ -1,26 +1,32 @@
 #include <Euclid/Math/Matrix.h>
-#include <Eigen/Dense>
 #include <array>
 #include <vector>
+#include <tuple>
 #include <cmath>
 
 namespace Euclid
 {
 
-template<typename Polyhedron_3>
-inline OBB<Polyhedron_3>::OBB(const Polyhedron_3& mesh)
+template<typename Mesh>
+inline OBB<Mesh>::OBB(const Mesh& mesh)
 {
+	using vertex_iterator = boost::graph_traits<Mesh>::vertex_iterator;
+
 	std::vector<Vec3> points;
-	points.reserve((mesh.size_of_vertices()));
+	points.reserve(num_vertices(mesh));
+	auto vpmap = get(CGAL::vertex_point, mesh);
 	Vec3 mean;
 	mean.setZero();
-	for (auto p = mesh.points_begin(); p != mesh.points_end(); ++p) {
-		mean += Vec3(p->x(), p->y(), p->z());
-		points.emplace_back(p->x(), p->y(), p->z());
+	vertex_iterator v_beg, v_end;
+	std::tie(v_beg, v_end) = vertices(mesh);
+	while (v_beg != v_end) {
+		auto p = vpmap[*v_beg++];
+		mean += Vec3(p.x(), p.y(), p.z());
+		points.emplace_back(p.x(), p.y(), p.z());
 	}
 	mean /= mesh.size_of_vertices();
 
-	Euclid::PCA<FT, 3> pca(points);
+	Euclid::PCA<float, 3> pca(points);
 
 	_directions.col(0) = pca.eigen_vector(0);
 	_directions.col(1) = pca.eigen_vector(1);
@@ -32,8 +38,10 @@ inline OBB<Polyhedron_3>::OBB(const Polyhedron_3& mesh)
 	auto yMin = yMax;
 	auto zMax = mean.dot(_directions.col(2));
 	auto zMin = zMax;
-	for (auto p = mesh.points_begin(); p != mesh.points_end(); ++p) {
-		auto vec = Vec3(p->x(), p->y(), p->z());
+	std::tie(v_beg, v_end) = vertices(mesh);
+	while (v_beg != v_end) {
+		auto p = vpmap[*v_beg++];
+		auto vec = Vec3(p.x(), p.y(), p.z());
 		xMax = std::max(xMax, vec.dot(_directions.col(0)));
 		yMax = std::max(yMax, vec.dot(_directions.col(1)));
 		zMax = std::max(zMax, vec.dot(_directions.col(2)));
@@ -47,8 +55,8 @@ inline OBB<Polyhedron_3>::OBB(const Polyhedron_3& mesh)
 		_directions.col(2) * (zMax + zMin) * 0.5f;
 }
 
-template<typename Polyhedron_3>
-inline OBB<Polyhedron_3>::OBB(const std::vector<Vec3>& vertices)
+template<typename Mesh>
+inline OBB<Mesh>::OBB(const std::vector<Vec3>& vertices)
 {
 	Vec3 mean;
 	mean.setZero();
@@ -57,7 +65,7 @@ inline OBB<Polyhedron_3>::OBB(const std::vector<Vec3>& vertices)
 	}
 	mean /= vertices.size();
 
-	Euclid::PCA<FT, 3> pca(vertices);
+	Euclid::PCA<float, 3> pca(vertices);
 
 	_directions.col(0) = pca.eigen_vector(0);
 	_directions.col(1) = pca.eigen_vector(1);

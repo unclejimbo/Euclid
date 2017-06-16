@@ -1,21 +1,22 @@
-#pragma once
 /*********************************************************
 * Package Overview                                       *
 * (O)beject (O)rientated (B)oundingbox uses pca to build *
 * an object aligned bounding box                         *
 *********************************************************/
+#pragma once
+#include <Eigen/Dense>
+
 namespace Euclid
 {
 
-template<typename Polyhedron_3>
+template<typename Mesh>
 class OBB
 {
-	using FT = typename Polyhedron_3::Traits::Kernel::FT;
-	using Vec3 = Eigen::Matrix<FT, 3, 1>;
-	using Mat3 = Eigen::Matrix<FT, 3, 3>;
+	using Vec3 = Eigen::Vector3f;
+	using Mat3 = Eigen::Matrix3f;
 
 public:
-	explicit OBB(const Polyhedron_3& mesh);
+	explicit OBB(const Mesh& mesh);
 	explicit OBB(const std::vector<Vec3>& vertices);
 	~OBB();
 
