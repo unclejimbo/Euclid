@@ -1,15 +1,17 @@
-#pragma once
 /**********************************************************
 * Package Overview:                                       *
 * Segmentation of 3D shape including mesh and point cloud *
 **********************************************************/
+#pragma once
+#include <Eigen/Dense>
+
 namespace Euclid
 {
 
-// Random walk segmentation for Polyhedron_3
-template<typename Polyhedron_3>
+// Random walk segmentation for mesh
+template<typename Mesh>
 void random_walk_segmentation(
-	const Polyhedron_3& mesh,
+	const Mesh& mesh,
 	std::vector<int>& seed_indices,
 	std::vector<int>& facet_class);
 

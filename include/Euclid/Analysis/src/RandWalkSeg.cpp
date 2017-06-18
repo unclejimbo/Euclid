@@ -1,76 +1,83 @@
-#include <Euclid/Geometry/Polyhedron_3.h>
+// Reference:
+// [1] Yu-Kun Lai, Shi-Min Hu, Ralph R. Martin, Paul L. Rosin.
+//     Rapid and Effective Segmentation of 3D Models Using Random Walks.
+//     CAGD'09.
+#include <Euclid/Geometry/MeshProperties.h>
 #include <Eigen/SparseCore>
 #include <Eigen/SparseLU>
-#include <Eigen/Dense>
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 #include <CGAL/Search_traits_3.h>
 #include <CGAL/Search_traits_adapter.h>
+#include <CGAL/boost/graph/iterator.h>
+#include <CGAL/boost/graph/helpers.h>
 #include <boost/iterator/counting_iterator.hpp>
 #include <vector>
 #include <unordered_map>
+#include <tuple>
 #include <algorithm>
 #include <ostream>
 
 namespace Euclid
 {
 
-// Reference:
-// [1] Yu-Kun Lai, Shi-Min Hu, Ralph R. Martin, Paul L. Rosin.
-//     Rapid and Effective Segmentation of 3D Models Using Random Walks.
-//     CAGD'09.
-
-namespace _imp
+namespace _impl
 {
 
-// Construct linear system for Polyhedron_3
-template<typename Polyhedron_3>
+// Construct linear system for mesh
+template<typename Mesh>
 inline void _construct_equation(
-	const Polyhedron_3& mesh,
+	const Mesh& mesh,
 	const std::vector<int>& ids,
-	Eigen::SparseMatrix<typename Polyhedron_3::Traits::Kernel::FT>& A,
-	Eigen::SparseMatrix<typename Polyhedron_3::Traits::Kernel::FT>& B)
+	Eigen::SparseMatrix<float>& A,
+	Eigen::SparseMatrix<float>& B)
 {
-	using FT = typename Polyhedron_3::Traits::Kernel::FT;
-	using SpMat = Eigen::SparseMatrix<FT>;
+	using SpMat = Eigen::SparseMatrix<float>;
 
+	auto fimap = get(CGAL::face_index, mesh);
+	auto vpmap = get(CGAL::vertex_point, mesh);
 	auto m = B.cols();
 	auto n = B.rows();
 	auto sum = 0.0;
+	auto n_faces = num_faces(mesh);
 	std::vector<int> rows;
 	std::vector<int> cols;
-	std::vector<FT> edge_len;
-	std::vector<FT> ds;
-	rows.reserve(3 * mesh.size_of_facets());
-	cols.reserve(3 * mesh.size_of_facets());
-	edge_len.reserve(3 * mesh.size_of_facets());
-	ds.reserve(3 * mesh.size_of_facets());
+	std::vector<float> edge_len;
+	std::vector<float> ds;
+	rows.reserve(3 * n_faces);
+	cols.reserve(3 * n_faces);
+	edge_len.reserve(3 * n_faces);
+	ds.reserve(3 * n_faces);
 
 	// Compute the ingredients of the laplacian matrix
-	for (auto fa = mesh.facets_begin(); fa != mesh.facets_end(); ++fa) {
-		auto fa_id = ids[fa->id()];
+	boost::graph_traits<const Mesh>::face_iterator fa, f_end;
+	std::tie(fa, f_end) = faces(mesh);
+	for (; fa != f_end; ++fa) {
+		auto fa_id = ids[fimap[*fa]];
 		auto facet_sum = 0.0;
-		auto na = Euclid::compute_facet_normal<Polyhedron_3>(*fa);
-		auto fit = fa->facet_begin();
+		auto na = Euclid::facet_normal(mesh, *fa);
+
+		CGAL::Halfedge_around_face_iterator<Mesh> fit, fit_end;
+		std::tie(fit, fit_end) = halfedges_around_face(halfedge(*fa, mesh), mesh);
 		do {
-			if (fit->opposite()->facet() != nullptr) { // Non-boundary
-				auto p1 = fit->vertex()->point();
-				auto p2 = fit->prev()->vertex()->point();
+			if (!is_border(opposite(*fit, mesh), mesh)) { // Non-boundary
+				auto p1 = vpmap[target(*fit, mesh)];
+				auto p2 = vpmap[source(*fit, mesh)];
 				auto edge = p2 - p1;
 				auto len = std::sqrt(edge.x() * edge.x() + edge.y() * edge.y() + edge.z() * edge.z());
 				edge_len.push_back(len);
 
 				// Determine whether the incident edge is concave or convex
-				auto pa = fit->next()->vertex()->point();
-				auto pb = fit->opposite()->next()->vertex()->point();
+				auto pa = vpmap[target(next(*fit, mesh), mesh)];
+				auto pb = vpmap[target(next(opposite(*fit, mesh), mesh), mesh)];
 				auto temp = pb - pa;
-				Eigen::Matrix<FT, 3, 1> p;
+				Eigen::Vector3d p;
 				p << temp.x(), temp.y(), temp.z();
 				auto eta = p.dot(na) <= 0.0 ? 0.2 : 1.0;
 
-				auto fb = fit->opposite()->facet();
-				auto fb_id = ids[fb->id()];
-				auto nb = Euclid::compute_facet_normal<Polyhedron_3>(*fb);
+				auto fb = face(opposite(*fit, mesh), mesh);
+				auto fb_id = ids[fimap[fb]];
+				auto nb = Euclid::facet_normal(mesh, fb);
 				auto diff = 0.5 * eta * (na - nb).squaredNorm();
 
 				cols.push_back(fa_id);
@@ -81,13 +88,13 @@ inline void _construct_equation(
 			else { // Placeholder
 				ds.push_back(-1.0);
 			}
-		} while (++fit != fa->facet_begin());
+		} while (++fit != fit_end);
 
 		sum += facet_sum;
 	}
 
 	// Normalize
-	std::vector<Eigen::Triplet<FT>> values;
+	std::vector<Eigen::Triplet<double>> values;
 	values.reserve(cols.size());
 	const auto inv_sigma = 1.0; // Parameter
 	auto inv_avg = edge_len.size() / (sum * 0.5);
@@ -223,17 +230,16 @@ inline void _construct_equation(
 	B.makeCompressed();
 }
 
-} // namespace _imp
+} // namespace _impl
 
-template<typename Polyhedron_3>
-inline void random_walk_segmentation(const Polyhedron_3& mesh, std::vector<int>& seed_indices, std::vector<int>& facet_class)
+template<typename Mesh>
+inline void random_walk_segmentation(const Mesh& mesh, std::vector<int>& seed_indices, std::vector<int>& facet_class)
 {
-	using FT = typename Polyhedron_3::Traits::Kernel::FT;
-	using SpMat = Eigen::SparseMatrix<FT>;
+	using SpMat = Eigen::SparseMatrix<float>;
 
 	// Construct the linear equation
 	auto m = static_cast<int>(seed_indices.size()); // Number of seeded
-	auto n = static_cast<int>(mesh.size_of_facets()) - m; // Number of unseeded
+	auto n = static_cast<int>(num_faces(mesh)) - m; // Number of unseeded
 	std::sort(seed_indices.begin(), seed_indices.end());
 	std::vector<int> ids(m + n, -1); // ids[FacetID] -> MatrixID
 	int inc = 0;
@@ -248,7 +254,7 @@ inline void random_walk_segmentation(const Polyhedron_3& mesh, std::vector<int>&
 	}
 	SpMat A(n, n);
 	SpMat B(n, m);
-	_imp::_construct_equation(mesh, ids, A, B);
+	_impl::_construct_equation(mesh, ids, A, B);
 
 	std::vector<int> inv_ids(m + n);
 	for (auto i = 0; i < m + n; ++i) {
@@ -260,7 +266,7 @@ inline void random_walk_segmentation(const Polyhedron_3& mesh, std::vector<int>&
 	for (auto s : seed_indices) {
 		facet_class[s] = s;
 	}
-	std::vector<FT> max_probabilities(n, static_cast<FT>(-1.0));
+	std::vector<float> max_probabilities(n, static_cast<float>(-1.0));
 	Eigen::SparseLU<SpMat> solver;
 	solver.compute(A);
 	if (solver.info() != Eigen::Success) {
@@ -268,8 +274,8 @@ inline void random_walk_segmentation(const Polyhedron_3& mesh, std::vector<int>&
 		return;
 	}
 	for (auto i = 0; i < m; ++i) {
-		Eigen::Matrix<FT, Eigen::Dynamic, 1> b = B.col(i);
-		Eigen::Matrix<FT, Eigen::Dynamic, 1> x = solver.solve(b);
+		Eigen::Matrix<float, Eigen::Dynamic, 1> b = B.col(i);
+		Eigen::Matrix<float, Eigen::Dynamic, 1> x = solver.solve(b);
 		for (auto j = 0; j < n; ++j) {
 			if (x(j, 0) > max_probabilities[j]) {
 				max_probabilities[j] = x(j, 0);
@@ -349,7 +355,7 @@ inline void random_walk_segmentation(
 			id = inc++;
 		}
 	}
-	_imp::_construct_equation(vertices, normals, neighbors, ids, A, B);
+	_impl::_construct_equation(vertices, normals, neighbors, ids, A, B);
 
 	std::vector<int> inv_ids(m + n);
 	for (auto i = 0; i < m + n; ++i) {
