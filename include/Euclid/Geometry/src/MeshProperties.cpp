@@ -1,11 +1,37 @@
+#include <Eigen/Dense>
 #include <ostream>
+#include <cmath>
 
 namespace Euclid
 {
 
 template<typename Mesh>
-decltype(auto) inline facet_normal(const Mesh& mesh,
-	const typename boost::graph_traits<const Mesh>::face_descriptor& f)
+decltype(auto) inline edge_length(
+	const typename boost::graph_traits<const Mesh>::halfedge_descriptor& he,
+	const Mesh& mesh)
+{
+	auto v1 = source(he, mesh);
+	auto v2 = target(he, mesh);
+	auto vpmap = get(CGAL::vertex_point, mesh);
+	auto p1 = vpmap[v1];
+	auto p2 = vpmap[v2];
+	auto p = p1 - p2;
+	return std::sqrt(p.x() * p.x() + p.y() * p.y() + p.z() * p.z());
+}
+
+template<typename Mesh>
+decltype(auto) inline edge_length(
+	const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
+	const Mesh& mesh)
+{
+	auto he = halfedge(e, mesh);
+	return edge_length(he, mesh);
+}
+
+template<typename Mesh>
+decltype(auto) inline facet_normal(
+	const typename boost::graph_traits<const Mesh>::face_descriptor& f,
+	const Mesh& mesh)
 {
 	using VPMap = boost::property_map<Mesh, boost::vertex_point_t>::type;
 	using Point_3 = boost::property_traits<VPMap>::value_type;
@@ -38,8 +64,9 @@ decltype(auto) inline facet_normal(const Mesh& mesh,
 }
 
 template<typename Mesh>
-decltype(auto) inline facet_area(const Mesh& mesh,
-	const typename boost::graph_traits<const Mesh>::facet_descriptor& f)
+decltype(auto) inline facet_area(
+	const typename boost::graph_traits<const Mesh>::facet_descriptor& f,
+	const Mesh& mesh)
 {
 	using VPMap = boost::property_map<Mesh, boost::vertex_point_t>::type;
 	using Point_3 = boost::property_traits<VPMap>::value_type;

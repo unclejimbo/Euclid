@@ -53,18 +53,18 @@ inline void _construct_equation(
 	for (; fa != f_end; ++fa) {
 		auto fa_id = ids[fimap[*fa]];
 		auto facet_sum = 0.0;
-		auto na = Euclid::facet_normal(mesh, *fa);
+		auto na = Euclid::facet_normal(*fa, mesh);
 
 		auto fit_end = halfedge(*fa, mesh);
 		auto fit = fit_end;
 		do {
 			auto oppo = opposite(fit, mesh);
 			if (!is_border(oppo, mesh)) { // Non-boundary
-				auto p1 = vpmap[target(fit, mesh)];
+				/*auto p1 = vpmap[target(fit, mesh)];
 				auto p2 = vpmap[source(fit, mesh)];
 				auto edge = p2 - p1;
-				auto len = std::sqrt(edge.x() * edge.x() + edge.y() * edge.y() + edge.z() * edge.z());
-				edge_len.push_back(len);
+				auto len = std::sqrt(edge.x() * edge.x() + edge.y() * edge.y() + edge.z() * edge.z());*/
+				edge_len.push_back(Euclid::edge_length(fit, mesh));
 
 				// Determine whether the incident edge is concave or convex
 				auto pa = vpmap[target(next(fit, mesh), mesh)];
@@ -76,7 +76,7 @@ inline void _construct_equation(
 
 				auto fb = face(oppo, mesh);
 				auto fb_id = ids[fimap[fb]];
-				auto nb = Euclid::facet_normal(mesh, fb);
+				auto nb = Euclid::facet_normal(fb, mesh);
 				auto diff = 0.5 * eta * (na - nb).squaredNorm();
 
 				cols.push_back(fa_id);

@@ -3,18 +3,29 @@
 * This package contains functions to compute properties of a mesh *
 ******************************************************************/
 #pragma once
-#include <Eigen/Dense>
 
 namespace Euclid
 {
 
 template<typename Mesh>
-decltype(auto) facet_normal(const Mesh& mesh,
-	const typename boost::graph_traits<const Mesh>::face_descriptor& f);
+decltype(auto) edge_length(
+	const typename boost::graph_traits<const Mesh>::halfedge_descriptor& he,
+	const Mesh& mesh);
 
 template<typename Mesh>
-decltype(auto) facet_area(const Mesh& mesh,
-	const typename boost::graph_traits<const Mesh>::face_descriptor& f);
+decltype(auto) edge_length(
+	const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
+	const Mesh& mesh);
+
+template<typename Mesh>
+decltype(auto) facet_normal(
+	const typename boost::graph_traits<const Mesh>::face_descriptor& f,
+	const Mesh& mesh);
+
+template<typename Mesh>
+decltype(auto) facet_area(
+	const typename boost::graph_traits<const Mesh>::face_descriptor& f,
+	const Mesh& mesh);
 
 } // namespace Euclid
 
