@@ -23,14 +23,14 @@ namespace _impl
 {
 
 // Construct linear system for mesh
-template<typename Mesh>
+template<typename Mesh, typename FT>
 inline void _construct_equation(
 	const Mesh& mesh,
 	const std::vector<int>& ids,
-	Eigen::SparseMatrix<float>& A,
-	Eigen::SparseMatrix<float>& B)
+	Eigen::SparseMatrix<FT>& A,
+	Eigen::SparseMatrix<FT>& B)
 {
-	using SpMat = Eigen::SparseMatrix<float>;
+	using SpMat = Eigen::SparseMatrix<FT>;
 
 	auto fimap = get(boost::face_index, mesh);
 	auto vpmap = get(CGAL::vertex_point, mesh);
@@ -40,8 +40,8 @@ inline void _construct_equation(
 	auto n_faces = num_faces(mesh);
 	std::vector<int> rows;
 	std::vector<int> cols;
-	std::vector<float> edge_len;
-	std::vector<float> ds;
+	std::vector<FT> edge_len;
+	std::vector<FT> ds;
 	rows.reserve(3 * n_faces);
 	cols.reserve(3 * n_faces);
 	edge_len.reserve(3 * n_faces);
@@ -70,7 +70,7 @@ inline void _construct_equation(
 				auto pa = vpmap[target(next(fit, mesh), mesh)];
 				auto pb = vpmap[target(next(oppo, mesh), mesh)];
 				auto temp = pb - pa;
-				Eigen::Vector3d p;
+				Eigen::Matrix<FT, 3, 1> p;
 				p << temp.x(), temp.y(), temp.z();
 				auto eta = p.dot(na) <= 0.0 ? 0.2 : 1.0;
 
@@ -94,7 +94,7 @@ inline void _construct_equation(
 	}
 
 	// Normalize
-	std::vector<Eigen::Triplet<double>> values;
+	std::vector<Eigen::Triplet<FT>> values;
 	values.reserve(cols.size());
 	const auto inv_sigma = 1.0; // Parameter
 	auto inv_avg = edge_len.size() / (sum * 0.5);
@@ -103,7 +103,7 @@ inline void _construct_equation(
 	auto c_iter = cols.begin();
 	auto r_iter = rows.begin();
 	while (d_iter != ds.end()) {
-		auto prob_sum = 0.0;
+		auto prob_sum = static_cast<FT>(0.0);
 		for (auto j = 0; j < 3; ++j) {
 			if (*d_iter != -1.0) {
 				auto prob = std::exp(-(*d_iter * inv_avg) * inv_sigma) * *e_iter++;
@@ -126,8 +126,8 @@ inline void _construct_equation(
 		}
 	}
 
-	for (auto i = 0; i < num_faces(mesh); ++i) {
-		values.emplace_back(i, i, 1.0);
+	for (boost::graph_traits<Mesh>::faces_size_type i = 0; i < num_faces(mesh); ++i) {
+		values.emplace_back(i, i, static_cast<FT>(1.0));
 	}
 
 	// Fill in the matrix
@@ -218,7 +218,7 @@ inline void _construct_equation(
 			auto idx = i * n_neighbors + j;
 			values.emplace_back(cols[idx], rows[idx], -ds[j] * inv_sum);
 		}
-		values.emplace_back(i, i, 1.0);
+		values.emplace_back(i, i, static_cast<FT>(1.0));
 	}
 
 	// Fill in the matrix
@@ -235,7 +235,10 @@ inline void _construct_equation(
 template<typename Mesh>
 inline void random_walk_segmentation(const Mesh& mesh, std::vector<int>& seed_indices, std::vector<int>& facet_class)
 {
-	using SpMat = Eigen::SparseMatrix<float>;
+	using VertexPointMap = boost::property_map<Mesh, boost::vertex_point_t>::type;
+	using Point_3 = boost::property_traits<VertexPointMap>::value_type;
+	using FT = CGAL::Kernel_traits<Point_3>::Kernel::FT;
+	using SpMat = Eigen::SparseMatrix<FT>;
 
 	// Construct the linear equation
 	auto m = static_cast<int>(seed_indices.size()); // Number of seeded
@@ -266,7 +269,7 @@ inline void random_walk_segmentation(const Mesh& mesh, std::vector<int>& seed_in
 	for (auto s : seed_indices) {
 		facet_class[s] = s;
 	}
-	std::vector<float> max_probabilities(n, static_cast<float>(-1.0));
+	std::vector<FT> max_probabilities(n, static_cast<FT>(-1.0));
 	Eigen::SparseLU<SpMat> solver;
 	solver.compute(A);
 	if (solver.info() != Eigen::Success) {

@@ -9,11 +9,11 @@ namespace Euclid
 {
 
 template<typename Mesh>
-Eigen::Vector3d facet_normal(const Mesh& mesh,
+decltype(auto) facet_normal(const Mesh& mesh,
 	const typename boost::graph_traits<const Mesh>::face_descriptor& f);
 
 template<typename Mesh>
-double facet_area(const Mesh& mesh,
+decltype(auto) facet_area(const Mesh& mesh,
 	const typename boost::graph_traits<const Mesh>::face_descriptor& f);
 
 } // namespace Euclid

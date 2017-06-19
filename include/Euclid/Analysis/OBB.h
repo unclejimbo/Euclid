@@ -9,13 +9,14 @@
 namespace Euclid
 {
 
-template<typename Mesh>
+template<typename FT>
 class OBB
 {
-	using Vec3 = Eigen::Vector3f;
-	using Mat3 = Eigen::Matrix3f;
+	using Vec3 = Eigen::Matrix<FT, 3, 1>;
+	using Mat3 = Eigen::Matrix<FT, 3, 3>;
 
 public:
+	template<typename Mesh>
 	explicit OBB(const Mesh& mesh);
 	explicit OBB(const std::vector<Vec3>& vertices);
 	~OBB();
