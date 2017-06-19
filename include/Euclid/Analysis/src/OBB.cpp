@@ -24,7 +24,7 @@ inline OBB<Mesh>::OBB(const Mesh& mesh)
 		mean += Vec3(p.x(), p.y(), p.z());
 		points.emplace_back(p.x(), p.y(), p.z());
 	}
-	mean /= mesh.size_of_vertices();
+	mean /= num_vertices(mesh);
 
 	Euclid::PCA<float, 3> pca(points);
 

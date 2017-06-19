@@ -9,8 +9,6 @@
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 #include <CGAL/Search_traits_3.h>
 #include <CGAL/Search_traits_adapter.h>
-#include <CGAL/boost/graph/iterator.h>
-#include <CGAL/boost/graph/helpers.h>
 #include <boost/iterator/counting_iterator.hpp>
 #include <vector>
 #include <unordered_map>
@@ -34,7 +32,7 @@ inline void _construct_equation(
 {
 	using SpMat = Eigen::SparseMatrix<float>;
 
-	auto fimap = get(CGAL::face_index, mesh);
+	auto fimap = get(boost::face_index, mesh);
 	auto vpmap = get(CGAL::vertex_point, mesh);
 	auto m = B.cols();
 	auto n = B.rows();
@@ -57,25 +55,26 @@ inline void _construct_equation(
 		auto facet_sum = 0.0;
 		auto na = Euclid::facet_normal(mesh, *fa);
 
-		CGAL::Halfedge_around_face_iterator<Mesh> fit, fit_end;
-		std::tie(fit, fit_end) = halfedges_around_face(halfedge(*fa, mesh), mesh);
+		auto fit_end = halfedge(*fa, mesh);
+		auto fit = fit_end;
 		do {
-			if (!is_border(opposite(*fit, mesh), mesh)) { // Non-boundary
-				auto p1 = vpmap[target(*fit, mesh)];
-				auto p2 = vpmap[source(*fit, mesh)];
+			auto oppo = opposite(fit, mesh);
+			if (!is_border(oppo, mesh)) { // Non-boundary
+				auto p1 = vpmap[target(fit, mesh)];
+				auto p2 = vpmap[source(fit, mesh)];
 				auto edge = p2 - p1;
 				auto len = std::sqrt(edge.x() * edge.x() + edge.y() * edge.y() + edge.z() * edge.z());
 				edge_len.push_back(len);
 
 				// Determine whether the incident edge is concave or convex
-				auto pa = vpmap[target(next(*fit, mesh), mesh)];
-				auto pb = vpmap[target(next(opposite(*fit, mesh), mesh), mesh)];
+				auto pa = vpmap[target(next(fit, mesh), mesh)];
+				auto pb = vpmap[target(next(oppo, mesh), mesh)];
 				auto temp = pb - pa;
 				Eigen::Vector3d p;
 				p << temp.x(), temp.y(), temp.z();
 				auto eta = p.dot(na) <= 0.0 ? 0.2 : 1.0;
 
-				auto fb = face(opposite(*fit, mesh), mesh);
+				auto fb = face(oppo, mesh);
 				auto fb_id = ids[fimap[fb]];
 				auto nb = Euclid::facet_normal(mesh, fb);
 				auto diff = 0.5 * eta * (na - nb).squaredNorm();
@@ -88,7 +87,8 @@ inline void _construct_equation(
 			else { // Placeholder
 				ds.push_back(-1.0);
 			}
-		} while (++fit != fit_end);
+			fit = next(fit, mesh);
+		} while (fit != fit_end);
 
 		sum += facet_sum;
 	}
@@ -126,7 +126,7 @@ inline void _construct_equation(
 		}
 	}
 
-	for (auto i = 0; i < mesh.size_of_facets(); ++i) {
+	for (auto i = 0; i < num_faces(mesh); ++i) {
 		values.emplace_back(i, i, 1.0);
 	}
 
