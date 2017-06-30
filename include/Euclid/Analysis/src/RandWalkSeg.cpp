@@ -59,24 +59,18 @@ inline void _construct_equation(
 		do {
 			auto oppo = opposite(fit, mesh);
 			if (!is_border(oppo, mesh)) { // Non-boundary
-				/*auto p1 = vpmap[target(fit, mesh)];
-				auto p2 = vpmap[source(fit, mesh)];
-				auto edge = p2 - p1;
-				auto len = std::sqrt(edge.x() * edge.x() + edge.y() * edge.y() + edge.z() * edge.z());*/
 				edge_len.push_back(Euclid::edge_length(fit, mesh));
 
 				// Determine whether the incident edge is concave or convex
 				auto pa = vpmap[target(next(fit, mesh), mesh)];
 				auto pb = vpmap[target(next(oppo, mesh), mesh)];
-				auto temp = pb - pa;
-				Eigen::Matrix<FT, 3, 1> p;
-				p << temp.x(), temp.y(), temp.z();
-				auto eta = p.dot(na) <= 0.0 ? 0.2 : 1.0;
+				auto p = pb - pa;
+				auto eta = p * na <= 0.0 ? 0.2 : 1.0;
 
 				auto fb = face(oppo, mesh);
 				auto fb_id = ids[fimap[fb]];
 				auto nb = Euclid::face_normal(fb, mesh);
-				auto diff = 0.5 * eta * (na - nb).squaredNorm();
+				auto diff = 0.5 * eta * (na - nb).squared_length();
 
 				cols.push_back(fa_id);
 				rows.push_back(fb_id);
