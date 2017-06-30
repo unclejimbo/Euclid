@@ -72,7 +72,7 @@ decltype(auto) inline edge_length(
 }
 
 template<typename Mesh>
-decltype(auto) inline facet_normal(
+decltype(auto) inline face_normal(
 	const typename boost::graph_traits<const Mesh>::face_descriptor& f,
 	const Mesh& mesh)
 {
@@ -107,7 +107,7 @@ decltype(auto) inline facet_normal(
 }
 
 template<typename Mesh>
-decltype(auto) inline facet_area(
+decltype(auto) inline face_area(
 	const typename boost::graph_traits<const Mesh>::facet_descriptor& f,
 	const Mesh& mesh)
 {

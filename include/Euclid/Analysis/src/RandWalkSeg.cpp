@@ -52,7 +52,7 @@ inline void _construct_equation(
 	for (; fa != f_end; ++fa) {
 		auto fa_id = ids[fimap[*fa]];
 		auto facet_sum = 0.0;
-		auto na = Euclid::facet_normal(*fa, mesh);
+		auto na = Euclid::face_normal(*fa, mesh);
 
 		auto fit_end = halfedge(*fa, mesh);
 		auto fit = fit_end;
@@ -75,7 +75,7 @@ inline void _construct_equation(
 
 				auto fb = face(oppo, mesh);
 				auto fb_id = ids[fimap[fb]];
-				auto nb = Euclid::facet_normal(fb, mesh);
+				auto nb = Euclid::face_normal(fb, mesh);
 				auto diff = 0.5 * eta * (na - nb).squaredNorm();
 
 				cols.push_back(fa_id);
@@ -371,7 +371,7 @@ inline void random_walk_segmentation(
 		neighbors_i.reserve(k);
 
 		auto p = point_pmap[*iter];
-		KNN knn(tree, p, k + 1, 0.00001, true, dist);
+		KNN knn(tree, p, k + 1, static_cast<FT>(0.00001), true, dist);
 
 		auto it = knn.begin();
 		++it; // The first will always return the identical point
