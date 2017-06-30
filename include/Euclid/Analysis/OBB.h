@@ -4,40 +4,52 @@
 * an object aligned bounding box                         *
 *********************************************************/
 #pragma once
-#include <Eigen/Dense>
+#include <CGAL/Point_set_3.h>
+#include <vector>
+#include <array>
 
 namespace Euclid
 {
 
-template<typename FT>
+template<typename Kernel>
 class OBB
 {
-	using Vec3 = Eigen::Matrix<FT, 3, 1>;
-	using Mat3 = Eigen::Matrix<FT, 3, 3>;
+	using Point_3 = typename Kernel::Point_3;
+	using Vector_3 = typename Kernel::Vector_3;
+	using FT = typename Kernel::FT;
 
 public:
 	template<typename Mesh>
 	explicit OBB(const Mesh& mesh);
-	explicit OBB(const std::vector<Vec3>& vertices);
-	~OBB();
 
-	Vec3 center() const;
-	std::array<Vec3, 3> directions() const;
-	Vec3 halfsize() const;
-	float radius() const;
-	Vec3 lbb() const;
-	Vec3 lbf() const;
-	Vec3 ltb() const;
-	Vec3 ltf() const;
-	Vec3 rbb() const;
-	Vec3 rbf() const;
-	Vec3 rtb() const;
-	Vec3 rtf() const;
+	explicit OBB(const std::vector<Point_3>& points);
+
+	template<typename ForwardIterator, typename PPMap>
+	OBB(ForwardIterator first,
+		ForwardIterator beyond,
+		PPMap point_pmap);
+
+	explicit OBB(const CGAL::Point_set_3<Point_3>& point_set);
+
+	Point_3 center() const;
+	Point_3 lbb() const;
+	Point_3 lbf() const;
+	Point_3 ltb() const;
+	Point_3 ltf() const;
+	Point_3 rbb() const;
+	Point_3 rbf() const;
+	Point_3 rtb() const;
+	Point_3 rtf() const;
 
 private:
-	Mat3 _directions;
-	Vec3 _center;
-	Vec3 _halfsize;
+	template<typename ForwardIterator, typename PPMap>
+	void _buildOBB(ForwardIterator first,
+		ForwardIterator beyond,
+		PPMap point_pmap);
+
+private:
+	Point_3 _lbb;
+	std::array<Vector_3, 3> _directions;
 };
 
 } // namespace Euclid

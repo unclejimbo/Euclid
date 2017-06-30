@@ -7,6 +7,20 @@
 namespace Euclid
 {
 
+enum class NormalWeighting
+{
+	constant,
+	face_area,
+	incident_angle
+};
+
+template<typename Mesh, typename FaceNormalMap>
+decltype(auto) vertex_normal(
+	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+	const Mesh& mesh,
+	const FaceNormalMap& fnmap,
+	const NormalWeighting& weight = NormalWeighting::incident_angle);
+
 template<typename Mesh>
 decltype(auto) edge_length(
 	const typename boost::graph_traits<const Mesh>::halfedge_descriptor& he,

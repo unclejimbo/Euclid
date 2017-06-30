@@ -9,7 +9,7 @@ bool inline build_surface_mesh(
 {
 	auto nv = static_cast<CGAL::Surface_mesh<Point_3>::size_type>(vertices.size());
 	auto nf = static_cast<CGAL::Surface_mesh<Point_3>::size_type>(indices.size() / 3);
-	auto ne = static_cast<CGAL::Surface_mesh<Point_3>::size_type>(2 - nv - nf); // Euler-characteristic
+	auto ne = static_cast<CGAL::Surface_mesh<Point_3>::size_type>(nf + nv - 2); // Euler-characteristic
 	mesh.reserve(nv, ne, nf);
 
 	std::vector<Surface_mesh::Vertex_index> vindices;
@@ -17,7 +17,7 @@ bool inline build_surface_mesh(
 	for (const auto& v : vertices) {
 		vindices.push_back(mesh.add_vertex(v));
 	}
-	for (auto i = 0; i < indices.size(); ++i) {
+	for (auto i = 0; i < indices.size(); i += 3) {
 		auto v0 = vindices[indices[i + 0]];
 		auto v1 = vindices[indices[i + 1]];
 		auto v2 = vindices[indices[i + 2]];

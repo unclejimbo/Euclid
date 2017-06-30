@@ -3,7 +3,6 @@
 * Segmentation of 3D shape including mesh and point cloud *
 **********************************************************/
 #pragma once
-#include <Eigen/Dense>
 
 namespace Euclid
 {
@@ -13,13 +12,15 @@ template<typename Mesh>
 void random_walk_segmentation(
 	const Mesh& mesh,
 	std::vector<int>& seed_indices,
-	std::vector<int>& facet_class);
+	std::vector<int>& face_class);
 
 // Random walk segmentation for point cloud with normals
-template<typename FT>
+template<typename ForwardIterator, typename PPMap, typename NPMap>
 void random_walk_segmentation(
-	const std::vector<Eigen::Matrix<FT, 3, 1>>& vertices,
-	const std::vector<Eigen::Matrix<FT, 3, 1>>& normals,
+	ForwardIterator first,
+	ForwardIterator beyond,
+	PPMap point_pmap,
+	NPMap normal_pmap,
 	std::vector<int>& seed_indices,
 	std::vector<int>& point_class);
 

@@ -22,6 +22,18 @@ inline TriMeshBuilder<Polyhedron_3>::TriMeshBuilder(const std::vector<Vec3>& ver
 }
 
 template<typename Polyhedron_3>
+inline TriMeshBuilder<Polyhedron_3>::TriMeshBuilder(const std::vector<Point_3>& vertices, const std::vector<unsigned>& indices)
+	: _indices(indices)
+{
+	_vertices.reserve(vertices.size() / 3);
+	for (const auto& v : vertices) {
+		_vertices.push_back(v.x());
+		_vertices.push_back(v.y());
+		_vertices.push_back(v.z());
+	}
+}
+
+template<typename Polyhedron_3>
 inline void TriMeshBuilder<Polyhedron_3>::operator()(HDS& hds)
 {
 	CGAL::Polyhedron_incremental_builder_3<HDS> builder(hds, true);

@@ -1,10 +1,21 @@
-#include <Eigen/Dense>
 #include <vector>
 #include <algorithm>
 #include <iostream>
 
 namespace Euclid
 {
+
+template<typename FT, typename CGALVec>
+inline Eigen::Matrix<FT, 3, 1> cgal_to_eigen(const CGALVec& vec)
+{
+	return Eigen::Matrix<FT, 3, 1>(vec.x(), vec.y(), vec.z());
+}
+
+template<typename CGALVec, typename FT>
+inline CGALVec eigen_to_cgal(const Eigen::Matrix<FT, 3, 1>& vec)
+{
+	return CGALVec(vec(0), vec(1), vec(2));
+}
 
 template<typename FT, int RowSize>
 inline bool covariance_matrix(
@@ -84,24 +95,10 @@ inline FT PCA<FT, RowSize>::eigen_value(int i) const
 }
 
 template<typename FT, int RowSize>
-inline const std::vector<FT>&
-PCA<FT, RowSize>::eigen_values() const
-{
-	return _eigen_values;
-}
-
-template<typename FT, int RowSize>
 inline typename PCA<FT, RowSize>::Point
 PCA<FT, RowSize>::eigen_vector(int i) const
 {
 	return _eigen_vectors[i];
-}
-
-template<typename FT, int RowSize>
-inline const std::vector<typename PCA<FT, RowSize>::Point>&
-PCA<FT, RowSize>::eigen_vectors() const
-{
-	return _eigen_vectors;
 }
 
 } // namespace Euclid

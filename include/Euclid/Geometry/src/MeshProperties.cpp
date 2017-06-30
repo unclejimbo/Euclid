@@ -1,9 +1,52 @@
+#include <CGAL/boost/graph/iterator.h>
 #include <Eigen/Dense>
 #include <ostream>
 #include <cmath>
 
 namespace Euclid
 {
+
+template<typename Mesh, typename FaceNormalMap>
+decltype(auto) vertex_normal(
+	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+	const Mesh& mesh,
+	const FaceNormalMap& fnmap,
+	const NormalWeighting& weight)
+{
+	using Vec3 = boost::property_traits<FaceNormalMap>::value_type;
+	auto vpmap = get(boost::vertex_point, mesh);
+
+	auto normal = Vec3(0.0, 0.0, 0.0);
+	auto he = halfedge(v, mesh);
+	CGAL::Halfedge_around_target_circulator hetc(he);
+	while (*++hetc != he) {
+		auto f = face(*hetc, mesh);
+		auto fn = fnmap[f];
+
+		if (weight == NormalWeighting::constant) {
+			normal += fn;
+		}
+		else if (weight == NormalWeighting::face_area) {
+			auto area = facet_area(f, mesh);
+			normal += area * fn;
+		}
+		else { // incident_angle
+			auto he_next = opposite(next(*hetc, mesh), mesh);
+			auto t = target(*hetc, mesh);
+			auto s1 = source(*hetc, mesh);
+			auto s2 = source(he_next, mesh);
+			auto pt = vpmap[t];
+			auto ps1 = vpmap[s1];
+			auto ps2 = vpmap[s2];
+			auto vec1 = (ps1 - pt).normalized();
+			auto vec2 = (ps2 - pt).normalized();
+			auto angle = vec1.dot(vec2);
+			normal += angle * fn;
+		}
+	}
+
+	return normal.normalized();
+}
 
 template<typename Mesh>
 decltype(auto) inline edge_length(

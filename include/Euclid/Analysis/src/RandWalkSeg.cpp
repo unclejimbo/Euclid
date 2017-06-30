@@ -5,13 +5,12 @@
 #include <Euclid/Geometry/MeshProperties.h>
 #include <Eigen/SparseCore>
 #include <Eigen/SparseLU>
-#include <CGAL/Simple_cartesian.h>
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 #include <CGAL/Search_traits_3.h>
 #include <CGAL/Search_traits_adapter.h>
 #include <boost/iterator/counting_iterator.hpp>
+#include <iterator>
 #include <vector>
-#include <unordered_map>
 #include <tuple>
 #include <algorithm>
 #include <ostream>
@@ -140,11 +139,14 @@ inline void _construct_equation(
 }
 
 // Construct linear system for point cloud
-template<typename FT>
+template<typename ForwardIterator, typename Index, typename PPMap, typename NPMap, typename FT>
 inline void _construct_equation(
-	const std::vector<Eigen::Matrix<FT, 3, 1>>& points,
-	const std::vector<Eigen::Matrix<FT, 3, 1>>& normals,
+	ForwardIterator first,
+	ForwardIterator beyond,
+	PPMap point_pmap,
+	NPMap normal_pmap,
 	const std::vector<std::vector<int>>& neighbors,
+	const std::vector<Index>& indices,
 	const std::vector<int>& ids,
 	Eigen::SparseMatrix<FT>& A,
 	Eigen::SparseMatrix<FT>& B)
@@ -168,9 +170,10 @@ inline void _construct_equation(
 	auto d2_sum = 0.0;
 
 	// Compute the ingredients of the laplacian matrix
-	for (auto i = 0; i < n_points; ++i) {
-		auto pi = points[i];
-		auto ni = normals[i];
+	auto i = 0;
+	for (auto iter = first; iter != beyond; ++iter, ++i) {
+		auto pi = point_pmap[*iter];
+		auto ni = normal_pmap[*iter];
 		auto d1_sum = 0.0;
 
 		for (auto j = 0; j < n_neighbors; ++j) {
@@ -178,14 +181,14 @@ inline void _construct_equation(
 			cols.push_back(ids[i]);
 			rows.push_back(ids[neighbor]);
 
-			auto pj = points[neighbor];
-			auto nj = normals[neighbor];
-			auto eta = ((pj - pi) - (pj - pi).dot(ni) * ni).dot(nj) >= 0.0 ? 0.2 : 1.0; // convex : concave
+			auto pj = point_pmap[indices[neighbor]];
+			auto nj = normal_pmap[indices[neighbor]];
+			auto eta = ((pj - pi) - ((pj - pi) * ni) * ni) * nj >= 0.0 ? 0.2 : 1.0; // convex : concave
 
-			auto d1 = (pi - pj).squaredNorm();
+			auto d1 = (pi - pj).squared_length();
 			d1s.push_back(d1);
 			d1_sum += d1;
-			auto d2 = 0.5 * eta * (ni - nj).squaredNorm();
+			auto d2 = 0.5 * eta * (ni - nj).squared_length();
 			d2s.push_back(d2);
 			d2_sum += d2;
 		}
@@ -230,10 +233,41 @@ inline void _construct_equation(
 	B.makeCompressed();
 }
 
+// Adapt PointPropertyMap to take in integer as key type
+template<typename PPMap>
+class IPMapAdaptor
+{
+	using PointKey = typename boost::property_traits<PPMap>::key_type;
+	using Point_3 = typename boost::property_traits<PPMap>::value_type;
+
+public:
+	using value_type = Point_3;
+	using reference = const value_type&;
+	using key_type = int;
+	using category = boost::lvalue_property_map_tag;
+
+	IPMapAdaptor(PPMap ppmap, const std::vector<PointKey>& pks)
+		: _ppmap(ppmap), _pks(pks) {}
+	
+	reference operator[](key_type key) const
+	{
+		return _ppmap[_pks[key]];
+	}
+
+	friend reference get(IPMapAdaptor ipmap, key_type key)
+	{
+		return ipmap[key];
+	}
+
+private:
+	PPMap _ppmap;
+	const std::vector<PointKey>& _pks;
+};
+
 } // namespace _impl
 
 template<typename Mesh>
-inline void random_walk_segmentation(const Mesh& mesh, std::vector<int>& seed_indices, std::vector<int>& facet_class)
+inline void random_walk_segmentation(const Mesh& mesh, std::vector<int>& seed_indices, std::vector<int>& face_class)
 {
 	using VertexPointMap = boost::property_map<Mesh, boost::vertex_point_t>::type;
 	using Point_3 = boost::property_traits<VertexPointMap>::value_type;
@@ -265,9 +299,9 @@ inline void random_walk_segmentation(const Mesh& mesh, std::vector<int>& seed_in
 	}
 
 	// Solve the equation to segment
-	facet_class.resize(n + m, 0);
+	face_class.resize(n + m, 0);
 	for (auto s : seed_indices) {
-		facet_class[s] = s;
+		face_class[s] = s;
 	}
 	std::vector<FT> max_probabilities(n, static_cast<FT>(-1.0));
 	Eigen::SparseLU<SpMat> solver;
@@ -282,72 +316,79 @@ inline void random_walk_segmentation(const Mesh& mesh, std::vector<int>& seed_in
 		for (auto j = 0; j < n; ++j) {
 			if (x(j, 0) > max_probabilities[j]) {
 				max_probabilities[j] = x(j, 0);
-				facet_class[inv_ids[j + m]] = seed_indices[i];
+				face_class[inv_ids[j + m]] = seed_indices[i];
 			}
 		}
 	}
 }
 
-template<typename FT>
+template<typename ForwardIterator, typename PPMap, typename NPMap>
 inline void random_walk_segmentation(
-	const std::vector<Eigen::Matrix<FT, 3, 1>>& vertices,
-	const std::vector<Eigen::Matrix<FT, 3, 1>>& normals,
-	std::vector<int>& seed_indices, std::vector<int>& point_class)
+	ForwardIterator first,
+	ForwardIterator beyond,
+	PPMap point_pmap,
+	NPMap normal_pmap,
+	std::vector<int>& seed_indices,
+	std::vector<int>& point_class)
 {
-	using Vector3 = Eigen::Matrix<FT, 3, 1>;
-	using Matrix3x3 = Eigen::Matrix<FT, 3, 3>;
-	using SpMat = Eigen::SparseMatrix<FT>;
-	using Kernel = CGAL::Simple_cartesian<FT>;
-	using Point = Kernel::Point_3;
+	using Index = std::iterator_traits<ForwardIterator>::value_type;
+	using Point_3 = boost::property_traits<PPMap>::value_type;
+	using Vector_3 = boost::property_traits<NPMap>::value_type;
+	using Kernel = CGAL::Kernel_traits<Point_3>::Kernel;
+	using IPMap = _impl::IPMapAdaptor<PPMap>;
 	using BaseTraits = CGAL::Search_traits_3<Kernel>;
-	using IndexPointMap = boost::const_associative_property_map<std::unordered_map<int, Point>>;
-	using KdTreeTraits = CGAL::Search_traits_adapter<int, IndexPointMap, BaseTraits>;
+	using KdTreeTraits = CGAL::Search_traits_adapter<int, IPMap, BaseTraits>;
 	using KNN = CGAL::Orthogonal_k_neighbor_search<KdTreeTraits>;
 	using KdTree = typename KNN::Tree;
 	using Splitter = KdTree::Splitter;
 	using Distance = KNN::Distance;
+	using FT = Kernel::FT;
+	using SpMat = Eigen::SparseMatrix<FT>;
 	const int k = 6; // Use 6 neighbors according to Euler formula
 
-	// Construct the property map of point index and point data
-	std::unordered_map<int, Point> points;
-	points.reserve(vertices.size());
-	for (auto i = 0; i < vertices.size(); ++i) {
-		auto p = vertices[i];
-		points.emplace(i, Point(p(0, 0), p(1, 0), p(2, 0)));
+	// Construct the IPMap
+	std::vector<Index> indices;
+	int n = 0;
+	for (auto iter = first; iter != beyond; ++iter) {
+		indices.push_back(*iter);
+		++n;
 	}
-	IndexPointMap ppmap(points);
+	IPMap ipmap(point_pmap, indices);
 
 	// Construct the k-d tree
 	KdTree tree(
 		boost::counting_iterator<int>(0),
-		boost::counting_iterator<int>(static_cast<int>(points.size())),
+		boost::counting_iterator<int>(n),
 		Splitter(),
-		KdTreeTraits(ppmap)
+		KdTreeTraits(ipmap)
 	);
-	Distance dist(ppmap);
+	Distance dist(ipmap);
 
 	// Query neighbors for all points and store the neighbors' indices
-	std::vector<std::vector<int>> neighbors(vertices.size());
-	for (auto i = 0; i < vertices.size(); ++i) {
-		auto p = vertices[i];
-		Point query(p(0, 0), p(1, 0), p(2, 0));
-		KNN knn(tree, query, k + 1, 0, true, dist);
-		neighbors[i].reserve(k);
+	std::vector<std::vector<int>> neighbors;
+	for (auto iter = first; iter < beyond; ++iter) {
+		std::vector<int> neighbors_i;
+		neighbors_i.reserve(k);
+
+		auto p = point_pmap[*iter];
+		KNN knn(tree, p, k + 1, 0.00001, true, dist);
 
 		auto it = knn.begin();
 		++it; // The first will always return the identical point
 		for (it; it != knn.end(); ++it) {
-			neighbors[i].push_back(it->first);
+			neighbors_i.push_back(it->first);
 		}
+
+		neighbors.push_back(neighbors_i);
 	}
 
 	// Construct the linear equation
 	auto m = static_cast<int>(seed_indices.size()); // Number of seeded
-	auto n = static_cast<int>(vertices.size()) - m; // Number of unseeded
+	n -= m; // Number of unseeded
 	std::sort(seed_indices.begin(), seed_indices.end());
 	SpMat A(n, n);
 	SpMat B(n, m);
-	std::vector<int> ids(m + n, -1); // ids[FacetID] -> MatrixID
+	std::vector<int> ids(m + n, -1); // ids[PointID] -> MatrixID
 	int inc = 0;
 	while (inc < seed_indices.size()) {
 		ids[seed_indices[inc]] = inc;
@@ -358,7 +399,8 @@ inline void random_walk_segmentation(
 			id = inc++;
 		}
 	}
-	_impl::_construct_equation(vertices, normals, neighbors, ids, A, B);
+	_impl::_construct_equation(first, beyond, point_pmap, normal_pmap,
+		neighbors, indices, ids, A, B);
 
 	std::vector<int> inv_ids(m + n);
 	for (auto i = 0; i < m + n; ++i) {

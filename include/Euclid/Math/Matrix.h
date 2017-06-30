@@ -8,6 +8,12 @@
 namespace Euclid
 {
 
+template<typename FT, typename CGALVec>
+inline Eigen::Matrix<FT, 3, 1> cgal_to_eigen(const CGALVec& vec);
+
+template<typename CGALVec, typename FT>
+inline CGALVec eigen_to_cgal(const Eigen::Matrix<FT, 3, 1>& vec);
+
 template<typename FT, int RowSize>
 inline bool covariance_matrix(
 	const std::vector<Eigen::Matrix<FT, RowSize, 1>>& points,
@@ -24,9 +30,7 @@ public:
 	~PCA();
 
 	FT eigen_value(int i) const;
-	const std::vector<FT>& eigen_values() const;
 	Point eigen_vector(int i) const;
-	const std::vector<Point>& eigen_vectors() const;
 
 private:
 	std::vector<FT> _eigen_values;
