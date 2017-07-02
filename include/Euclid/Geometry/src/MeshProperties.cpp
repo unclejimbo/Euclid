@@ -5,7 +5,7 @@ namespace Euclid
 {
 
 template<typename Mesh, typename FaceNormalMap>
-decltype(auto) vertex_normal(
+typename boost::property_traits<FaceNormalMap>::value_type vertex_normal(
 	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
 	const Mesh& mesh,
 	const FaceNormalMap& fnmap,
@@ -15,23 +15,21 @@ decltype(auto) vertex_normal(
 	auto vpmap = get(boost::vertex_point, mesh);
 
 	auto normal = Vec3(0.0, 0.0, 0.0);
-	auto he = halfedge(v, mesh);
-	CGAL::Halfedge_around_target_circulator hetc(he);
-	while (*++hetc != he) {
-		auto f = face(*hetc, mesh);
+	for (auto he : CGAL::halfedges_around_target(v, mesh)) {
+		auto f = face(he, mesh);
 		auto fn = fnmap[f];
 
 		if (weight == NormalWeighting::constant) {
 			normal += fn;
 		}
 		else if (weight == NormalWeighting::face_area) {
-			auto area = facet_area(f, mesh);
+			auto area = face_area(f, mesh);
 			normal += area * fn;
 		}
 		else { // incident_angle
-			auto he_next = opposite(next(*hetc, mesh), mesh);
-			auto t = target(*hetc, mesh);
-			auto s1 = source(*hetc, mesh);
+			auto he_next = opposite(next(he, mesh), mesh);
+			auto t = target(he, mesh);
+			auto s1 = source(he, mesh);
 			auto s2 = source(he_next, mesh);
 			auto pt = vpmap[t];
 			auto ps1 = vpmap[s1];
@@ -49,13 +47,15 @@ decltype(auto) vertex_normal(
 }
 
 template<typename Mesh>
-decltype(auto) inline edge_length(
+inline typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+edge_length(
 	const typename boost::graph_traits<const Mesh>::halfedge_descriptor& he,
 	const Mesh& mesh)
 {
 	auto v1 = source(he, mesh);
 	auto v2 = target(he, mesh);
-	auto vpmap = get(CGAL::vertex_point, mesh);
+	auto vpmap = get(boost::vertex_point, mesh);
 	auto p1 = vpmap[v1];
 	auto p2 = vpmap[v2];
 	auto e = p1 - p2;
@@ -63,7 +63,9 @@ decltype(auto) inline edge_length(
 }
 
 template<typename Mesh>
-decltype(auto) inline edge_length(
+inline typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+edge_length(
 	const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
 	const Mesh& mesh)
 {
@@ -72,7 +74,9 @@ decltype(auto) inline edge_length(
 }
 
 template<typename Mesh>
-decltype(auto) inline face_normal(
+inline typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::Vector_3
+face_normal(
 	const typename boost::graph_traits<const Mesh>::face_descriptor& f,
 	const Mesh& mesh)
 {
@@ -105,21 +109,23 @@ decltype(auto) inline face_normal(
 }
 
 template<typename Mesh>
-decltype(auto) inline face_area(
-	const typename boost::graph_traits<const Mesh>::facet_descriptor& f,
+inline typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+face_area(
+	const typename boost::graph_traits<const Mesh>::face_descriptor& f,
 	const Mesh& mesh)
 {
 	auto he = halfedge(f, mesh);
 	auto v1 = source(he, mesh);
 	auto v2 = target(he, mesh);
 	auto v3 = target(next(he, mesh), mesh);
-	auto vpmap = get(CGAL::vertex_point, mesh);
+	auto vpmap = get(boost::vertex_point, mesh);
 	auto p1 = vpmap[v1];
 	auto p2 = vpmap[v2];
 	auto p3 = vpmap[v3];
 	auto e1 = p1 - p2;
 	auto e2 = p3 - p2;
-	return CGAL::cross_product(e1, e2) * 0.5;
+	return std::sqrt(CGAL::cross_product(e1, e2).squared_length()) * 0.5;
 }
 
 } // namespace Euclid

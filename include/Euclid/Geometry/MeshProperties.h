@@ -15,29 +15,38 @@ enum class NormalWeighting
 };
 
 template<typename Mesh, typename FaceNormalMap>
-decltype(auto) vertex_normal(
+typename boost::property_traits<FaceNormalMap>::value_type
+vertex_normal(
 	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
 	const Mesh& mesh,
 	const FaceNormalMap& fnmap,
 	const NormalWeighting& weight = NormalWeighting::incident_angle);
 
 template<typename Mesh>
-decltype(auto) edge_length(
+typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+edge_length(
 	const typename boost::graph_traits<const Mesh>::halfedge_descriptor& he,
 	const Mesh& mesh);
 
 template<typename Mesh>
-decltype(auto) edge_length(
+typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+edge_length(
 	const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
 	const Mesh& mesh);
 
 template<typename Mesh>
-decltype(auto) face_normal(
+typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::Vector_3
+face_normal(
 	const typename boost::graph_traits<const Mesh>::face_descriptor& f,
 	const Mesh& mesh);
 
 template<typename Mesh>
-decltype(auto) face_area(
+typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+face_area(
 	const typename boost::graph_traits<const Mesh>::face_descriptor& f,
 	const Mesh& mesh);
 
