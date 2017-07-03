@@ -1,4 +1,5 @@
 #include <Euclid/Math/Matrix.h>
+#include <Euclid/Math/KernelGeometry.h>
 #include <tuple>
 #include <cmath>
 

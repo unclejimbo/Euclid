@@ -1,21 +1,10 @@
 #include <vector>
+#include <utility>
 #include <algorithm>
-#include <iostream>
+#include <ostream>
 
 namespace Euclid
 {
-
-template<typename FT, typename CGALVec>
-inline Eigen::Matrix<FT, 3, 1> cgal_to_eigen(const CGALVec& vec)
-{
-	return Eigen::Matrix<FT, 3, 1>(vec.x(), vec.y(), vec.z());
-}
-
-template<typename CGALVec, typename FT>
-inline CGALVec eigen_to_cgal(const Eigen::Matrix<FT, 3, 1>& vec)
-{
-	return CGALVec(vec(0), vec(1), vec(2));
-}
 
 template<typename FT, int RowSize>
 inline bool covariance_matrix(
