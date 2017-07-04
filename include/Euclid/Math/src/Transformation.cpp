@@ -38,9 +38,9 @@ bool transform_between_2_coord_systems(
 	Transform tt(x2.x(), x2.y(), x2.z(),
 		y2.x(), y2.y(), y2.z(),
 		z2.x(), z2.y(), z2.z());
-	transformation = tt * tf.inverse();
-	auto translation = Transform(CGAL::Translation(), to_origin - transformation(from_origin));
-	transformation = translation * transformation;
+
+	transformation = Transform(CGAL::Translation(), from_origin - to_origin);
+	transformation = tt * tf.inverse() * transformation;
 
 	return true;
 }
