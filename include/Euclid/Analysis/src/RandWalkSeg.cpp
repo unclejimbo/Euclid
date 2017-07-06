@@ -305,8 +305,8 @@ inline void random_walk_segmentation(const Mesh& mesh, std::vector<int>& seed_in
 		return;
 	}
 	for (auto i = 0; i < m; ++i) {
-		Eigen::Matrix<float, Eigen::Dynamic, 1> b = B.col(i);
-		Eigen::Matrix<float, Eigen::Dynamic, 1> x = solver.solve(b);
+		Eigen::Matrix<FT, Eigen::Dynamic, 1> b = B.col(i);
+		Eigen::Matrix<FT, Eigen::Dynamic, 1> x = solver.solve(b);
 		for (auto j = 0; j < n; ++j) {
 			if (x(j, 0) > max_probabilities[j]) {
 				max_probabilities[j] = x(j, 0);
