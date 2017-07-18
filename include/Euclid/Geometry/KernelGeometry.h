@@ -24,6 +24,17 @@ area(const CGAL::Point_3<Kernel>& p1,
 	const CGAL::Point_3<Kernel>& p2,
 	const CGAL::Point_3<Kernel>& p3);
 
+template<typename Kernel>
+typename Kernel::FT
+cosine(const CGAL::Vector_3<Kernel>& v1,
+	const CGAL::Vector_3<Kernel>& v2);
+
+template<typename Kernel>
+typename Kernel::FT
+cosine(const CGAL::Point_3<Kernel>& p1,
+	const CGAL::Point_3<Kernel>& p2,
+	const CGAL::Point_3<Kernel>& p3);
+
 template<typename FT, typename CGALVec>
 Eigen::Matrix<FT, 3, 1> cgal_to_eigen(const CGALVec& vec);
 
