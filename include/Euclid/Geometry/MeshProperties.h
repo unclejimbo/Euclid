@@ -4,6 +4,7 @@
 * geometric and differential properties of a mesh *
 **************************************************/
 #pragma once
+#include <Eigen/Dense>
 
 namespace Euclid
 {
@@ -65,6 +66,26 @@ typename CGAL::Kernel_traits<typename boost::property_traits<
 face_area(
 	const typename boost::graph_traits<const Mesh>::face_descriptor& f,
 	const Mesh& mesh);
+
+template<typename Mesh>
+CGAL::Vector_3<typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel>
+laplace_beltrami(
+	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+	const Mesh& mesh);
+
+// LaplaceMatrix = MassMatrix * CotangentMatrix
+template<typename Mesh>
+Eigen::Matrix<typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT,
+	Eigen::Dynamic, Eigen::Dynamic>
+cotangent_matrix(const Mesh& mesh);
+
+template<typename Mesh>
+Eigen::Matrix<typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT,
+	Eigen::Dynamic, Eigen::Dynamic>
+mass_matrix(const Mesh& mesh, const VertexArea& method = VertexArea::mixed);
 
 } // namespace Euclid
 

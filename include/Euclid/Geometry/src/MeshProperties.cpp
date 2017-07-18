@@ -59,6 +59,7 @@ vertex_area(
 	using FT = typename CGAL::Kernel_traits<typename boost::property_traits<
 		typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT;
 	auto vpmap = get(boost::vertex_point, mesh);
+	const FT one_third = 1.0 / 3.0;
 	FT area = 0.0;
 
 	if (method == VertexArea::barycentric) {
@@ -68,7 +69,7 @@ vertex_area(
 			auto p3 = vpmap[target(next(he, mesh), mesh)];
 			auto mid1 = CGAL::midpoint(p2, p1);
 			auto mid2 = CGAL::midpoint(p2, p3);
-			auto center = CGAL::barycenter(p1, p2, p3);
+			auto center = CGAL::barycenter(p1, one_third, p2, one_third, p3);
 			area += Euclid::area(mid1, p2, center) + Euclid::area(mid2, center, p2);
 		}
 	}
@@ -169,6 +170,92 @@ face_area(
 	auto p2 = vpmap[target(he, mesh)];
 	auto p3 = vpmap[target(next(he, mesh), mesh)];
 	return area(p1, p2, p3);
+}
+
+template<typename Mesh>
+CGAL::Vector_3<typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel>
+laplace_beltrami(
+	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+	const Mesh& mesh)
+{
+	using Kernel = typename CGAL::Kernel_traits<typename boost::property_traits<
+		typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel;
+	using T = typename Kernel::FT;
+	using Vector_3 = CGAL::Vector_3<Kernel>;
+	auto vpmap = get(boost::vertex_point, mesh);
+
+	T value = 0.0;
+	Vector_3 flow(0.0, 0.0, 0.0);
+	for (const auto& he : halfedges_around_target(v, mesh)) {
+		auto vj = source(he, mesh);
+		auto va = target(next(he, mesh), mesh);
+		auto vb = target(next(opposite(he, mesh), mesh), mesh);
+		auto cosa = cosine(vpmap[v], vpmap[va], vpmap[vj]);
+		auto cosb = cosine(vpmap[v], vpmap[vb], vpmap[vj]);
+		auto cota = cosa / std::sqrt(1.0 - cosa * cosa);
+		auto cotb = cosb / std::sqrt(1.0 - cosb * cosb);
+		value += (cota + cotb) * 0.5;
+		flow += vpmap[vj] - vpmap[v];
+	}
+	return value * flow / vertex_area(v, mesh);
+}
+
+template<typename Mesh>
+inline Eigen::Matrix<typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT,
+	Eigen::Dynamic, Eigen::Dynamic>
+cotangent_matrix(const Mesh& mesh)
+{
+	using T = typename CGAL::Kernel_traits<typename boost::property_traits<
+		typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT;
+	auto vimap = get(boost::vertex_index, mesh);
+	auto vpmap = get(boost::vertex_point, mesh);
+	const auto nv = num_vertices(mesh);
+	Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> cotangent =
+		Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>::Zero(nv, nv);
+
+	for (const auto& vi : vertices(mesh)) {
+		int i = vimap[vi];
+		T row_sum = 0.0;
+		for (const auto& he : CGAL::halfedges_around_target(vi, mesh)) {
+			auto vj = source(he, mesh);
+			auto va = target(next(he, mesh), mesh);
+			auto vb = target(next(opposite(he, mesh), mesh), mesh);
+			auto cosa = cosine(vpmap[vi], vpmap[va], vpmap[vj]);
+			auto cosb = cosine(vpmap[vi], vpmap[vb], vpmap[vj]);
+			auto cota = cosa / std::sqrt(1.0 - cosa * cosa);
+			auto cotb = cosb / std::sqrt(1.0 - cosb * cosb);
+			int j = vimap[vj];
+			T value = (cota + cotb) * 0.5;
+			cotangent(i, j) = value;
+			row_sum += value;
+		}
+		cotangent(i, i) = -row_sum;
+	}
+
+	return cotangent;
+}
+
+template<typename Mesh>
+inline Eigen::Matrix<typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT,
+	Eigen::Dynamic, Eigen::Dynamic>
+mass_matrix(const Mesh& mesh, const VertexArea& method)
+{
+	using T = typename CGAL::Kernel_traits<typename boost::property_traits<
+		typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT;
+	auto vimap = get(boost::vertex_index, mesh);
+	const auto nv = num_vertices(mesh);
+	Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> mass =
+		Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>::Zero(nv, nv);
+
+	for (const auto& v : vertices(mesh)) {
+		auto i = vimap[v];
+		mass(i, i) = vertex_area(v, mesh, method);
+	}
+
+	return mass;
 }
 
 } // namespace Euclid
