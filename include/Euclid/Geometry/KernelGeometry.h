@@ -18,6 +18,12 @@ void normalize(CGAL::Vector_3<Kernel>& vec);
 template<typename Kernel>
 CGAL::Vector_3<Kernel> normalized(const CGAL::Vector_3<Kernel>& vec);
 
+template<typename Kernel>
+typename Kernel::FT 
+area(const CGAL::Point_3<Kernel>& p1,
+	const CGAL::Point_3<Kernel>& p2,
+	const CGAL::Point_3<Kernel>& p3);
+
 template<typename FT, typename CGALVec>
 Eigen::Matrix<FT, 3, 1> cgal_to_eigen(const CGALVec& vec);
 

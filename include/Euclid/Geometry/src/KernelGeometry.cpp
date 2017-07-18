@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iostream>
 
 namespace Euclid
 {
@@ -19,6 +20,21 @@ template<typename Kernel>
 inline CGAL::Vector_3<Kernel> normalized(const CGAL::Vector_3<Kernel>& vec)
 {
 	return vec / Euclid::length(vec);
+}
+
+template<typename Kernel>
+inline typename Kernel::FT
+area(const CGAL::Point_3<Kernel>& p1,
+	const CGAL::Point_3<Kernel>& p2,
+	const CGAL::Point_3<Kernel>& p3)
+{
+	if (CGAL::collinear(p1, p2, p3)) {
+		std::cerr << "Input points are collinear, area is zero" << std::endl;
+		return 0.0;
+	}
+	else {
+		return std::sqrt(CGAL::cross_product(p3 - p2, p1 - p2).squared_length()) * 0.5;
+	}
 }
 
 template<typename FT, typename CGALVec>
