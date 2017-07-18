@@ -1,4 +1,4 @@
-#include <Euclid/Math/KernelGeometry.h>
+#include <Euclid/Geometry/KernelGeometry.h>
 #include <ostream>
 
 namespace Euclid

@@ -4,8 +4,8 @@
 //     PAMI'99
 #define _USE_MATH_DEFINES
 #include <Euclid/Geometry/MeshProperties.h>
-#include <Euclid/Math/KernelGeometry.h>
-#include <Euclid/Math/Transformation.h>
+#include <Euclid/Geometry/KernelGeometry.h>
+#include <Euclid/Geometry/Transformation.h>
 #include <tuple>
 #include <cmath>
 
