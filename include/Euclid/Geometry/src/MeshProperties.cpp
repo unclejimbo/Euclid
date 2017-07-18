@@ -5,11 +5,12 @@ namespace Euclid
 {
 
 template<typename Mesh, typename FaceNormalMap>
-typename boost::property_traits<FaceNormalMap>::value_type vertex_normal(
+inline typename boost::property_traits<FaceNormalMap>::value_type
+vertex_normal(
 	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
 	const Mesh& mesh,
 	const FaceNormalMap& fnmap,
-	const NormalWeighting& weight)
+	const VertexNormal& weight)
 {
 	using Vec3 = boost::property_traits<FaceNormalMap>::value_type;
 	auto vpmap = get(boost::vertex_point, mesh);
@@ -19,10 +20,10 @@ typename boost::property_traits<FaceNormalMap>::value_type vertex_normal(
 		auto f = face(he, mesh);
 		auto fn = fnmap[f];
 
-		if (weight == NormalWeighting::constant) {
+		if (weight == VertexNormal::constant) {
 			normal += fn;
 		}
-		else if (weight == NormalWeighting::face_area) {
+		else if (weight == VertexNormal::face_area) {
 			auto area = face_area(f, mesh);
 			normal += area * fn;
 		}

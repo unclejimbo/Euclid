@@ -7,7 +7,7 @@
 namespace Euclid
 {
 
-enum class NormalWeighting
+enum class VertexNormal
 {
 	constant,
 	face_area,
@@ -20,7 +20,7 @@ vertex_normal(
 	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
 	const Mesh& mesh,
 	const FaceNormalMap& fnmap,
-	const NormalWeighting& weight = NormalWeighting::incident_angle);
+	const VertexNormal& weight = VertexNormal::incident_angle);
 
 template<typename Mesh>
 typename CGAL::Kernel_traits<typename boost::property_traits<
