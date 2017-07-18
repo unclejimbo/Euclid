@@ -1,4 +1,3 @@
-#include <Euclid/Geometry/PrimitiveGenerator>
 #include <CGAL/Subdivision_method_3.h>
 #include <Eigen/Dense>
 #include <algorithm>
