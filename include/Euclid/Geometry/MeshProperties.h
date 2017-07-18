@@ -1,7 +1,8 @@
-/******************************************************************
-* Package Overview:                                               *
-* This package contains functions to compute properties of a mesh *
-******************************************************************/
+/**************************************************
+* Package Overview:                               *
+* This package contains functions to compute      *
+* geometric and differential properties of a mesh *
+**************************************************/
 #pragma once
 
 namespace Euclid
