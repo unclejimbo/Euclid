@@ -22,6 +22,21 @@ vertex_normal(
 	const FaceNormalMap& fnmap,
 	const VertexNormal& weight = VertexNormal::incident_angle);
 
+enum class VertexArea
+{
+	barycentric,
+	voronoi,
+	mixed
+};
+
+template<typename Mesh>
+typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+vertex_area(
+	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+	const Mesh& mesh,
+	const VertexArea& method = VertexArea::mixed);
+
 template<typename Mesh>
 typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT

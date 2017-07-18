@@ -1,3 +1,4 @@
+#include <Euclid/Geometry/KernelGeometry.h>
 #include <ostream>
 #include <cmath>
 
@@ -45,6 +46,62 @@ vertex_normal(
 	}
 
 	return normal / std::sqrt(normal.squared_length());
+}
+
+template<typename Mesh>
+typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+vertex_area(
+	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+	const Mesh& mesh,
+	const VertexArea& method)
+{
+	using FT = typename CGAL::Kernel_traits<typename boost::property_traits<
+		typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT;
+	auto vpmap = get(boost::vertex_point, mesh);
+	FT area = 0.0;
+
+	if (method == VertexArea::barycentric) {
+		for (auto he : CGAL::halfedges_around_target(v, mesh)) {
+			auto p1 = vpmap[source(he, mesh)];
+			auto p2 = vpmap[target(he, mesh)];
+			auto p3 = vpmap[target(next(he, mesh), mesh)];
+			auto mid1 = CGAL::midpoint(p2, p1);
+			auto mid2 = CGAL::midpoint(p2, p3);
+			auto center = CGAL::barycenter(p1, p2, p3);
+			area += Euclid::area(mid1, p2, center) + Euclid::area(mid2, center, p2);
+		}
+	}
+	else if (method == VertexArea::voronoi) {
+		for (auto he : CGAL::halfedges_around_target(v, mesh)) {
+			auto p1 = vpmap[source(he, mesh)];
+			auto p2 = vpmap[target(he, mesh)];
+			auto p3 = vpmap[target(next(he, mesh), mesh)];
+			auto mid1 = CGAL::midpoint(p2, p1);
+			auto mid2 = CGAL::midpoint(p2, p3);
+			auto center = CGAL::circumcenter(p1, p2, p3);
+			area += Euclid::area(mid1, p2, center) + Euclid::area(mid2, center, p2);
+		}
+	}
+	else { // mixed
+		for (auto he : CGAL::halfedges_around_target(v, mesh)) {
+			auto p1 = vpmap[source(he, mesh)];
+			auto p2 = vpmap[target(he, mesh)];
+			auto p3 = vpmap[target(next(he, mesh), mesh)];
+			auto mid1 = CGAL::midpoint(p2, p1);
+			auto mid2 = CGAL::midpoint(p2, p3);
+			if (CGAL::angle(p1, p2, p3) == CGAL::ACUTE) {
+				auto center = CGAL::circumcenter(p1, p2, p3);
+				area += Euclid::area(mid1, p2, center) + Euclid::area(mid2, center, p2);
+			}
+			else {
+				auto center = CGAL::midpoint(p1, p3);
+				area += Euclid::area(mid1, p2, center) + Euclid::area(mid2, center, p2);
+			}
+		}
+	}
+
+	return area;
 }
 
 template<typename Mesh>
