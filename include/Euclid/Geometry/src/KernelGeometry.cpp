@@ -42,7 +42,15 @@ typename Kernel::FT
 cosine(const CGAL::Vector_3<Kernel>& v1,
 	const CGAL::Vector_3<Kernel>& v2)
 {
-	return v1 * v2 / (length(v1) * length(v2));
+	auto cos = v1 * v2 / (length(v1) * length(v2));
+	// If floating point precision error happens
+	if (cos > static_cast<typename Kernel::FT>(1.0)) {
+		cos = static_cast<typename Kernel::FT>(1.0);
+	}
+	if (cos < static_cast<typename Kernel::FT>(-1.0)) {
+		cos = static_cast<typename Kernel::FT>(-1.0);
+	}
+	return cos;
 }
 
 template<typename Kernel>
