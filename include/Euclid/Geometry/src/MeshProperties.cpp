@@ -1,5 +1,6 @@
 #include <Euclid/Geometry/KernelGeometry.h>
 #include <ostream>
+#define _USE_MATH_DEFINES
 #include <cmath>
 
 namespace Euclid
@@ -91,12 +92,16 @@ vertex_area(
 			auto p3 = vpmap[target(next(he, mesh), mesh)];
 			auto mid1 = CGAL::midpoint(p2, p1);
 			auto mid2 = CGAL::midpoint(p2, p3);
-			if (CGAL::angle(p1, p2, p3) == CGAL::ACUTE) {
-				auto center = CGAL::circumcenter(p1, p2, p3);
+			if (CGAL::angle(p1, p2, p3) == CGAL::OBTUSE) {
+				auto center = CGAL::midpoint(p1, p3);
 				area += Euclid::area(mid1, p2, center) + Euclid::area(mid2, center, p2);
 			}
-			else {
-				auto center = CGAL::midpoint(p1, p3);
+			else if (CGAL::angle(p2, p3, p1) == CGAL::OBTUSE ||
+				CGAL::angle(p3, p1, p2) == CGAL::OBTUSE) {
+				area += Euclid::area(mid1, p2, mid2);
+			}
+			else { // triangle is acute or right
+				auto center = CGAL::circumcenter(p1, p2, p3);
 				area += Euclid::area(mid1, p2, center) + Euclid::area(mid2, center, p2);
 			}
 		}
@@ -185,7 +190,6 @@ laplace_beltrami(
 	using Vector_3 = CGAL::Vector_3<Kernel>;
 	auto vpmap = get(boost::vertex_point, mesh);
 
-	T value = 0.0;
 	Vector_3 flow(0.0, 0.0, 0.0);
 	for (const auto& he : halfedges_around_target(v, mesh)) {
 		auto vj = source(he, mesh);
@@ -195,10 +199,9 @@ laplace_beltrami(
 		auto cosb = cosine(vpmap[v], vpmap[vb], vpmap[vj]);
 		auto cota = cosa / std::sqrt(1.0 - cosa * cosa);
 		auto cotb = cosb / std::sqrt(1.0 - cosb * cosb);
-		value += (cota + cotb) * 0.5;
-		flow += vpmap[vj] - vpmap[v];
+		flow += (vpmap[vj] - vpmap[v]) * (cota + cotb);
 	}
-	return value * flow / vertex_area(v, mesh);
+	return flow / (vertex_area(v, mesh) * 2.0);
 }
 
 template<typename Mesh>
@@ -258,4 +261,37 @@ mass_matrix(const Mesh& mesh, const VertexArea& method)
 	return mass;
 }
 
+template<typename Mesh>
+typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+gaussian_curvature(
+	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+	const Mesh& mesh)
+{
+	using T = typename CGAL::Kernel_traits<typename boost::property_traits<
+		typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT;
+	auto vpmap = get(boost::vertex_point, mesh);
+
+	T angle_defect = 2.0 * M_PI;
+	for (const auto& he : halfedges_around_target(v, mesh)) {
+		auto vp = source(he, mesh);
+		auto vq = target(next(he, mesh), mesh);
+		angle_defect -= acos(cosine(vpmap[vp], vpmap[v], vpmap[vq]));
+	}
+	return angle_defect / vertex_area(v, mesh);
+}
+
+template<typename Mesh>
+typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+mean_curvature(
+	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+	const Mesh& mesh)
+{
+	return 0.5 * length(laplace_beltrami(v, mesh));
+}
+
 } // namespace Euclid
+
+
+#undef _USE_MATH_DEFINES

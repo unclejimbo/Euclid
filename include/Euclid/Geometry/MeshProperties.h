@@ -87,6 +87,20 @@ Eigen::Matrix<typename CGAL::Kernel_traits<typename boost::property_traits<
 	Eigen::Dynamic, Eigen::Dynamic>
 mass_matrix(const Mesh& mesh, const VertexArea& method = VertexArea::mixed);
 
+template<typename Mesh>
+typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+gaussian_curvature(
+	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+	const Mesh& mesh);
+
+template<typename Mesh>
+typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+mean_curvature(
+	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+	const Mesh& mesh);
+
 } // namespace Euclid
 
 #include "src/MeshProperties.cpp"
