@@ -74,7 +74,7 @@ laplace_beltrami(
 	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
 	const Mesh& mesh);
 
-// LaplaceMatrix = MassMatrix * CotangentMatrix
+// LaplaceMatrix = MassMatrix^-1 * CotangentMatrix
 template<typename Mesh>
 Eigen::Matrix<typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT,
