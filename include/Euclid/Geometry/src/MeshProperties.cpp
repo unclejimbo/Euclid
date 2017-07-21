@@ -62,7 +62,6 @@ vertex_area(
 	auto vpmap = get(boost::vertex_point, mesh);
 	const FT one_third = 1.0 / 3.0;
 	FT area = 0.0;
-
 	if (method == VertexArea::barycentric) {
 		for (auto he : CGAL::halfedges_around_target(v, mesh)) {
 			auto p1 = vpmap[source(he, mesh)];
@@ -93,12 +92,10 @@ vertex_area(
 			auto mid1 = CGAL::midpoint(p2, p1);
 			auto mid2 = CGAL::midpoint(p2, p3);
 			if (CGAL::angle(p1, p2, p3) == CGAL::OBTUSE) {
-				auto center = CGAL::midpoint(p1, p3);
-				area += Euclid::area(mid1, p2, center) + Euclid::area(mid2, center, p2);
-			}
+				area += Euclid::area(p1, p2, p3) * 0.5;
 			else if (CGAL::angle(p2, p3, p1) == CGAL::OBTUSE ||
 				CGAL::angle(p3, p1, p2) == CGAL::OBTUSE) {
-				area += Euclid::area(mid1, p2, mid2);
+				area += Euclid::area(p1, p2, p3) * 0.5;
 			}
 			else { // triangle is acute or right
 				auto center = CGAL::circumcenter(p1, p2, p3);
@@ -106,7 +103,6 @@ vertex_area(
 			}
 		}
 	}
-
 	return area;
 }
 
