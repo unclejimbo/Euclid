@@ -4,7 +4,7 @@
 * geometric and differential properties of a mesh *
 **************************************************/
 #pragma once
-#include <Eigen/Dense>
+#include <Eigen/SparseCore>
 
 namespace Euclid
 {
@@ -55,6 +55,13 @@ edge_length(
 
 template<typename Mesh>
 typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+squared_edge_length(
+	const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
+	const Mesh& mesh);
+
+template<typename Mesh>
+typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::Vector_3
 face_normal(
 	const typename boost::graph_traits<const Mesh>::face_descriptor& f,
@@ -76,15 +83,13 @@ laplace_beltrami(
 
 // LaplaceMatrix = MassMatrix^-1 * CotangentMatrix
 template<typename Mesh>
-Eigen::Matrix<typename CGAL::Kernel_traits<typename boost::property_traits<
-	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT,
-	Eigen::Dynamic, Eigen::Dynamic>
+Eigen::SparseMatrix<typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT>
 cotangent_matrix(const Mesh& mesh);
 
 template<typename Mesh>
-Eigen::Matrix<typename CGAL::Kernel_traits<typename boost::property_traits<
-	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT,
-	Eigen::Dynamic, Eigen::Dynamic>
+Eigen::SparseMatrix<typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT>
 mass_matrix(const Mesh& mesh, const VertexArea& method = VertexArea::mixed);
 
 template<typename Mesh>

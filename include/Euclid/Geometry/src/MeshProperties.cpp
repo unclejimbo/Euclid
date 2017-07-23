@@ -52,7 +52,7 @@ vertex_normal(
 template<typename Mesh>
 typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
-vertex_area(
+	vertex_area(
 	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
 	const Mesh& mesh,
 	const VertexArea& method)
@@ -93,6 +93,7 @@ vertex_area(
 			auto mid2 = CGAL::midpoint(p2, p3);
 			if (CGAL::angle(p1, p2, p3) == CGAL::OBTUSE) {
 				area += Euclid::area(p1, p2, p3) * 0.5;
+			}
 			else if (CGAL::angle(p2, p3, p1) == CGAL::OBTUSE ||
 				CGAL::angle(p3, p1, p2) == CGAL::OBTUSE) {
 				area += Euclid::area(p1, p2, p3) * 0.5;
@@ -109,7 +110,7 @@ vertex_area(
 template<typename Mesh>
 inline typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
-edge_length(
+	edge_length(
 	const typename boost::graph_traits<const Mesh>::halfedge_descriptor& he,
 	const Mesh& mesh)
 {
@@ -123,12 +124,37 @@ edge_length(
 template<typename Mesh>
 inline typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
-edge_length(
+	edge_length(
 	const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
 	const Mesh& mesh)
 {
 	auto he = halfedge(e, mesh);
 	return edge_length(he, mesh);
+}
+
+template<typename Mesh>
+typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+squared_edge_length(
+	const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
+	const Mesh& mesh)
+{
+	auto vpmap = get(boost::vertex_point, mesh);
+	auto p1 = vpmap[source(he, mesh)];
+	auto p2 = vpmap[target(he, mesh)];
+	auto e = p1 - p2;
+	return e.squared_length();
+}
+
+template<typename Mesh>
+typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+squared_edge_length(
+	const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
+	const Mesh& mesh)
+{
+	auto he = halfedge(e, mesh);
+	return squared_edge_lengeth(he, mesh);
 }
 
 template<typename Mesh>
@@ -201,9 +227,8 @@ laplace_beltrami(
 }
 
 template<typename Mesh>
-inline Eigen::Matrix<typename CGAL::Kernel_traits<typename boost::property_traits<
-	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT,
-	Eigen::Dynamic, Eigen::Dynamic>
+inline Eigen::SparseMatrix<typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT>
 cotangent_matrix(const Mesh& mesh)
 {
 	using T = typename CGAL::Kernel_traits<typename boost::property_traits<
@@ -211,8 +236,8 @@ cotangent_matrix(const Mesh& mesh)
 	auto vimap = get(boost::vertex_index, mesh);
 	auto vpmap = get(boost::vertex_point, mesh);
 	const auto nv = num_vertices(mesh);
-	Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> cotangent =
-		Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>::Zero(nv, nv);
+	Eigen::SparseMatrix<T> cotangent;
+	std::vector<Eigen::Triplet<T>> values;
 
 	for (const auto& vi : vertices(mesh)) {
 		int i = vimap[vi];
@@ -227,12 +252,14 @@ cotangent_matrix(const Mesh& mesh)
 			auto cotb = cosb / std::sqrt(1.0 - cosb * cosb);
 			int j = vimap[vj];
 			T value = (cota + cotb) * 0.5;
-			cotangent(i, j) = value;
+			values.emplace_back(i, j, value);
 			row_sum += value;
 		}
-		cotangent(i, i) = -row_sum;
+		values.emplace_back(i, i, -row_sum);
 	}
 
+	cotangent.setFromTriplets(values.begin(), values.end());
+	cotangent.makeCompressed();
 	return cotangent;
 }
 
@@ -246,14 +273,16 @@ mass_matrix(const Mesh& mesh, const VertexArea& method)
 		typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT;
 	auto vimap = get(boost::vertex_index, mesh);
 	const auto nv = num_vertices(mesh);
-	Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> mass =
-		Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>::Zero(nv, nv);
+	Eigen::SparseMatrix<T> mass;
+	std::vector<Eigen::Triplet<T>> values;
 
 	for (const auto& v : vertices(mesh)) {
 		auto i = vimap[v];
-		mass(i, i) = vertex_area(v, mesh, method);
+		values.emplace_back(i, i, vertex_area(v, mesh, method));
 	}
 
+	mass.setFromTriplets(values.begin(), values.end());
+	mass.makeCompressed();
 	return mass;
 }
 
