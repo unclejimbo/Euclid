@@ -50,7 +50,7 @@ vertex_normal(
 }
 
 template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
+inline typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
 vertex_area(
 	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
@@ -133,7 +133,7 @@ edge_length(
 }
 
 template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
+inline typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
 squared_edge_length(
 	const typename boost::graph_traits<const Mesh>::halfedge_descriptor& he,
@@ -147,7 +147,7 @@ squared_edge_length(
 }
 
 template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
+inline typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
 squared_edge_length(
 	const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
@@ -199,8 +199,57 @@ face_area(
 	return area(p1, p2, p3);
 }
 
+template<typename Mesh, typename VertexValueMap>
+inline CGAL::Vector_3<typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel>
+gradient(
+	const typename boost::graph_traits<const Mesh>::face_descriptor& f,
+	const Mesh& mesh,
+	const VertexValueMap& vvmap)
+{
+	using Vector_3 = CGAL::Vector_3<typename CGAL::Kernel_traits<typename boost::property_traits<
+		typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel>;
+	auto vpmap = get(boost::vertex_point, mesh);
+	auto normal = fnmap[f];
+	Vector_3 grad(0.0, 0.0, 0.0);
+	for (const auto& he : halfedges_around_face(halfedge(f, mesh), mesh)) {
+		auto v = source(he, mesh);
+		auto e = vpmap[next(target(he, mesh))] - vpmap[next(source(he, mesh))];
+		grad += vvmap[v] * CGAL::cross_product(normal, e);
+	}
+	grad *= 0.5 / face_area(f, mesh);
+	return grad;
+}
+
+template<typename Mesh, typename VertexValueMap>
+inline std::vector<CGAL::Vector_3<typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel>>
+gradient_field(
+	const Mesh& mesh,
+	const VertexValueMap& vvmap)
+{
+	using Vector_3 = CGAL::Vector_3<typename CGAL::Kernel_traits<typename boost::property_traits<
+		typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel>;
+	auto vpmap = get(boost::vertex_point, mesh);
+	std::vector<Vector_3> gradients;
+	gradients.reserve(num_faces(mesh));
+	for (const auto& f : faces(mesh)) {
+		auto normal = face_normal(f, mesh);
+		Vector_3 grad(0.0, 0.0, 0.0);
+		for (const auto& he : halfedges_around_face(halfedge(f, mesh), mesh)) {
+			auto v = source(he, mesh);
+			auto e = vpmap[next(target(he, mesh))] - vpmap[next(source(he, mesh))];
+			grad += vvmap[v] * CGAL::cross_product(normal, e);
+		}
+		grad *= 0.5 / face_area(f, mesh);
+		gradients.push_back(grad);
+	}
+	return gradients;
+}
+
+
 template<typename Mesh>
-CGAL::Vector_3<typename CGAL::Kernel_traits<typename boost::property_traits<
+inline CGAL::Vector_3<typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel>
 laplace_beltrami(
 	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
@@ -287,7 +336,7 @@ mass_matrix(const Mesh& mesh, const VertexArea& method)
 }
 
 template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
+inline typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
 gaussian_curvature(
 	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
@@ -307,7 +356,7 @@ gaussian_curvature(
 }
 
 template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
+inline typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
 mean_curvature(
 	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,

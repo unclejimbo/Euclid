@@ -81,6 +81,21 @@ face_area(
 	const typename boost::graph_traits<const Mesh>::face_descriptor& f,
 	const Mesh& mesh);
 
+template<typename Mesh, typename VertexValueMap>
+CGAL::Vector_3<typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel>
+gradient(
+	const typename boost::graph_traits<const Mesh>::face_descriptor& f,
+	const Mesh& mesh,
+	const VertexValueMap& vvmap);
+
+template<typename Mesh, typename VertexValueMap>
+std::vector<CGAL::Vector_3<typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel>>
+gradient_field(
+	const Mesh& mesh,
+	const VertexValueMap& vvmap);
+
 template<typename Mesh>
 CGAL::Vector_3<typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel>
