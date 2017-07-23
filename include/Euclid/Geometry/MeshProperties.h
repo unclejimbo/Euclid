@@ -57,6 +57,13 @@ template<typename Mesh>
 typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
 squared_edge_length(
+	const typename boost::graph_traits<const Mesh>::halfedge_descriptor& he,
+	const Mesh& mesh);
+
+template<typename Mesh>
+typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
+squared_edge_length(
 	const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
 	const Mesh& mesh);
 

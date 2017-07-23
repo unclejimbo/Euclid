@@ -52,7 +52,7 @@ vertex_normal(
 template<typename Mesh>
 typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
-	vertex_area(
+vertex_area(
 	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
 	const Mesh& mesh,
 	const VertexArea& method)
@@ -110,7 +110,7 @@ typename CGAL::Kernel_traits<typename boost::property_traits<
 template<typename Mesh>
 inline typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
-	edge_length(
+edge_length(
 	const typename boost::graph_traits<const Mesh>::halfedge_descriptor& he,
 	const Mesh& mesh)
 {
@@ -124,7 +124,7 @@ inline typename CGAL::Kernel_traits<typename boost::property_traits<
 template<typename Mesh>
 inline typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
-	edge_length(
+edge_length(
 	const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
 	const Mesh& mesh)
 {
@@ -136,7 +136,7 @@ template<typename Mesh>
 typename CGAL::Kernel_traits<typename boost::property_traits<
 	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT
 squared_edge_length(
-	const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
+	const typename boost::graph_traits<const Mesh>::halfedge_descriptor& he,
 	const Mesh& mesh)
 {
 	auto vpmap = get(boost::vertex_point, mesh);
