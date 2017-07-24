@@ -154,7 +154,7 @@ squared_edge_length(
 	const Mesh& mesh)
 {
 	auto he = halfedge(e, mesh);
-	return squared_edge_lengeth(he, mesh);
+	return squared_edge_length(he, mesh);
 }
 
 template<typename Mesh>
@@ -238,7 +238,7 @@ gradient_field(
 		Vector_3 grad(0.0, 0.0, 0.0);
 		for (const auto& he : halfedges_around_face(halfedge(f, mesh), mesh)) {
 			auto v = source(he, mesh);
-			auto e = vpmap[next(target(he, mesh))] - vpmap[next(source(he, mesh))];
+			auto e = vpmap[target(he, mesh)] - vpmap[target(next(he, mesh), mesh)];
 			grad += vvmap[v] * CGAL::cross_product(normal, e);
 		}
 		grad *= 0.5 / face_area(f, mesh);
@@ -313,9 +313,8 @@ cotangent_matrix(const Mesh& mesh)
 }
 
 template<typename Mesh>
-inline Eigen::Matrix<typename CGAL::Kernel_traits<typename boost::property_traits<
-	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT,
-	Eigen::Dynamic, Eigen::Dynamic>
+inline Eigen::SparseMatrix<typename CGAL::Kernel_traits<typename boost::property_traits<
+	typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT>
 mass_matrix(const Mesh& mesh, const VertexArea& method)
 {
 	using T = typename CGAL::Kernel_traits<typename boost::property_traits<
