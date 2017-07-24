@@ -179,7 +179,7 @@ face_normal(
 		result = Vector_3(0.0, 0.0, 0.0);
 	}
 	else {
-		result = CGAL::normal(p1, p2, p3);
+		result = normalized(CGAL::normal(p1, p2, p3));
 	}
 	return result;
 }
@@ -210,11 +210,11 @@ gradient(
 	using Vector_3 = CGAL::Vector_3<typename CGAL::Kernel_traits<typename boost::property_traits<
 		typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel>;
 	auto vpmap = get(boost::vertex_point, mesh);
-	auto normal = fnmap[f];
+	auto normal = face_normal(f, mesh);
 	Vector_3 grad(0.0, 0.0, 0.0);
 	for (const auto& he : halfedges_around_face(halfedge(f, mesh), mesh)) {
 		auto v = source(he, mesh);
-		auto e = vpmap[next(target(he, mesh))] - vpmap[next(source(he, mesh))];
+		auto e = vpmap[target(next(he, mesh), mesh)] - vpmap[target(he, mesh)];
 		grad += vvmap[v] * CGAL::cross_product(normal, e);
 	}
 	grad *= 0.5 / face_area(f, mesh);
@@ -238,7 +238,7 @@ gradient_field(
 		Vector_3 grad(0.0, 0.0, 0.0);
 		for (const auto& he : halfedges_around_face(halfedge(f, mesh), mesh)) {
 			auto v = source(he, mesh);
-			auto e = vpmap[target(he, mesh)] - vpmap[target(next(he, mesh), mesh)];
+			auto e = vpmap[target(next(he, mesh), mesh)] - vpmap[target(he, mesh)];
 			grad += vvmap[v] * CGAL::cross_product(normal, e);
 		}
 		grad *= 0.5 / face_area(f, mesh);
@@ -285,7 +285,7 @@ cotangent_matrix(const Mesh& mesh)
 	auto vimap = get(boost::vertex_index, mesh);
 	auto vpmap = get(boost::vertex_point, mesh);
 	const auto nv = num_vertices(mesh);
-	Eigen::SparseMatrix<T> cotangent;
+	Eigen::SparseMatrix<T> cotmat(nv, nv);
 	std::vector<Eigen::Triplet<T>> values;
 
 	for (const auto& vi : vertices(mesh)) {
@@ -295,10 +295,8 @@ cotangent_matrix(const Mesh& mesh)
 			auto vj = source(he, mesh);
 			auto va = target(next(he, mesh), mesh);
 			auto vb = target(next(opposite(he, mesh), mesh), mesh);
-			auto cosa = cosine(vpmap[vi], vpmap[va], vpmap[vj]);
-			auto cosb = cosine(vpmap[vi], vpmap[vb], vpmap[vj]);
-			auto cota = cosa / std::sqrt(1.0 - cosa * cosa);
-			auto cotb = cosb / std::sqrt(1.0 - cosb * cosb);
+			auto cota = cotangent(vpmap[vi], vpmap[va], vpmap[vj]);
+			auto cotb = cotangent(vpmap[vi], vpmap[vb], vpmap[vj]);
 			int j = vimap[vj];
 			T value = (cota + cotb) * 0.5;
 			values.emplace_back(i, j, value);
@@ -307,9 +305,9 @@ cotangent_matrix(const Mesh& mesh)
 		values.emplace_back(i, i, -row_sum);
 	}
 
-	cotangent.setFromTriplets(values.begin(), values.end());
-	cotangent.makeCompressed();
-	return cotangent;
+	cotmat.setFromTriplets(values.begin(), values.end());
+	cotmat.makeCompressed();
+	return cotmat;
 }
 
 template<typename Mesh>
@@ -321,7 +319,7 @@ mass_matrix(const Mesh& mesh, const VertexArea& method)
 		typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT;
 	auto vimap = get(boost::vertex_index, mesh);
 	const auto nv = num_vertices(mesh);
-	Eigen::SparseMatrix<T> mass;
+	Eigen::SparseMatrix<T> mass(nv, nv);
 	std::vector<Eigen::Triplet<T>> values;
 
 	for (const auto& v : vertices(mesh)) {

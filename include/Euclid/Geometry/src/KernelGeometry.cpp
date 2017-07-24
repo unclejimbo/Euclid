@@ -101,7 +101,7 @@ tangent(const CGAL::Vector_3<Kernel>& v1,
 		return NAN;
 	}
 	else {
-		return std::sqrt((1.0 - squared_cos) / squared_cos)
+		return std::sqrt((1.0 - squared_cos) / squared_cos);
 	}
 }
 
