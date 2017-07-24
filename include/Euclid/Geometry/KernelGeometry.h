@@ -26,12 +26,45 @@ area(const CGAL::Point_3<Kernel>& p1,
 
 template<typename Kernel>
 typename Kernel::FT
+sine(const CGAL::Vector_3<Kernel>& v1,
+	const CGAL::Vector_3<Kernel>& v2);
+
+template<typename Kernel>
+typename Kernel::FT
+sine(const CGAL::Point_3<Kernel>& p1,
+	const CGAL::Point_3<Kernel>& p2,
+	const CGAL::Point_3<Kernel>& p3);
+
+template<typename Kernel>
+typename Kernel::FT
 cosine(const CGAL::Vector_3<Kernel>& v1,
 	const CGAL::Vector_3<Kernel>& v2);
 
 template<typename Kernel>
 typename Kernel::FT
 cosine(const CGAL::Point_3<Kernel>& p1,
+	const CGAL::Point_3<Kernel>& p2,
+	const CGAL::Point_3<Kernel>& p3);
+
+template<typename Kernel>
+typename Kernel::FT
+tangent(const CGAL::Vector_3<Kernel>& v1,
+	const CGAL::Vector_3<Kernel>& v2);
+
+template<typename Kernel>
+typename Kernel::FT
+tangent(const CGAL::Point_3<Kernel>& p1,
+	const CGAL::Point_3<Kernel>& p2,
+	const CGAL::Point_3<Kernel>& p3);
+
+template<typename Kernel>
+typename Kernel::FT
+cotangent(const CGAL::Vector_3<Kernel>& v1,
+	const CGAL::Vector_3<Kernel>& v2);
+
+template<typename Kernel>
+typename Kernel::FT
+cotangent(const CGAL::Point_3<Kernel>& p1,
 	const CGAL::Point_3<Kernel>& p2,
 	const CGAL::Point_3<Kernel>& p3);
 

@@ -39,6 +39,30 @@ area(const CGAL::Point_3<Kernel>& p1,
 
 template<typename Kernel>
 typename Kernel::FT
+sine(const CGAL::Vector_3<Kernel>& v1,
+	const CGAL::Vector_3<Kernel>& v2)
+{
+	auto inner_prod = v1 * v2;
+	auto squared_cos = inner_prod * inner_prod /
+		(v1.squared_length() * v2.squared_length());
+	if (squared_cos > static_cast<typename Kernel::FT>(1.0)) {
+		squared_cos = static_cast<typename Kernel::FT>(1.0);
+	}
+	auto sin = std::sqrt(1.0 - squared_cos);
+	return sin;
+}
+
+template<typename Kernel>
+typename Kernel::FT
+sine(const CGAL::Point_3<Kernel>& p1,
+	const CGAL::Point_3<Kernel>& p2,
+	const CGAL::Point_3<Kernel>& p3)
+{
+	return sine(p1 - p2, p3 - p2);
+}
+
+template<typename Kernel>
+typename Kernel::FT
 cosine(const CGAL::Vector_3<Kernel>& v1,
 	const CGAL::Vector_3<Kernel>& v2)
 {
@@ -60,6 +84,62 @@ cosine(const CGAL::Point_3<Kernel>& p1,
 	const CGAL::Point_3<Kernel>& p3)
 {
 	return cosine(p1 - p2, p3 - p2);
+}
+
+template<typename Kernel>
+typename Kernel::FT
+tangent(const CGAL::Vector_3<Kernel>& v1,
+	const CGAL::Vector_3<Kernel>& v2)
+{
+	auto inner_prod = v1 * v2;
+	auto squared_cos = inner_prod * inner_prod /
+		(v1.squared_length() * v2.squared_length());
+	if (squared_cos > static_cast<typename Kernel::FT>(1.0)) {
+		squared_cos = static_cast<typename Kernel::FT>(1.0);
+	}
+	if (squared_cos == static_cast<typename Kernel::FT>(0.0)) {
+		return NAN;
+	}
+	else {
+		return std::sqrt((1.0 - squared_cos) / squared_cos)
+	}
+}
+
+template<typename Kernel>
+typename Kernel::FT
+tangent(const CGAL::Point_3<Kernel>& p1,
+	const CGAL::Point_3<Kernel>& p2,
+	const CGAL::Point_3<Kernel>& p3)
+{
+	return tangent(p1 - p2, p3 - p2);
+}
+
+template<typename Kernel>
+typename Kernel::FT
+cotangent(const CGAL::Vector_3<Kernel>& v1,
+	const CGAL::Vector_3<Kernel>& v2)
+{
+	auto inner_prod = v1 * v2;
+	auto squared_cos = inner_prod * inner_prod /
+		(v1.squared_length() * v2.squared_length());
+	if (squared_cos > static_cast<typename Kernel::FT>(1.0)) {
+		squared_cos = static_cast<typename Kernel::FT>(1.0);
+	}
+	if (squared_cos == static_cast<typename Kernel::FT>(1.0)) {
+		return NAN;
+	}
+	else {
+		return std::sqrt(squared_cos / (1.0 - squared_cos));
+	}
+}
+
+template<typename Kernel>
+typename Kernel::FT
+cotangent(const CGAL::Point_3<Kernel>& p1,
+	const CGAL::Point_3<Kernel>& p2,
+	const CGAL::Point_3<Kernel>& p3)
+{
+	return cotangent(p1 - p2, p3 - p2);
 }
 
 template<typename FT, typename CGALVec>
