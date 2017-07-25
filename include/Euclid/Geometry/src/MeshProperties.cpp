@@ -1,4 +1,5 @@
 #include <Euclid/Geometry/KernelGeometry.h>
+#include <vector>
 #include <ostream>
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -287,6 +288,7 @@ cotangent_matrix(const Mesh& mesh)
 	const auto nv = num_vertices(mesh);
 	Eigen::SparseMatrix<T> cotmat(nv, nv);
 	std::vector<Eigen::Triplet<T>> values;
+	values.reserve(nv * 7);
 
 	for (const auto& vi : vertices(mesh)) {
 		int i = vimap[vi];
