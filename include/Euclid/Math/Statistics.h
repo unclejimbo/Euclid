@@ -1,9 +1,10 @@
-/*************************************
-* Package Overview:                  *
-* Common matrix associated utilities *
-*************************************/
+/************************
+* Package Overview:     *
+* Statistics untilities *
+************************/
 #pragma once
 #include <Eigen/Dense>
+#include <vector>
 
 namespace Euclid
 {
@@ -21,7 +22,6 @@ class PCA
 
 public:
 	explicit PCA(const std::vector<Point>& points);
-	~PCA();
 
 	FT eigen_value(int i) const;
 	Point eigen_vector(int i) const;

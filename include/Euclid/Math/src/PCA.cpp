@@ -1,4 +1,3 @@
-#include <vector>
 #include <utility>
 #include <algorithm>
 #include <ostream>
@@ -51,30 +50,25 @@ inline PCA<FT, RowSize>::PCA(const std::vector<Point>& points)
 		}
 		std::sort(value_index_map.begin(), value_index_map.end(),
 			[](const std::pair<FT, int>& v1, const std::pair<FT, int>& v2) {
-			return v1.first > v2.first;
-		}
+				return v1.first > v2.first;
+			}
 		);
 
 		_eigen_values.resize(value_index_map.size());
 		std::transform(value_index_map.begin(), value_index_map.end(), _eigen_values.begin(),
 			[](const std::pair<FT, int>& v) {
-			return v.first;
-		}
+				return v.first;
+			}
 		);
 
 		auto eigen_vectors = eigensolver.eigenvectors();
 		_eigen_vectors.resize(value_index_map.size());
 		std::transform(value_index_map.begin(), value_index_map.end(), _eigen_vectors.begin(),
 			[&eigen_vectors](const std::pair<FT, int>& v) {
-			return Point(eigen_vectors.col(v.second));
-		}
+				return Point(eigen_vectors.col(v.second));
+			}
 		);
 	}
-}
-
-template<typename FT, int RowSize>
-inline PCA<FT, RowSize>::~PCA()
-{
 }
 
 template<typename FT, int RowSize>
