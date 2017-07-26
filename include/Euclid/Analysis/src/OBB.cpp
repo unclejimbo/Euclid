@@ -1,4 +1,4 @@
-#include <Euclid/Math/Matrix.h>
+#include <Euclid/Math/Statistics.h>
 #include <Euclid/Geometry/KernelGeometry.h>
 #include <tuple>
 #include <cmath>
