@@ -1,4 +1,5 @@
 #include <cmath>
+#include <algorithm>
 #include <iostream>
 
 namespace Euclid
@@ -13,13 +14,27 @@ inline typename Kernel::FT length(const CGAL::Vector_3<Kernel>& vec)
 template<typename Kernel>
 inline void normalize(CGAL::Vector_3<Kernel>& vec)
 {
-	vec /= Euclid::length(vec);
+	auto l = Euclid::length(vec);
+	if (l > 0.0) {
+		vec /= Euclid::length(vec);
+	}
+	else {
+		std::cerr << "Can't normalize zero vector" << std::endl;
+	}
 }
 
 template<typename Kernel>
 inline CGAL::Vector_3<Kernel> normalized(const CGAL::Vector_3<Kernel>& vec)
 {
-	return vec / Euclid::length(vec);
+	auto l = Euclid::length(vec);
+	auto rtn = vec;
+	if (l > 0.0) {
+		rtn /= l;
+	}
+	else {
+		std::cerr << "Can't normalize zero vector" << std::endl;
+	}
+	return rtn;
 }
 
 template<typename Kernel>
@@ -33,7 +48,8 @@ area(const CGAL::Point_3<Kernel>& p1,
 		return 0.0;
 	}
 	else {
-		return std::sqrt(CGAL::cross_product(p3 - p2, p1 - p2).squared_length()) * 0.5;
+		return std::sqrt(CGAL::cross_product(p3 - p2, p1 - p2).squared_length()) *
+			static_cast<typename Kernel::FT>(0.5);
 	}
 }
 
@@ -42,13 +58,14 @@ typename Kernel::FT
 sine(const CGAL::Vector_3<Kernel>& v1,
 	const CGAL::Vector_3<Kernel>& v2)
 {
-	auto inner_prod = v1 * v2;
-	auto squared_cos = inner_prod * inner_prod /
-		(v1.squared_length() * v2.squared_length());
-	if (squared_cos > static_cast<typename Kernel::FT>(1.0)) {
-		squared_cos = static_cast<typename Kernel::FT>(1.0);
+	using FT = typename Kernel::FT;
+	FT sin = 0.0;
+	auto l1 = length(v1);
+	auto l2 = length(v2);
+	if (l1 != 0.0 && l2 != 0.0) {
+		auto outer_prod = CGAL::cross_product(v1, v2);
+		sin = std::min(length(outer_prod) / (l1 * l2), static_cast<FT>(1.0));
 	}
-	auto sin = std::sqrt(1.0 - squared_cos);
 	return sin;
 }
 
@@ -66,13 +83,13 @@ typename Kernel::FT
 cosine(const CGAL::Vector_3<Kernel>& v1,
 	const CGAL::Vector_3<Kernel>& v2)
 {
-	auto cos = v1 * v2 / (length(v1) * length(v2));
-	// If floating point precision error happens
-	if (cos > static_cast<typename Kernel::FT>(1.0)) {
-		cos = static_cast<typename Kernel::FT>(1.0);
-	}
-	if (cos < static_cast<typename Kernel::FT>(-1.0)) {
-		cos = static_cast<typename Kernel::FT>(-1.0);
+	using FT = typename Kernel::FT;
+	FT cos = 1.0;
+	auto l1 = length(v1);
+	auto l2 = length(v2);
+	if (l1 != 0.0 && l2 != 0.0) {
+		cos = v1 * v2 / (l1 * l2);
+		cos = std::clamp(cos, static_cast<FT>(-1.0), static_cast<FT>(1.0));
 	}
 	return cos;
 }
@@ -91,18 +108,18 @@ typename Kernel::FT
 tangent(const CGAL::Vector_3<Kernel>& v1,
 	const CGAL::Vector_3<Kernel>& v2)
 {
-	auto inner_prod = v1 * v2;
-	auto squared_cos = inner_prod * inner_prod /
-		(v1.squared_length() * v2.squared_length());
-	if (squared_cos > static_cast<typename Kernel::FT>(1.0)) {
-		squared_cos = static_cast<typename Kernel::FT>(1.0);
+	using FT = typename Kernel::FT;
+	FT tan = 0.0;
+	auto l1 = v1.squared_length();
+	auto l2 = v2.squared_length();
+	if (l1 != 0.0 && l2 != 0.0) {
+		auto inner_prod = v1 * v2;
+		auto squared_cos = inner_prod * inner_prod / (l1 * l2);
+		squared_cos = std::min(squared_cos, static_cast<FT>(1.0));
+		tan = squared_cos == 0.0 ? NAN : std::sqrt((static_cast<FT>(1.0) - squared_cos) / squared_cos);
+		tan = inner_prod < 0.0 ? -tan : tan;
 	}
-	if (squared_cos == static_cast<typename Kernel::FT>(0.0)) {
-		return NAN;
-	}
-	else {
-		return std::sqrt((1.0 - squared_cos) / squared_cos);
-	}
+	return tan;
 }
 
 template<typename Kernel>
@@ -119,18 +136,18 @@ typename Kernel::FT
 cotangent(const CGAL::Vector_3<Kernel>& v1,
 	const CGAL::Vector_3<Kernel>& v2)
 {
-	auto inner_prod = v1 * v2;
-	auto squared_cos = inner_prod * inner_prod /
-		(v1.squared_length() * v2.squared_length());
-	if (squared_cos > static_cast<typename Kernel::FT>(1.0)) {
-		squared_cos = static_cast<typename Kernel::FT>(1.0);
+	using FT = typename Kernel::FT;
+	FT cot = NAN;
+	auto l1 = v1.squared_length();
+	auto l2 = v2.squared_length();
+	if (l1 != 0.0 && l2 != 0.0) {
+		auto inner_prod = v1 * v2;
+		auto squared_cos = inner_prod * inner_prod / (l1 * l2);
+		squared_cos = std::min(squared_cos, static_cast<FT>(1.0));
+		cot = squared_cos == 1.0 ? NAN : std::sqrt(squared_cos / (static_cast<FT>(1.0) - squared_cos));
+		cot = inner_prod < 0.0 ? -cot : cot;
 	}
-	if (squared_cos == static_cast<typename Kernel::FT>(1.0)) {
-		return NAN;
-	}
-	else {
-		return std::sqrt(squared_cos / (1.0 - squared_cos));
-	}
+	return cot;
 }
 
 template<typename Kernel>
