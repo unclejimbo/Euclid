@@ -8,6 +8,6 @@
 #ifndef NDEBUG
 #define EASSERT_MSG(expr, msg) \
 	if (!(expr)) { std::cerr << "Assertion Message: " << msg << std::endl; assert(expr); }
-#elif
+#else
 #define EASSERT_MSG(expr, msg) void(0);
 #endif
