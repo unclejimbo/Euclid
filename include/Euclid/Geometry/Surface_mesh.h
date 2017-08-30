@@ -4,7 +4,6 @@
 **********************************************************/
 #pragma once
 #include <CGAL/Surface_mesh.h>
-#include <Eigen/Dense>
 #include <boost/property_map/property_map.hpp>
 #include <vector>
 
@@ -13,15 +12,15 @@ namespace Euclid
 
 template<typename Point_3>
 bool build_surface_mesh(
-	const std::vector<Point_3>& vertices,
-	const std::vector<unsigned>& indices,
-	CGAL::Surface_mesh<Point_3>& mesh);
+	CGAL::Surface_mesh<Point_3>& mesh,
+	const std::vector<typename CGAL::Kernel_traits<Point_3>::Kernel::FT>& vertices,
+	const std::vector<unsigned>& indices);
 
-template<typename Point_3, typename FT>
+template<typename Point_3>
 bool build_surface_mesh(
-	const std::vector<Eigen::Matrix<FT, 3, 1>>& vertices,
-	const std::vector<unsigned>& indices,
-	CGAL::Surface_mesh<Point_3>& mesh);
+	CGAL::Surface_mesh<Point_3>& mesh,
+	const std::vector<Point_3>& vertices,
+	const std::vector<unsigned>& indices);
 
 template<typename ValueType>
 class SM_PropertyMap
