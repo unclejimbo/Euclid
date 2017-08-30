@@ -10,18 +10,6 @@ inline TriMeshBuilder<Polyhedron_3>::TriMeshBuilder(const std::vector<FT>& verti
 }
 
 template<typename Polyhedron_3>
-inline TriMeshBuilder<Polyhedron_3>::TriMeshBuilder(const std::vector<Vec3>& vertices, const std::vector<unsigned>& indices)
-	: _indices(indices)
-{
-	_vertices.reserve(vertices.size() / 3);
-	for (const auto& v : vertices) {
-		_vertices.push_back(v(0));
-		_vertices.push_back(v(1));
-		_vertices.push_back(v(2));
-	}
-}
-
-template<typename Polyhedron_3>
 inline TriMeshBuilder<Polyhedron_3>::TriMeshBuilder(const std::vector<Point_3>& vertices, const std::vector<unsigned>& indices)
 	: _indices(indices)
 {

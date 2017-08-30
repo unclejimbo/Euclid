@@ -3,7 +3,7 @@
 * This package contains helper functions for Polyhedron_3 *
 **********************************************************/
 #pragma once
-#include <Eigen/Dense>
+#include <CGAL/Polyhedron_3.h>
 
 namespace Euclid
 {
@@ -14,12 +14,10 @@ class TriMeshBuilder : public CGAL::Modifier_base<typename Polyhedron_3::Halfedg
 {
 	using FT = typename Polyhedron_3::Traits::Kernel::FT;
 	using HDS = typename Polyhedron_3::HalfedgeDS;
-	using Vec3 = Eigen::Matrix<typename Polyhedron_3::Traits::Kernel::FT, 3, 1>;
 	using Point_3 = typename Polyhedron_3::Traits::Kernel::Point_3;
 
 public:
 	TriMeshBuilder(const std::vector<FT>& vertices, const std::vector<unsigned>& indices);
-	TriMeshBuilder(const std::vector<Vec3>& vertices, const std::vector<unsigned>& indices);
 	TriMeshBuilder(const std::vector<Point_3>& vertices, const std::vector<unsigned>& indices);
 	void operator()(HDS& hds);
 
