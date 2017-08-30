@@ -1,78 +1,165 @@
+#include <Euclid/Geometry/Surface_mesh.h>
+#include <Euclid/Geometry/Polyhedron_3.h>
 #include <CGAL/Subdivision_method_3.h>
-#include <Eigen/Dense>
 #include <algorithm>
 
 namespace Euclid
 {
 
-template<typename Polyhedron_3>
-inlline Polyhedron_3 icosahedron(
-	typename Polyhedron_3::Traits::Kernel::FT radius = 1.0,
-	const Eigen::Matrix<typename Polyhedron_3::Traits::Kernel::FT, 3, 1>& center = { 0.0, 0.0, 0.0 })
+// Partial specialization for Surface_mesh
+template<typename Point>
+class PrimitiveGenerator<CGAL::Surface_mesh<Point>>
 {
-	using FT = typename Polyhedron_3::Traits::Kernel::FT;
+	using Mesh = CGAL::Surface_mesh<Point>;
+	using Point_3 = typename boost::property_traits<
+		typename boost::property_map<Mesh, boost::vertex_point_t>
+		::type>::value_type;
+	using Kernel = typename CGAL::Kernel_traits<Point_3>::Kernel;
+	using FT = typename Kernel::FT;
 
-	const FT x = 0.5257311;
-	const FT y = 0.8506508;
-	std::vector<FT> vertices = {
-		0.0, -x, y,
-		y, 0.0, x,
-		y, 0.0, -x,
-		-y, 0.0, -x,
-		-y, 0.0, x,
-		-x, y, 0.0,
-		x, y, 0.0,
-		x, -y, 0.0,
-		-x, -y, 0.0,
-		0.0, -x, -y,
-		0.0, x, -y,
-		0.0, x, y
-	};
-	std::vector<unsigned> indices = {
-		1, 2, 6,
-		1, 7, 2,
-		3, 4, 5,
-		4, 3, 8,
-		6, 5, 11,
-		5, 6, 10,
-		9, 10, 2,
-		10, 9, 3,
-		7, 8, 9,
-		8, 7, 0,
-		11, 0, 1,
-		0, 11, 4,
-		6, 2, 10,
-		1, 6, 11,
-		3, 5, 10,
-		5, 4, 11,
-		2, 7, 9,
-		7, 1, 0,
-		3, 9, 8,
-		4, 8, 0
-	};
-
-	for (size_t i = 0; i < vertices.size(); i += 3) {
-		vertices[i] = vertices[i] * radius + center(0);
-		vertices[i + 1] = vertices[i + 1] * radius + center(1);
-		vertices[i + 2] = vertices[i + 2] * radius + center(2);
+public:
+	template<typename T>
+	static void icosahedron(
+		Mesh& mesh,
+		T radius = 1.0,
+		const Point_3& center = { 0.0, 0.0, 0.0 })
+	{
+		const FT x = 0.5257311;
+		const FT y = 0.8506508;
+		std::vector<FT> vertices = {
+			0.0, -x, y,
+			y, 0.0, x,
+			y, 0.0, -x,
+			-y, 0.0, -x,
+			-y, 0.0, x,
+			-x, y, 0.0,
+			x, y, 0.0,
+			x, -y, 0.0,
+			-x, -y, 0.0,
+			0.0, -x, -y,
+			0.0, x, -y,
+			0.0, x, y
+		};
+		std::vector<unsigned> indices = {
+			1, 2, 6,
+			1, 7, 2,
+			3, 4, 5,
+			4, 3, 8,
+			6, 5, 11,
+			5, 6, 10,
+			9, 10, 2,
+			10, 9, 3,
+			7, 8, 9,
+			8, 7, 0,
+			11, 0, 1,
+			0, 11, 4,
+			6, 2, 10,
+			1, 6, 11,
+			3, 5, 10,
+			5, 4, 11,
+			2, 7, 9,
+			7, 1, 0,
+			3, 9, 8,
+			4, 8, 0
+		};
+		for (size_t i = 0; i < vertices.size(); i += 3) {
+			vertices[i] = vertices[i] * radius + center.x();
+			vertices[i + 1] = vertices[i + 1] * radius + center.y();
+			vertices[i + 2] = vertices[i + 2] * radius + center.z();
+		}
+		build_surface_mesh(mesh, vertices, indices);
 	}
 
-	Polyhedron_3 icosahedron;
-	TriMeshBuilder<Polyhedron_3> builder(vertices, indices);
-	icosahedron.delegate(builder);
-	return icosahedron;
-}
+	template<typename T>
+	static void subdivision_sphere(
+		Mesh& mesh,
+		T radius = 1.0,
+		const Point_3& center = { 0.0, 0.0, 0.0 },
+		int iterations = 4)
+	{
+		icosahedron(mesh, radius, center);
+		CGAL::Subdivision_method_3::Loop_subdivision(mesh, iterations);
+	}
+};
 
-
-template<typename Polyhedron_3>
-inline Polyhedron_3 subdivision_sphere(
-	typename Polyhedron_3::Traits::Kernel::FT radius = 1.0,
-	const Eigen::Matrix<typename Polyhedron_3::Traits::Kernel::FT, 3, 1>& center = { 0.0, 0.0, 0.0 },
-	int iterations = 4)
+// Partial specialization for Polyhedron_3
+template<typename PolyhedronTraits_3, 
+	typename PolyhedronItems_3,
+	template<typename T, typename I, typename> class HalfedgeDS,
+	typename Alloc>
+class PrimitiveGenerator<CGAL::Polyhedron_3<PolyhedronTraits_3, PolyhedronItems_3, HalfedgeDS, Alloc>>
 {
-	auto sphere = icosahedron<Polyhedron_3>(radius, center);
-	CGAL::Subdivision_method_3::Loop_subdivision(sphere, iterations);
-	return sphere;
-}
+	using Mesh = CGAL::Polyhedron_3<PolyhedronTraits_3, PolyhedronItems_3, HalfedgeDS, Alloc>;
+	using Point_3 = typename boost::property_traits<
+		typename boost::property_map<Mesh, boost::vertex_point_t>
+		::type>::value_type;
+	using Kernel = typename CGAL::Kernel_traits<Point_3>::Kernel;
+	using FT = typename Kernel::FT;
 
-} // namespace euclid
+public:
+	template<typename T>
+	static void icosahedron(
+		Mesh& mesh,
+		T radius = 1.0,
+		const Point_3& center = { 0.0, 0.0, 0.0 })
+	{
+		const FT x = 0.5257311;
+		const FT y = 0.8506508;
+		std::vector<FT> vertices = {
+			0.0, -x, y,
+			y, 0.0, x,
+			y, 0.0, -x,
+			-y, 0.0, -x,
+			-y, 0.0, x,
+			-x, y, 0.0,
+			x, y, 0.0,
+			x, -y, 0.0,
+			-x, -y, 0.0,
+			0.0, -x, -y,
+			0.0, x, -y,
+			0.0, x, y
+		};
+		std::vector<unsigned> indices = {
+			1, 2, 6,
+			1, 7, 2,
+			3, 4, 5,
+			4, 3, 8,
+			6, 5, 11,
+			5, 6, 10,
+			9, 10, 2,
+			10, 9, 3,
+			7, 8, 9,
+			8, 7, 0,
+			11, 0, 1,
+			0, 11, 4,
+			6, 2, 10,
+			1, 6, 11,
+			3, 5, 10,
+			5, 4, 11,
+			2, 7, 9,
+			7, 1, 0,
+			3, 9, 8,
+			4, 8, 0
+		};
+		for (size_t i = 0; i < vertices.size(); i += 3) {
+			vertices[i] = vertices[i] * radius + center.x();
+			vertices[i + 1] = vertices[i + 1] * radius + center.y();
+			vertices[i + 2] = vertices[i + 2] * radius + center.z();
+		}
+		TriMeshBuilder<Mesh> builder(vertices, indices);
+		mesh.delegate(builder);
+	}
+
+	template<typename T>
+	static void subdivision_sphere(
+		Mesh& mesh,
+		T radius = 1.0,
+		const Point_3& center = { 0.0, 0.0, 0.0 },
+		int iterations = 4)
+	{
+		icosahedron(mesh, radius, center);
+		CGAL::Subdivision_method_3::Loop_subdivision(mesh, iterations);
+	}
+};
+
+} // namespace Euclid
