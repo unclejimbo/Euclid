@@ -1,14 +1,20 @@
-/**********************************************************
-* Package Overview:                                       *
-* This package contains helper functions for Polyhedron_3 *
-**********************************************************/
+/** CGAL::Polyhedron_3 utilities.
+ *
+ *  This package contains utilities to work with the
+ *  CGAL::Polyhedron_3 package.
+ *  @defgroup PkgPolyhedron Polyhedron_3
+ *  @ingroup PkgGeometry
+ */
 #pragma once
 #include <CGAL/Polyhedron_3.h>
 
 namespace Euclid
 {
+/** @{*/
 
-// Build Polyhedron_3 from vertices and indices
+/** Triangle mesh builder for Polyhedron_3.
+ *
+ */
 template<typename Polyhedron_3>
 class TriMeshBuilder : public CGAL::Modifier_base<typename Polyhedron_3::HalfedgeDS>
 {
@@ -17,8 +23,18 @@ class TriMeshBuilder : public CGAL::Modifier_base<typename Polyhedron_3::Halfedg
 	using Point_3 = typename Polyhedron_3::Traits::Kernel::Point_3;
 
 public:
+	/** Build mesh from vertices and indices.
+	 *
+	 */
 	TriMeshBuilder(const std::vector<FT>& vertices, const std::vector<unsigned>& indices);
+
+
+	/** Build mesh from vertices and indices.
+	 *
+	 */
 	TriMeshBuilder(const std::vector<Point_3>& vertices, const std::vector<unsigned>& indices);
+
+
 	void operator()(HDS& hds);
 
 private:
@@ -26,6 +42,7 @@ private:
 	std::vector<unsigned> _indices;
 };
 
+/** @}*/
 } // namespace Euclid
 
 #include "src/Polyhedron_3.cpp"

@@ -1,28 +1,26 @@
-#include <Euclid/Geometry/KernelGeometry.h>
-#include <ostream>
+#include <Euclid/Math/Vector.h>
+#include <exception>
 
 namespace Euclid
 {
 
 template<typename Kernel>
-bool transform_between_2_coord_systems(
+inline CGAL::Aff_transformation_3<Kernel>
+transform_between_2_coord_systems(
 	const typename Kernel::Point_3& from_origin,
 	const typename Kernel::Point_3& from_x,
 	const typename Kernel::Point_3& from_y,
 	const typename Kernel::Point_3& to_origin,
 	const typename Kernel::Point_3& to_x,
-	const typename Kernel::Point_3& to_y,
-	CGAL::Aff_transformation_3<Kernel>& transformation)
+	const typename Kernel::Point_3& to_y)
 {
 	using Transform = CGAL::Aff_transformation_3<Kernel>;
 
 	if (CGAL::collinear(from_origin, from_x, from_y)) {
-		std::cerr << "Input from-points are collinear" << std::endl;
-		return false;
+		throw std::invalid_argument("Inputs are collinear!");
 	}
 	if (CGAL::collinear(to_origin, to_x, to_y)) {
-		std::cerr << "Input to-points are collinear" << std::endl;
-		return false;
+		throw std::invalid_argument("Inputs are collinear!");
 	}
 
 	auto x1 = Euclid::normalized(from_x - from_origin);
@@ -39,24 +37,23 @@ bool transform_between_2_coord_systems(
 		y2.x(), y2.y(), y2.z(),
 		z2.x(), z2.y(), z2.z());
 
-	transformation = Transform(CGAL::Translation(), from_origin - to_origin);
+	auto transformation = Transform(CGAL::Translation(), from_origin - to_origin);
 	transformation = tt * tf.inverse() * transformation;
 
-	return true;
+	return transformation;
 }
 
 template<typename Kernel>
-inline bool transform_between_2_coord_systems(
+inline CGAL::Aff_transformation_3<Kernel>
+transform_between_2_coord_systems(
 	const typename Kernel::Point_3& to_origin,
 	const typename Kernel::Point_3& to_x,
-	const typename Kernel::Point_3& to_y,
-	CGAL::Aff_transformation_3<Kernel>& transformation)
+	const typename Kernel::Point_3& to_y)
 {
 	using Transform = CGAL::Aff_transformation_3<Kernel>;
 
 	if (CGAL::collinear(to_origin, to_x, to_y)) {
-		std::cerr << "Input to-points are collinear" << std::endl;
-		return false;
+		throw std::invalid_argument("Inputs are collinear!");
 	}
 
 	auto x2 = Euclid::normalized(to_x - to_origin);
@@ -67,10 +64,10 @@ inline bool transform_between_2_coord_systems(
 		y2.x(), y2.y(), y2.z(),
 		z2.x(), z2.y(), z2.z());
 
-	transformation = Transform(CGAL::Translation(), CGAL::ORIGIN - to_origin);
+	auto transformation = Transform(CGAL::Translation(), CGAL::ORIGIN - to_origin);
 	transformation = tt * transformation;
 
-	return true;
+	return transformation;
 }
 
 }

@@ -1,7 +1,7 @@
 #include <Euclid/Geometry/Surface_mesh.h>
 #include <Euclid/Geometry/Polyhedron_3.h>
-#include <Euclid/Geometry/KernelGeometry.h>
-#include <CGAL/Subdivision_method_3.h>
+#include <Euclid/Math/Vector.h>
+#include <CGAL/subdivision_method_3.h>
 #include <algorithm>
 
 namespace Euclid
@@ -84,7 +84,7 @@ public:
 };
 
 // Partial specialization for Polyhedron_3
-template<typename PolyhedronTraits_3, 
+template<typename PolyhedronTraits_3,
 	typename PolyhedronItems_3,
 	template<typename T, typename I, typename> class HalfedgeDS,
 	typename Alloc>

@@ -1,7 +1,3 @@
-// Reference:
-// [1] Yu-Kun Lai, Shi-Min Hu, Ralph R. Martin, Paul L. Rosin.
-//     Rapid and Effective Segmentation of 3D Models Using Random Walks.
-//     CAGD'09.
 #include <Euclid/Geometry/MeshProperties.h>
 #include <Eigen/SparseCore>
 #include <Eigen/SparseLU>
@@ -242,7 +238,7 @@ public:
 
 	IPMapAdaptor(PPMap ppmap, const std::vector<PointKey>& pks)
 		: _ppmap(ppmap), _pks(pks) {}
-	
+
 	reference operator[](key_type key) const
 	{
 		return _ppmap[_pks[key]];

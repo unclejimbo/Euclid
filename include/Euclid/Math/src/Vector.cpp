@@ -1,6 +1,7 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
+#include <CGAL/Kernel/global_functions.h>
 
 namespace Euclid
 {

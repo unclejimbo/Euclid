@@ -1,14 +1,13 @@
 #include <utility>
 #include <algorithm>
-#include <ostream>
+#include <exception>
 
 namespace Euclid
 {
 
 template<typename FT, int RowSize>
-inline bool covariance_matrix(
-	const std::vector<Eigen::Matrix<FT, RowSize, 1>>& points,
-	Eigen::Matrix<FT, RowSize, RowSize>& cov)
+inline Eigen::Matrix<FT, RowSize, RowSize>
+covariance_matrix(const std::vector<Eigen::Matrix<FT, RowSize, 1>>& points)
 {
 	if (points.size() > 1) {
 		Eigen::Matrix<FT, RowSize, Eigen::Dynamic> mat(RowSize, points.size());
@@ -16,29 +15,24 @@ inline bool covariance_matrix(
 			mat.col(i) = points[i];
 		}
 		auto centered = mat.colwise() - mat.rowwise().mean();
-		cov = (centered * centered.adjoint()) / (mat.cols() - 1.0);
-		return true;
+		return (centered * centered.adjoint()) / (mat.cols() - 1.0);
 	}
 	else if (points.size() == 1) {
-		cov.setZero();
-		return true;
+		return Eigen::Matrix<FT, RowSize, RowSize>::Zero();
 	}
 	else {
-		std::cerr << "Can't compute covariance matrix for empty set" << std::endl;
-		return false;
+		throw std::invalid_argument("Input vector is empty!");
 	}
 }
 
 template<typename FT, int RowSize>
-inline PCA<FT, RowSize>::PCA(const std::vector<Point>& points)
+inline PCA<FT, RowSize>::PCA(const std::vector<Eigen::Matrix<FT, RowSize, 1>>& points)
 {
-	Matrix covariance;
-	Euclid::covariance_matrix<FT, RowSize>(points, covariance);
+	auto covariance = Euclid::covariance_matrix<FT, RowSize>(points);
 
-	Eigen::SelfAdjointEigenSolver<Matrix> eigensolver(covariance);
+	Eigen::SelfAdjointEigenSolver<Eigen::Matrix<FT, RowSize, RowSize>> eigensolver(covariance);
 	if (eigensolver.info() != Eigen::Success) {
-		std::cerr << "PCA analysis failed" << std::endl;
-		assert(-1);
+		throw std::runtime_error("Eigen decomposition does not converge!");
 	}
 	else {
 		// Sort the eigen vectors wrt eigen values in descending order
@@ -65,7 +59,7 @@ inline PCA<FT, RowSize>::PCA(const std::vector<Point>& points)
 		_eigen_vectors.resize(value_index_map.size());
 		std::transform(value_index_map.begin(), value_index_map.end(), _eigen_vectors.begin(),
 			[&eigen_vectors](const std::pair<FT, int>& v) {
-				return Point(eigen_vectors.col(v.second));
+				return Eigen::Matrix<FT, RowSize, 1>(eigen_vectors.col(v.second));
 			}
 		);
 	}
@@ -78,7 +72,7 @@ inline FT PCA<FT, RowSize>::eigen_value(int i) const
 }
 
 template<typename FT, int RowSize>
-inline typename PCA<FT, RowSize>::Point
+inline Eigen::Matrix<FT, RowSize, 1>
 PCA<FT, RowSize>::eigen_vector(int i) const
 {
 	return _eigen_vectors[i];

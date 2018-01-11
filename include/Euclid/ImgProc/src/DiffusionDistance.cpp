@@ -1,9 +1,5 @@
-// Reference:
-// [1] Diffusion Distance for Histogram Comparison
-//     Haibin Ling, Kazunori Okada
-//     CVPR'2006
-#include <iostream>
 #include <cmath>
+#include <exception>
 
 namespace Euclid
 {
@@ -19,18 +15,16 @@ inline double diffusion_distance(
 		return 0.0;
 	}
 	if (hist1.size() != hist2.size()) {
-		std::cerr << "Input histograms should be of the same size" << std::endl;
-		return -1.0;
+		throw std::invalid_argument("Input histograms have different sizes!");
 	}
 	auto sz = static_cast<int>(hist1.size());
 	auto width = static_cast<int>(std::sqrt(sz));
 	if (width * width != sz) {
-		std::cerr << "Input histograms should have square size" << std::endl;
-		return -1.0;
+		throw std::invalid_argument("Input histograms have different sizes!");
 	}
 	auto h1 = cv::Mat_<T>(hist1).reshape(0, width).clone();
 	auto h2 = cv::Mat_<T>(hist2).reshape(0, width).clone();
-	
+
 	double distance = 0.0;
 	while (level-- >= 1) {
 		// Compute the histogram distance of this layer
@@ -51,19 +45,17 @@ inline double diffusion_distance(
 	return distance;
 }
 
-template<typename T>
-double diffusion_distance(
-	const std::vector<cv::Mat_<T>>& pyramid1,
-	const std::vector<cv::Mat_<T>>& pyramid2)
+inline double diffusion_distance(
+	const std::vector<cv::Mat>& pyramid1,
+	const std::vector<cv::Mat>& pyramid2)
 {
 	if (pyramid1.size() != pyramid2.size()) {
-		std::cerr << "Input pyramids should be of the same size" << std::endl;
-		return -1.0;
+		throw std::invalid_argument("Input histograms have different sizes!");
 	}
 
 	double distance = 0.0;
 	for (auto i = 0; i < pyramid1.size(); ++i) {
-		cv::Mat_<T> diff;
+		cv::Mat diff;
 		cv::absdiff(pyramid1[i], pyramid2[i], diff);
 		auto difference = cv::sum(diff)[0];
 		if (difference == 0.0) {

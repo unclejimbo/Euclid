@@ -1,11 +1,7 @@
-// Reference:
-// [1] Andrew E. Johnson, Martial Hebert
-//     Using Spin Images for Efficient Object Recognition in Cluttered 3D Scenes
-//     PAMI'99
 #define _USE_MATH_DEFINES
 #include <Euclid/Geometry/MeshProperties.h>
-#include <Euclid/Geometry/KernelGeometry.h>
-#include <Euclid/Geometry/Transformation.h>
+#include <Euclid/Math/Vector.h>
+#include <Euclid/Math/Transformation.h>
 #include <tuple>
 #include <cmath>
 
@@ -49,7 +45,7 @@ inline void spin_image(
 		median += Euclid::edge_length(*e_iter++, mesh);
 	}
 	median /= static_cast<T>(num_edges(mesh));
-	auto bin_width = median * static_cast<T>(bin_size); 
+	auto bin_width = median * static_cast<T>(bin_size);
 	auto inv_bin_width = 1.0 / bin_width;
 
 	// Compute spin images for all vertices

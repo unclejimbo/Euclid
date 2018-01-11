@@ -1,4 +1,4 @@
-#include <Euclid/Geometry/KernelGeometry.h>
+#include <Euclid/Math/Vector.h>
 #include <vector>
 #include <ostream>
 #define _USE_MATH_DEFINES
@@ -167,7 +167,7 @@ face_normal(
 {
 	using Vector_3 = typename CGAL::Kernel_traits<typename boost::property_traits<
 		typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::Vector_3;
-	
+
 	auto vpmap = get(CGAL::vertex_point, mesh);
 	auto he = halfedge(f, mesh);
 	auto p1 = vpmap[source(he, mesh)];

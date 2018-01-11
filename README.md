@@ -2,11 +2,11 @@
 
 Euclid is a header only library for geometry processing and shape analysis.
 
-It contains some functions and algorithms which extend and cooperate with other major libraries in the literature, like CGAL, Eigen(libigl), OpenCV, to name a few.
+It contains some functions and algorithms which extend and cooperate with other popular libraries around there, like Eigen(libigl), CGAL, OpenCV, to name a few.
 
 # Dependencies
 
-The following packages are optional if you do not use the part of Euclid working with these libraries:
+You'll need the following libraries when you use headers in Euclid that deal with them,
 - CGAL
 - Eigen
 - OpenCV

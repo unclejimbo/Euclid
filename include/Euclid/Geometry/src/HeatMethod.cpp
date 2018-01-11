@@ -1,5 +1,5 @@
 #include <Euclid/Geometry/MeshProperties.h>
-#include <Euclid/Geometry/KernelGeometry.h>
+#include <Euclid/Math/Vector.h>
 #include <Euclid/Util/Assert.h>
 #include <Eigen/Dense>
 #include <Eigen/SparseCholesky>
@@ -35,7 +35,7 @@ bool heat_method(
 	SpMat cot_mat = cotangent_matrix(mesh);
 	SpMat mass_mat = mass_matrix(mesh);
 	SpMat heat_mat = mass_mat - time_interval * cot_mat;
-	Eigen::Matrix<FT, Eigen::Dynamic, 1> delta = 
+	Eigen::Matrix<FT, Eigen::Dynamic, 1> delta =
 		Eigen::Matrix<FT, Eigen::Dynamic, 1>::Zero(num_vertices(mesh));
 	delta(vimap[v], 0) = vertex_area(v, mesh);
 
@@ -98,7 +98,7 @@ bool heat_method(
 		std::cerr << "Unable to solve the poisson equation" << std::endl;
 		return false;
 	}
-	
+
 	for (size_t i = 0; i < num_vertices(mesh); ++i) {
 		geodesics[i] = geod(i, 0) - geod(vimap[v], 0);
 		EASSERT(geodesics[i] >= 0.0);

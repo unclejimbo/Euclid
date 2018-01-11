@@ -10,9 +10,6 @@
 namespace Euclid
 {
 
-// Reference:
-// [1] Tianhao Gao, Wencheng Wang, Honglei Han.
-//     Efficient View Selection by Measuring Proxy Information. CASA'16.
 template<typename Polyhedron_3>
 inline void proxy_view_selection(
 	const Polyhedron_3& mesh,

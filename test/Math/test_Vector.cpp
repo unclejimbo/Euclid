@@ -1,9 +1,10 @@
-#include <Euclid/3rdparty/catch.hpp>
-#include <Euclid/Geometry/KernelGeometry.h>
+#include <catch.hpp>
+#include <Euclid/Math/Vector.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Simple_cartesian.h>
+#include <Eigen/Dense>
 
-TEST_CASE("Test Package: KernelGeometry") {
+TEST_CASE("Package: Math/Vector", "[vector]") {
 	using Kerneld = CGAL::Exact_predicates_inexact_constructions_kernel;
 	using Vector_3d = typename Kerneld::Vector_3;
 	using Point_3d = typename Kerneld::Point_3;
@@ -30,8 +31,9 @@ TEST_CASE("Test Package: KernelGeometry") {
 	auto p5f = Point_3f(-1.0f, 0.0f, 0.0f);
 	auto p6f = Point_3f(1.0f, 1.0f, 0.0f);
 	auto p7f = Point_3f(-1.0f, 1.0f, 0.0f);
+	auto ezerod = Eigen::Vector3d(0.0, 0.0, 0.0);
 
-	SECTION("Test Function: length(const CGAL::Vector_3<Kernel>&)") {
+	SECTION("Function: length") {
 		REQUIRE(Euclid::length(zerod) == 0.0);
 		REQUIRE(Euclid::length(oned) == 1.0);
 
@@ -39,7 +41,7 @@ TEST_CASE("Test Package: KernelGeometry") {
 		REQUIRE(Euclid::length(onef) == 1.0f);
 	};
 
-	SECTION("Test Function: normalize(CGAL::Vector_3<Kernel>&)") {
+	SECTION("Function: normalize") {
 		Euclid::normalize(zerod);
 		REQUIRE(Euclid::length(zerod) == 0.0);
 		Euclid::normalize(oned);
@@ -51,7 +53,7 @@ TEST_CASE("Test Package: KernelGeometry") {
 		REQUIRE(Euclid::length(onef) == 1.0f);
 	}
 
-	SECTION("Test Function: normalized(const CGAL::Vector_3<Kernel>&)") {
+	SECTION("Function: normalized") {
 		REQUIRE(zerod == Euclid::normalized(zerod));
 		REQUIRE(oned == Euclid::normalized(oned));
 
@@ -59,8 +61,7 @@ TEST_CASE("Test Package: KernelGeometry") {
 		REQUIRE(onef == Euclid::normalized(onef));
 	}
 
-	SECTION("Test Function: area(const CGAL::Point_3<Kernel>&, "\
-		"const CGAL::Point_3<Kernel>, &const CGAL::Point_3<Kernel>&") {
+	SECTION("Function: area") {
 		REQUIRE(Euclid::area(p1d, p1d, p1d) == 0.0);
 		REQUIRE(Euclid::area(p1d, p2d, p3d) == 0.0);
 		REQUIRE(Euclid::area(p1d, p2d, p4d) == 1.0);
@@ -70,15 +71,14 @@ TEST_CASE("Test Package: KernelGeometry") {
 		REQUIRE(Euclid::area(p1f, p2f, p4f) == 1.0f);
 	}
 
-	SECTION("Test Function: sine(const CGAL::Point_3<Kernel>& p1, "\
-		"const CGAL::Point_3<Kernel>& p2, const CGAL::Point_3<Kernel>& p3)") {
+	SECTION("Function: sine") {
 		REQUIRE(Euclid::sine(p1d, p1d, p1d) == 0.0);
 		REQUIRE(Euclid::sine(p2d, p1d, p3d) == 0.0);
 		REQUIRE(Euclid::sine(p2d, p1d, p4d) == 1.0);
 		REQUIRE(Euclid::sine(p2d, p1d, p5d) == 0.0);
 		REQUIRE(Euclid::sine(p2d, p1d, p6d) == Approx(sqrt2_2));
 		REQUIRE(Euclid::sine(p2d, p1d, p7d) == Approx(sqrt2_2));
-		
+
 		REQUIRE(Euclid::sine(p1f, p1f, p1f) == 0.0f);
 		REQUIRE(Euclid::sine(p2f, p1f, p3f) == 0.0f);
 		REQUIRE(Euclid::sine(p2f, p1f, p4f) == 1.0f);
@@ -87,15 +87,14 @@ TEST_CASE("Test Package: KernelGeometry") {
 		REQUIRE(Euclid::sine(p2f, p1f, p7f) == Approx(sqrt2_2));
 	}
 
-	SECTION("Test Function: cosine(const CGAL::Point_3<Kernel>& p1, "\
-		"const CGAL::Point_3<Kernel>& p2, const CGAL::Point_3<Kernel>& p3)") {
+	SECTION("Function: cosine") {
 		REQUIRE(Euclid::cosine(p1d, p1d, p1d) == 1.0);
 		REQUIRE(Euclid::cosine(p2d, p1d, p3d) == 1.0);
 		REQUIRE(Euclid::cosine(p2d, p1d, p4d) == 0.0);
 		REQUIRE(Euclid::cosine(p2d, p1d, p5d) == -1.0);
 		REQUIRE(Euclid::cosine(p2d, p1d, p6d) == Approx(sqrt2_2));
 		REQUIRE(Euclid::cosine(p2d, p1d, p7d) == Approx(-sqrt2_2));
-		
+
 		REQUIRE(Euclid::cosine(p1f, p1f, p1f) == 1.0f);
 		REQUIRE(Euclid::cosine(p2f, p1f, p3f) == 1.0f);
 		REQUIRE(Euclid::cosine(p2f, p1f, p4f) == 0.0f);
@@ -104,15 +103,14 @@ TEST_CASE("Test Package: KernelGeometry") {
 		REQUIRE(Euclid::cosine(p2f, p1f, p7f) == Approx(-sqrt2_2));
 	}
 
-	SECTION("Test Function: tangent(const CGAL::Point_3<Kernel>& p1, "\
-		"const CGAL::Point_3<Kernel>& p2, const CGAL::Point_3<Kernel>& p3)") {
+	SECTION("Function: tangent") {
 		REQUIRE(Euclid::tangent(p1d, p1d, p1d) == 0.0);
 		REQUIRE(Euclid::tangent(p2d, p1d, p3d) == 0.0);
 		REQUIRE(std::isnan(Euclid::tangent(p2d, p1d, p4d)));
 		REQUIRE(Euclid::tangent(p2d, p1d, p5d) == 0.0);
 		REQUIRE(Euclid::tangent(p2d, p1d, p6d) == Approx(1.0));
 		REQUIRE(Euclid::tangent(p2d, p1d, p7d) == Approx(-1.0));
-		
+
 		REQUIRE(Euclid::tangent(p1f, p1f, p1f) == 0.0f);
 		REQUIRE(Euclid::tangent(p2f, p1f, p3f) == 0.0f);
 		REQUIRE(std::isnan(Euclid::tangent(p2f, p1f, p4f)));
@@ -121,20 +119,31 @@ TEST_CASE("Test Package: KernelGeometry") {
 		REQUIRE(Euclid::tangent(p2f, p1f, p7f) == Approx(-1.0));
 	}
 
-	SECTION("Test Function: cotangent(const CGAL::Point_3<Kernel>& p1, "\
-		"const CGAL::Point_3<Kernel>& p2, const CGAL::Point_3<Kernel>& p3)") {
+	SECTION("Function: cotangent") {
 		REQUIRE(isnan(Euclid::cotangent(p1d, p1d, p1d)));
 		REQUIRE(isnan(Euclid::cotangent(p2d, p1d, p3d)));
 		REQUIRE(Euclid::cotangent(p2d, p1d, p4d) == 0.0);
 		REQUIRE(isnan(Euclid::cotangent(p2d, p1d, p5d)));
 		REQUIRE(Euclid::cotangent(p2d, p1d, p6d) == Approx(1.0));
 		REQUIRE(Euclid::cotangent(p2d, p1d, p7d) == Approx(-1.0));
-		
+
 		REQUIRE(isnan(Euclid::cotangent(p1f, p1f, p1f)));
 		REQUIRE(isnan(Euclid::cotangent(p2f, p1f, p3f)));
 		REQUIRE(Euclid::cotangent(p2f, p1f, p4f) == 0.0f);
 		REQUIRE(isnan(Euclid::cotangent(p2f, p1f, p5f)));
 		REQUIRE(Euclid::cotangent(p2f, p1f, p6f) == Approx(1.0f));
 		REQUIRE(Euclid::cotangent(p2f, p1f, p7f) == Approx(-1.0f));
+	}
+
+	SECTION("Function: cgal_to_eigen") {
+		auto vec = Euclid::cgal_to_eigen<double>(zerod);
+		REQUIRE(vec == ezerod);
+	}
+
+	SECTION("Function: eigen_to_cgal") {
+		auto p = Euclid::eigen_to_cgal<Point_3d>(ezerod);
+		auto v = Euclid::eigen_to_cgal<Vector_3d>(ezerod);
+		REQUIRE(p == p1d);
+		REQUIRE(v == zerod);
 	}
 }
