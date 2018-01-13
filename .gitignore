@@ -1,3 +1,5 @@
 build/
 x64/
 .vscode/
+test/config.h
+test/tmp/

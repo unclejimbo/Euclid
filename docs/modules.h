@@ -10,6 +10,10 @@
  *  @defgroup PkgImgProc ImgProc
  */
 
+/** File I/O.
+ *  @defgroup PkgIO I/O
+ */
+
 /** Math utilities.
  *  @defgroup PkgMath Math
  */
