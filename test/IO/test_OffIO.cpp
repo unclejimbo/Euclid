@@ -1,9 +1,11 @@
-#include <catch.hpp>
-#include <Euclid/IO/OffIO.h>
 #include "../config.h"
+#include <Euclid/IO/OffIO.h>
+#include <catch.hpp>
 
-TEST_CASE("Package: IO/OffIO", "[offio]") {
-    SECTION("Function: read_off and write_off") {
+TEST_CASE("Package: IO/OffIO", "[offio]")
+{
+    SECTION("Function: read_off and write_off")
+    {
         std::string file(DATA_DIR);
         file.append("chair.off");
         std::vector<float> positions;
