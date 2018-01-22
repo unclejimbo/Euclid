@@ -3,6 +3,7 @@
 #include <array>
 #include <exception>
 #include <fstream>
+#include <optional>
 #include <sstream>
 
 namespace Euclid
@@ -50,21 +51,19 @@ static inline void _check_stream(const std::ofstream& stream,
     }
 }
 
-/** Check if the endianness should be swaped.*/
-static inline bool _should_swap(PlyFormat format)
+/** Check if system is little endian.*/
+static inline bool _sys_little_endian()
 {
     union
     {
-        uint16_t i;
-        char c[2];
-    } bint = {0x0001};
-    auto is_little_endian = (bint.c[0] == 1);
-    return (is_little_endian && format == PlyFormat::binary_big_endian) ||
-           (!is_little_endian && format == PlyFormat::binary_little_endian);
+        uint32_t value;
+        uint8_t bytes[4];
+    } checker = {.value = 0x00000001};
+    return checker.bytes[0] == 1;
 }
 
 /** Swap endianness for a buffer.*/
-static inline void _swap_byte(char* bytes, size_t N)
+static inline void _swap_bytes(char* bytes, size_t N)
 {
     for (auto i = 0; i < (N + 1) / 2; ++i) {
         std::swap(bytes[i], bytes[N - 1 - i]);
@@ -82,18 +81,42 @@ static inline T _get_ascii(std::ifstream& stream)
 
 /** Get a binary value from the stream.*/
 template<typename T, int N>
-static inline T _get_binary(std::ifstream& stream, bool swap_byte)
+static inline T _get_binary(std::ifstream& stream,
+                            bool file_little_endian,
+                            bool sys_little_endian)
 {
+    static_assert(N <= sizeof(T));
+
+    // Get bytes
+    char bytes[N];
+    stream.read(bytes, N);
+
+    // Swap if inconsistent
+    if (file_little_endian != sys_little_endian && N > 1) {
+        _swap_bytes(bytes, N);
+    }
+
+    // Convert to number
     union
     {
         T value;
-        char bytes[N];
-    } bits;
-    stream.read(bits.bytes, N);
-    if (swap_byte) {
-        _impl::_swap_byte(bits.bytes, N);
+        char bytes[sizeof(T)];
+    } number;
+    for (auto i = 0; i < sizeof(T); ++i) {
+        number.bytes[i] = 0;
     }
-    return bits.value;
+    if (sys_little_endian) {
+        for (auto i = 0; i < N; ++i) {
+            number.bytes[i] = bytes[i];
+        }
+    }
+    else {
+        for (auto i = 0; i < N; ++i) {
+            number.bytes[sizeof(T) - N + i] = bytes[i];
+        }
+    }
+
+    return number.value;
 }
 
 /** Put an ascii value to the stream.*/
@@ -105,18 +128,40 @@ static inline void _put_ascii(std::ofstream& stream, T value)
 
 /** Put a binary value to the stream.*/
 template<typename T, int N>
-static inline void _put_binary(std::ofstream& stream, T value, bool swap_byte)
+static inline void _put_binary(std::ofstream& stream,
+                               T value,
+                               bool file_little_endian,
+                               bool sys_little_endian)
 {
+    static_assert(N <= sizeof(T));
+
+    // Convert to bytes
     union
     {
         T value;
-        char bytes[N];
-    } bits;
-    bits.value = value;
-    if (swap_byte) {
-        _impl::_swap_byte(bits.bytes, N);
+        char bytes[sizeof(T)];
+    } number;
+    number.value = value;
+
+    char bytes[N];
+    if (sys_little_endian) {
+        for (auto i = 0; i < N; ++i) {
+            bytes[i] = number.bytes[i];
+        }
     }
-    stream.write(bits.bytes, N);
+    else {
+        for (auto i = 0; i < N; ++i) {
+            bytes[i] = number.bytes[sizeof(T) - N + i];
+        }
+    }
+
+    // Swap if inconsistent
+    if (file_little_endian != sys_little_endian && N > 1) {
+        _swap_bytes(bytes, N);
+    }
+
+    // Write bytes
+    stream.write(bytes, N);
 }
 
 /** Make a specific type of PlyProperty.*/
@@ -355,18 +400,16 @@ static void _write_ply_header(std::ofstream& stream, const PlyHeader& header)
 
 void PlyDoubleProperty::apply(PlyReader& reader,
                               std::ifstream& stream,
-                              bool is_binary,
-                              bool swap_byte) const
+                              PlyFormat format) const
 {
-    reader.read(this, stream, is_binary, swap_byte);
+    reader.read(this, stream, format);
 }
 
 void PlyDoubleProperty::apply(PlyWriter& writer,
                               std::ofstream& stream,
-                              bool is_binary,
-                              bool swap_byte) const
+                              PlyFormat format) const
 {
-    writer.write(this, stream, is_binary, swap_byte);
+    writer.write(this, stream, format);
 }
 
 PlyDoubleProperty::value_type PlyDoubleProperty::get_ascii(
@@ -377,9 +420,11 @@ PlyDoubleProperty::value_type PlyDoubleProperty::get_ascii(
 
 PlyDoubleProperty::value_type PlyDoubleProperty::get_binary(
     std::ifstream& stream,
-    bool swap_byte) const
+    bool file_little_endian,
+    bool sys_little_endian) const
 {
-    return _impl::_get_binary<value_type, 8>(stream, swap_byte);
+    return _impl::_get_binary<value_type, 8>(
+        stream, file_little_endian, sys_little_endian);
 }
 
 void PlyDoubleProperty::put_ascii(std::ofstream& stream,
@@ -390,25 +435,25 @@ void PlyDoubleProperty::put_ascii(std::ofstream& stream,
 
 void PlyDoubleProperty::put_binary(std::ofstream& stream,
                                    PlyDoubleProperty::value_type value,
-                                   bool swap_byte) const
+                                   bool file_little_endian,
+                                   bool sys_little_endian) const
 {
-    _impl::_put_binary<value_type, 8>(stream, value, swap_byte);
+    _impl::_put_binary<value_type, 8>(
+        stream, value, file_little_endian, sys_little_endian);
 }
 
 void PlyFloatProperty::apply(PlyReader& reader,
                              std::ifstream& stream,
-                             bool is_binary,
-                             bool swap_byte) const
+                             PlyFormat format) const
 {
-    reader.read(this, stream, is_binary, swap_byte);
+    reader.read(this, stream, format);
 }
 
 void PlyFloatProperty::apply(PlyWriter& writer,
                              std::ofstream& stream,
-                             bool is_binary,
-                             bool swap_byte) const
+                             PlyFormat format) const
 {
-    writer.write(this, stream, is_binary, swap_byte);
+    writer.write(this, stream, format);
 }
 
 PlyFloatProperty::value_type PlyFloatProperty::get_ascii(
@@ -417,10 +462,13 @@ PlyFloatProperty::value_type PlyFloatProperty::get_ascii(
     return _impl::_get_ascii<value_type>(stream);
 }
 
-PlyFloatProperty::value_type PlyFloatProperty::get_binary(std::ifstream& stream,
-                                                          bool swap_byte) const
+PlyFloatProperty::value_type PlyFloatProperty::get_binary(
+    std::ifstream& stream,
+    bool file_little_endian,
+    bool sys_little_endian) const
 {
-    return _impl::_get_binary<value_type, 4>(stream, swap_byte);
+    return _impl::_get_binary<value_type, 4>(
+        stream, file_little_endian, sys_little_endian);
 }
 
 void PlyFloatProperty::put_ascii(std::ofstream& stream,
@@ -431,25 +479,25 @@ void PlyFloatProperty::put_ascii(std::ofstream& stream,
 
 void PlyFloatProperty::put_binary(std::ofstream& stream,
                                   PlyFloatProperty::value_type value,
-                                  bool swap_byte) const
+                                  bool file_little_endian,
+                                  bool sys_little_endian) const
 {
-    _impl::_put_binary<value_type, 4>(stream, value, swap_byte);
+    _impl::_put_binary<value_type, 4>(
+        stream, value, file_little_endian, sys_little_endian);
 }
 
 void PlyIntProperty::apply(PlyReader& reader,
                            std::ifstream& stream,
-                           bool is_binary,
-                           bool swap_byte) const
+                           PlyFormat format) const
 {
-    reader.read(this, stream, is_binary, swap_byte);
+    reader.read(this, stream, format);
 }
 
 void PlyIntProperty::apply(PlyWriter& writer,
                            std::ofstream& stream,
-                           bool is_binary,
-                           bool swap_byte) const
+                           PlyFormat format) const
 {
-    writer.write(this, stream, is_binary, swap_byte);
+    writer.write(this, stream, format);
 }
 
 PlyIntProperty::value_type PlyIntProperty::get_ascii(
@@ -458,10 +506,13 @@ PlyIntProperty::value_type PlyIntProperty::get_ascii(
     return _impl::_get_ascii<value_type>(stream);
 }
 
-PlyIntProperty::value_type PlyIntProperty::get_binary(std::ifstream& stream,
-                                                      bool swap_byte) const
+PlyIntProperty::value_type PlyIntProperty::get_binary(
+    std::ifstream& stream,
+    bool file_little_endian,
+    bool sys_little_endian) const
 {
-    return _impl::_get_binary<value_type, 4>(stream, swap_byte);
+    return _impl::_get_binary<value_type, 4>(
+        stream, file_little_endian, sys_little_endian);
 }
 
 void PlyIntProperty::put_ascii(std::ofstream& stream,
@@ -472,25 +523,25 @@ void PlyIntProperty::put_ascii(std::ofstream& stream,
 
 void PlyIntProperty::put_binary(std::ofstream& stream,
                                 PlyIntProperty::value_type value,
-                                bool swap_byte) const
+                                bool file_little_endian,
+                                bool sys_little_endian) const
 {
-    _impl::_put_binary<value_type, 4>(stream, value, swap_byte);
+    _impl::_put_binary<value_type, 4>(
+        stream, value, file_little_endian, sys_little_endian);
 }
 
 void PlyUintProperty::apply(PlyReader& reader,
                             std::ifstream& stream,
-                            bool is_binary,
-                            bool swap_byte) const
+                            PlyFormat format) const
 {
-    reader.read(this, stream, is_binary, swap_byte);
+    reader.read(this, stream, format);
 }
 
 void PlyUintProperty::apply(PlyWriter& writer,
                             std::ofstream& stream,
-                            bool is_binary,
-                            bool swap_byte) const
+                            PlyFormat format) const
 {
-    writer.write(this, stream, is_binary, swap_byte);
+    writer.write(this, stream, format);
 }
 
 PlyUintProperty::value_type PlyUintProperty::get_ascii(
@@ -499,10 +550,13 @@ PlyUintProperty::value_type PlyUintProperty::get_ascii(
     return _impl::_get_ascii<value_type>(stream);
 }
 
-PlyUintProperty::value_type PlyUintProperty::get_binary(std::ifstream& stream,
-                                                        bool swap_byte) const
+PlyUintProperty::value_type PlyUintProperty::get_binary(
+    std::ifstream& stream,
+    bool file_little_endian,
+    bool sys_little_endian) const
 {
-    return _impl::_get_binary<value_type, 4>(stream, swap_byte);
+    return _impl::_get_binary<value_type, 4>(
+        stream, file_little_endian, sys_little_endian);
 }
 
 void PlyUintProperty::put_ascii(std::ofstream& stream,
@@ -513,25 +567,25 @@ void PlyUintProperty::put_ascii(std::ofstream& stream,
 
 void PlyUintProperty::put_binary(std::ofstream& stream,
                                  PlyUintProperty::value_type value,
-                                 bool swap_byte) const
+                                 bool file_little_endian,
+                                 bool sys_little_endian) const
 {
-    _impl::_put_binary<value_type, 4>(stream, value, swap_byte);
+    _impl::_put_binary<value_type, 4>(
+        stream, value, file_little_endian, sys_little_endian);
 }
 
 void PlyShortProperty::apply(PlyReader& reader,
                              std::ifstream& stream,
-                             bool is_binary,
-                             bool swap_byte) const
+                             PlyFormat format) const
 {
-    reader.read(this, stream, is_binary, swap_byte);
+    reader.read(this, stream, format);
 }
 
 void PlyShortProperty::apply(PlyWriter& writer,
                              std::ofstream& stream,
-                             bool is_binary,
-                             bool swap_byte) const
+                             PlyFormat format) const
 {
-    writer.write(this, stream, is_binary, swap_byte);
+    writer.write(this, stream, format);
 }
 
 PlyShortProperty::value_type PlyShortProperty::get_ascii(
@@ -540,10 +594,13 @@ PlyShortProperty::value_type PlyShortProperty::get_ascii(
     return _impl::_get_ascii<value_type>(stream);
 }
 
-PlyShortProperty::value_type PlyShortProperty::get_binary(std::ifstream& stream,
-                                                          bool swap_byte) const
+PlyShortProperty::value_type PlyShortProperty::get_binary(
+    std::ifstream& stream,
+    bool file_little_endian,
+    bool sys_little_endian) const
 {
-    return _impl::_get_binary<value_type, 2>(stream, swap_byte);
+    return _impl::_get_binary<value_type, 2>(
+        stream, file_little_endian, sys_little_endian);
 }
 
 void PlyShortProperty::put_ascii(std::ofstream& stream,
@@ -554,25 +611,25 @@ void PlyShortProperty::put_ascii(std::ofstream& stream,
 
 void PlyShortProperty::put_binary(std::ofstream& stream,
                                   PlyShortProperty::value_type value,
-                                  bool swap_byte) const
+                                  bool file_little_endian,
+                                  bool sys_little_endian) const
 {
-    _impl::_put_binary<value_type, 2>(stream, value, swap_byte);
+    _impl::_put_binary<value_type, 2>(
+        stream, value, file_little_endian, sys_little_endian);
 }
 
 void PlyUshortProperty::apply(PlyReader& reader,
                               std::ifstream& stream,
-                              bool is_binary,
-                              bool swap_byte) const
+                              PlyFormat format) const
 {
-    reader.read(this, stream, is_binary, swap_byte);
+    reader.read(this, stream, format);
 }
 
 void PlyUshortProperty::apply(PlyWriter& writer,
                               std::ofstream& stream,
-                              bool is_binary,
-                              bool swap_byte) const
+                              PlyFormat format) const
 {
-    writer.write(this, stream, is_binary, swap_byte);
+    writer.write(this, stream, format);
 }
 
 PlyUshortProperty::value_type PlyUshortProperty::get_ascii(
@@ -583,9 +640,11 @@ PlyUshortProperty::value_type PlyUshortProperty::get_ascii(
 
 PlyUshortProperty::value_type PlyUshortProperty::get_binary(
     std::ifstream& stream,
-    bool swap_byte) const
+    bool file_little_endian,
+    bool sys_little_endian) const
 {
-    return _impl::_get_binary<value_type, 2>(stream, swap_byte);
+    return _impl::_get_binary<value_type, 2>(
+        stream, file_little_endian, sys_little_endian);
 }
 
 void PlyUshortProperty::put_ascii(std::ofstream& stream,
@@ -596,25 +655,25 @@ void PlyUshortProperty::put_ascii(std::ofstream& stream,
 
 void PlyUshortProperty::put_binary(std::ofstream& stream,
                                    PlyUshortProperty::value_type value,
-                                   bool swap_byte) const
+                                   bool file_little_endian,
+                                   bool sys_little_endian) const
 {
-    _impl::_put_binary<value_type, 2>(stream, value, swap_byte);
+    _impl::_put_binary<value_type, 2>(
+        stream, value, file_little_endian, sys_little_endian);
 }
 
 void PlyCharProperty::apply(PlyReader& reader,
                             std::ifstream& stream,
-                            bool is_binary,
-                            bool swap_byte) const
+                            PlyFormat format) const
 {
-    reader.read(this, stream, is_binary, swap_byte);
+    reader.read(this, stream, format);
 }
 
 void PlyCharProperty::apply(PlyWriter& writer,
                             std::ofstream& stream,
-                            bool is_binary,
-                            bool swap_byte) const
+                            PlyFormat format) const
 {
-    writer.write(this, stream, is_binary, swap_byte);
+    writer.write(this, stream, format);
 }
 
 PlyCharProperty::value_type PlyCharProperty::get_ascii(
@@ -623,10 +682,13 @@ PlyCharProperty::value_type PlyCharProperty::get_ascii(
     return _impl::_get_ascii<value_type>(stream);
 }
 
-PlyCharProperty::value_type PlyCharProperty::get_binary(std::ifstream& stream,
-                                                        bool swap_byte) const
+PlyCharProperty::value_type PlyCharProperty::get_binary(
+    std::ifstream& stream,
+    bool file_little_endian,
+    bool sys_little_endian) const
 {
-    return _impl::_get_binary<value_type, 1>(stream, swap_byte);
+    return _impl::_get_binary<value_type, 1>(
+        stream, file_little_endian, sys_little_endian);
 }
 
 void PlyCharProperty::put_ascii(std::ofstream& stream,
@@ -637,25 +699,25 @@ void PlyCharProperty::put_ascii(std::ofstream& stream,
 
 void PlyCharProperty::put_binary(std::ofstream& stream,
                                  PlyCharProperty::value_type value,
-                                 bool swap_byte) const
+                                 bool file_little_endian,
+                                 bool sys_little_endian) const
 {
-    _impl::_put_binary<value_type, 1>(stream, value, swap_byte);
+    _impl::_put_binary<value_type, 1>(
+        stream, value, file_little_endian, sys_little_endian);
 }
 
 void PlyUcharProperty::apply(PlyReader& reader,
                              std::ifstream& stream,
-                             bool is_binary,
-                             bool swap_byte) const
+                             PlyFormat format) const
 {
-    reader.read(this, stream, is_binary, swap_byte);
+    reader.read(this, stream, format);
 }
 
 void PlyUcharProperty::apply(PlyWriter& writer,
                              std::ofstream& stream,
-                             bool is_binary,
-                             bool swap_byte) const
+                             PlyFormat format) const
 {
-    writer.write(this, stream, is_binary, swap_byte);
+    writer.write(this, stream, format);
 }
 
 PlyUcharProperty::value_type PlyUcharProperty::get_ascii(
@@ -664,10 +726,13 @@ PlyUcharProperty::value_type PlyUcharProperty::get_ascii(
     return _impl::_get_ascii<value_type>(stream);
 }
 
-PlyUcharProperty::value_type PlyUcharProperty::get_binary(std::ifstream& stream,
-                                                          bool swap_byte) const
+PlyUcharProperty::value_type PlyUcharProperty::get_binary(
+    std::ifstream& stream,
+    bool file_little_endian,
+    bool sys_little_endian) const
 {
-    return _impl::_get_binary<value_type, 1>(stream, swap_byte);
+    return _impl::_get_binary<value_type, 1>(
+        stream, file_little_endian, sys_little_endian);
 }
 
 void PlyUcharProperty::put_ascii(std::ofstream& stream,
@@ -678,12 +743,19 @@ void PlyUcharProperty::put_ascii(std::ofstream& stream,
 
 void PlyUcharProperty::put_binary(std::ofstream& stream,
                                   PlyUcharProperty::value_type value,
-                                  bool swap_byte) const
+                                  bool file_little_endian,
+                                  bool sys_little_endian) const
 {
-    _impl::_put_binary<value_type, 1>(stream, value, swap_byte);
+    _impl::_put_binary<value_type, 1>(
+        stream, value, file_little_endian, sys_little_endian);
 }
 
 //-------------------CommonPlyReader------------------------
+
+PlyReader::PlyReader()
+{
+    _sys_little_endian = _impl::_sys_little_endian();
+}
 
 template<typename FloatType, typename IndexType, typename ColorType, int VN>
 void CommonPlyReader<FloatType, IndexType, ColorType, VN>::on_read(
@@ -742,50 +814,45 @@ template<typename FloatType, typename IndexType, typename ColorType, int VN>
 void CommonPlyReader<FloatType, IndexType, ColorType, VN>::read(
     const PlyDoubleProperty* property,
     std::ifstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
-    _store_float(property, stream, is_binary, swap_byte);
+    _store_float(property, stream, format);
 }
 
 template<typename FloatType, typename IndexType, typename ColorType, int VN>
 void CommonPlyReader<FloatType, IndexType, ColorType, VN>::read(
     const PlyFloatProperty* property,
     std::ifstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
-    _store_float(property, stream, is_binary, swap_byte);
+    _store_float(property, stream, format);
 }
 
 template<typename FloatType, typename IndexType, typename ColorType, int VN>
 void CommonPlyReader<FloatType, IndexType, ColorType, VN>::read(
     const PlyIntProperty* property,
     std::ifstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
-    _store_indices(property, stream, is_binary, swap_byte);
+    _store_indices(property, stream, format);
 }
 
 template<typename FloatType, typename IndexType, typename ColorType, int VN>
 void CommonPlyReader<FloatType, IndexType, ColorType, VN>::read(
     const PlyUintProperty* property,
     std::ifstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
-    _store_indices(property, stream, is_binary, swap_byte);
+    _store_indices(property, stream, format);
 }
 
 template<typename FloatType, typename IndexType, typename ColorType, int VN>
 void CommonPlyReader<FloatType, IndexType, ColorType, VN>::read(
     const PlyUcharProperty* property,
     std::ifstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
-    _store_color(property, stream, is_binary, swap_byte);
+    _store_color(property, stream, format);
 }
 
 template<typename FloatType, typename IndexType, typename ColorType, int VN>
@@ -793,18 +860,19 @@ template<typename TPlyProperty>
 inline void CommonPlyReader<FloatType, IndexType, ColorType, VN>::_store_float(
     const TPlyProperty* property,
     std::ifstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
     // First read out value then decide what to do with it.
     // By this way we can safely skip unrecognised properties.
     FloatType value;
-    if (!is_binary) {
+    if (format == PlyFormat::ascii) {
         auto v = property->get_ascii(stream);
         value = static_cast<FloatType>(v);
     }
     else {
-        auto v = property->get_binary(stream, swap_byte);
+        auto v = property->get_binary(stream,
+                                      format == PlyFormat::binary_little_endian,
+                                      _sys_little_endian);
         value = static_cast<FloatType>(v);
     }
 
@@ -832,16 +900,17 @@ template<typename TPlyProperty>
 inline void CommonPlyReader<FloatType, IndexType, ColorType, VN>::_store_color(
     const TPlyProperty* property,
     std::ifstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
     ColorType value;
-    if (!is_binary) {
+    if (format == PlyFormat::ascii) {
         auto v = property->get_ascii(stream);
         value = static_cast<ColorType>(v);
     }
     else {
-        auto v = property->get_binary(stream, swap_byte);
+        auto v = property->get_binary(stream,
+                                      format == PlyFormat::binary_little_endian,
+                                      _sys_little_endian);
         value = static_cast<ColorType>(v);
     }
 
@@ -860,12 +929,11 @@ inline void
 CommonPlyReader<FloatType, IndexType, ColorType, VN>::_store_indices(
     const TPlyProperty* property,
     std::ifstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
     if (property->is_list()) {
         std::vector<IndexType> values;
-        if (!is_binary) {
+        if (format == PlyFormat::ascii) {
             unsigned count;
             stream >> count;
             if (count != VN) {
@@ -896,7 +964,10 @@ CommonPlyReader<FloatType, IndexType, ColorType, VN>::_store_indices(
 
             values.resize(count);
             for (auto i = 0; i < count; ++i) {
-                auto v = property->get_binary(stream, swap_byte);
+                auto v = property->get_binary(
+                    stream,
+                    format == PlyFormat::binary_little_endian,
+                    _sys_little_endian);
                 values[i] = static_cast<IndexType>(v);
             }
         }
@@ -916,6 +987,11 @@ CommonPlyReader<FloatType, IndexType, ColorType, VN>::_store_indices(
 }
 
 //------------------CommonPlyWriter-----------------------
+
+PlyWriter::PlyWriter()
+{
+    _sys_little_endian = _impl::_sys_little_endian();
+}
 
 template<typename FloatType, typename IndexType, typename ColorType, int VN>
 void CommonPlyWriter<FloatType, IndexType, ColorType, VN>::on_write()
@@ -960,57 +1036,52 @@ PlyHeader CommonPlyWriter<FloatType, IndexType, ColorType, VN>::generate_header(
         header.add_element(std::move(fe));
     }
 
-    return std::move(header);
+    return header;
 }
 
 template<typename FloatType, typename IndexType, typename ColorType, int VN>
 void CommonPlyWriter<FloatType, IndexType, ColorType, VN>::write(
     const PlyDoubleProperty* property,
     std::ofstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
-    _write_float(property, stream, is_binary, swap_byte);
+    _write_float(property, stream, format);
 }
 
 template<typename FloatType, typename IndexType, typename ColorType, int VN>
 void CommonPlyWriter<FloatType, IndexType, ColorType, VN>::write(
     const PlyFloatProperty* property,
     std::ofstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
-    _write_float(property, stream, is_binary, swap_byte);
+    _write_float(property, stream, format);
 }
 
 template<typename FloatType, typename IndexType, typename ColorType, int VN>
 void CommonPlyWriter<FloatType, IndexType, ColorType, VN>::write(
     const PlyIntProperty* property,
     std::ofstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
-    _write_indices(property, stream, is_binary, swap_byte);
+    _write_indices(property, stream, format);
 }
 
 template<typename FloatType, typename IndexType, typename ColorType, int VN>
 void CommonPlyWriter<FloatType, IndexType, ColorType, VN>::write(
     const PlyUintProperty* property,
     std::ofstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
-    _write_indices(property, stream, is_binary, swap_byte);
+    _write_indices(property, stream, format);
 }
 
 template<typename FloatType, typename IndexType, typename ColorType, int VN>
 void CommonPlyWriter<FloatType, IndexType, ColorType, VN>::write(
     const PlyUcharProperty* property,
     std::ofstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
-    _write_color(property, stream, is_binary, swap_byte);
+    _write_color(property, stream, format);
 }
 
 template<typename FloatType, typename IndexType, typename ColorType, int VN>
@@ -1018,10 +1089,9 @@ template<typename TPlyProperty>
 void CommonPlyWriter<FloatType, IndexType, ColorType, VN>::_write_float(
     const TPlyProperty* property,
     std::ofstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
-    FloatType value;
+    std::optional<FloatType> value;
     if (property->name() == "x" || property->name() == "y" ||
         property->name() == "z") {
         value = _positions[_piter++];
@@ -1040,12 +1110,17 @@ void CommonPlyWriter<FloatType, IndexType, ColorType, VN>::_write_float(
         // Ignore
     }
 
-    auto v = static_cast<typename TPlyProperty::value_type>(value);
-    if (!is_binary) {
-        property->put_ascii(stream, v);
-    }
-    else {
-        property->put_binary(stream, v, swap_byte);
+    if (value.has_value()) {
+        auto v = static_cast<typename TPlyProperty::value_type>(*value);
+        if (format == PlyFormat::ascii) {
+            property->put_ascii(stream, v);
+        }
+        else {
+            property->put_binary(stream,
+                                 v,
+                                 format == PlyFormat::binary_little_endian,
+                                 _sys_little_endian);
+        }
     }
 }
 
@@ -1054,10 +1129,9 @@ template<typename TPlyProperty>
 void CommonPlyWriter<FloatType, IndexType, ColorType, VN>::_write_color(
     const TPlyProperty* property,
     std::ofstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
-    ColorType value;
+    std::optional<ColorType> value;
     if (property->name() == "red" || property->name() == "green" ||
         property->name() == "blue" || property->name() == "alpha") {
         EASSERT(_colors != nullptr);
@@ -1067,12 +1141,17 @@ void CommonPlyWriter<FloatType, IndexType, ColorType, VN>::_write_color(
         // Ignore
     }
 
-    auto v = static_cast<typename TPlyProperty::value_type>(value);
-    if (!is_binary) {
-        property->put_ascii(stream, v);
-    }
-    else {
-        property->put_binary(stream, v, swap_byte);
+    if (value.has_value()) {
+        auto v = static_cast<typename TPlyProperty::value_type>(*value);
+        if (format == PlyFormat::ascii) {
+            property->put_ascii(stream, v);
+        }
+        else {
+            property->put_binary(stream,
+                                 v,
+                                 format == PlyFormat::binary_little_endian,
+                                 _sys_little_endian);
+        }
     }
 }
 
@@ -1081,16 +1160,14 @@ template<typename TPlyProperty>
 void CommonPlyWriter<FloatType, IndexType, ColorType, VN>::_write_indices(
     const TPlyProperty* property,
     std::ofstream& stream,
-    bool is_binary,
-    bool swap_byte)
+    PlyFormat format)
 {
     if (property->name() == "vertex_index" ||
         property->name() == "vertex_indices") {
         EASSERT(_indices != nullptr);
 
         // Write vertex number
-        auto vn = static_cast<unsigned char>(VN);
-        if (!is_binary) {
+        if (format == PlyFormat::ascii) {
             stream << VN << " ";
         }
         else {
@@ -1101,14 +1178,17 @@ void CommonPlyWriter<FloatType, IndexType, ColorType, VN>::_write_indices(
         // Write index
         for (auto i = 0; i < VN; ++i) {
             auto v = (*_indices)[_iiter++];
-            if (!is_binary) {
+            if (format == PlyFormat::ascii) {
                 property->put_ascii(stream, v);
                 if (i < VN - 1) {
                     stream << " ";
                 }
             }
             else {
-                property->put_binary(stream, v, swap_byte);
+                property->put_binary(stream,
+                                     v,
+                                     format == PlyFormat::binary_little_endian,
+                                     _sys_little_endian);
             }
         }
     }
@@ -1135,21 +1215,17 @@ void read_ply(const std::string& file_name, PlyReader& reader)
     auto header = _impl::_read_ply_header(stream);
     reader.on_read(header);
 
-    bool is_binary = false;
-    bool swap_byte = false;
     if (header.format() != PlyFormat::ascii) {
         auto pos = stream.tellg();
         stream.close();
         stream.open(file_name, std::ios::binary);
         stream.seekg(pos);
-        is_binary = true;
-        swap_byte = _impl::_should_swap(header.format());
     }
 
     for (const auto& elem : header) {
         for (auto i = 0; i < elem.count(); ++i) {
             for (const auto& prop : elem) {
-                prop.apply(reader, stream, is_binary, swap_byte);
+                prop.apply(reader, stream, header.format());
             }
         }
     }
@@ -1180,25 +1256,21 @@ void write_ply(const std::string& file_name,
     auto header = writer.generate_header(format);
     _impl::_write_ply_header(stream, header);
 
-    bool is_binary = false;
-    bool swap_byte = false;
     if (format != PlyFormat::ascii) {
         stream.close();
         stream.open(file_name, std::ios::binary | std::ios::app);
-        is_binary = true;
-        swap_byte = _impl::_should_swap(format);
     }
 
     for (const auto& elem : header) {
         for (auto i = 0; i < elem.count(); ++i) {
             for (auto j = 0; j < elem.n_props(); ++j) {
                 const auto prop = elem.property(j);
-                prop->apply(writer, stream, is_binary, swap_byte);
-                if (!is_binary && j < elem.n_props() - 1) {
+                prop->apply(writer, stream, format);
+                if (format == PlyFormat::ascii && j < elem.n_props() - 1) {
                     stream << " ";
                 }
             }
-            if (!is_binary) {
+            if (format == PlyFormat::ascii) {
                 stream << std::endl;
             }
         }

@@ -12,12 +12,6 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
         std::string file(DATA_DIR);
         file.append("cube_ascii.ply");
         auto header = Euclid::read_ply_header(file);
-        for (const auto& e : header) {
-            std::cout << "element " << e.name() << std::endl;
-            for (const auto& p : e) {
-                std::cout << "property " << p.name() << std::endl;
-            }
-        }
 
         REQUIRE(header.format() == Euclid::PlyFormat::ascii);
         REQUIRE(header.n_elems() == 2);
@@ -92,13 +86,6 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
         std::string file(DATA_DIR);
         file.append("cube_binary_little_endian.ply");
         auto header = Euclid::read_ply_header(file);
-        for (const auto& e : header) {
-            std::cout << "element " << e.name() << std::endl;
-            for (const auto& p : e) {
-                std::cout << "property " << p.name() << " " << p.type_str()
-                          << std::endl;
-            }
-        }
 
         REQUIRE(header.format() == Euclid::PlyFormat::binary_little_endian);
         REQUIRE(header.n_elems() == 2);
