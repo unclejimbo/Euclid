@@ -36,14 +36,14 @@ public:
      *
      *  Eigen values are sorted in descending order.
      */
-    template<size_t i>
+    template<int i>
     FT eigen_value() const;
 
     /** The i-th eigen vector.
      *
      *  Eigen vectors are sorted w.r.t. eigen values in descending order.
      */
-    template<size_t i>
+    template<int i>
     Eigen::Matrix<FT, RowSize, 1> eigen_vector() const;
 
 private:

@@ -70,7 +70,7 @@ inline PCA<FT, RowSize>::PCA(
 }
 
 template<typename FT, int RowSize>
-template<size_t i>
+template<int i>
 inline FT PCA<FT, RowSize>::eigen_value() const
 {
     static_assert(i < RowSize);
@@ -78,7 +78,7 @@ inline FT PCA<FT, RowSize>::eigen_value() const
 }
 
 template<typename FT, int RowSize>
-template<size_t i>
+template<int i>
 inline Eigen::Matrix<FT, RowSize, 1> PCA<FT, RowSize>::eigen_vector() const
 {
     static_assert(i < RowSize);
