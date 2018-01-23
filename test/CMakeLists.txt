@@ -1,47 +1,68 @@
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.00)
-        message(FATAL_ERROR "Require MSVC14 or higher")
-    endif()
-    add_compile_options("/std:c++latest")
-    add_definitions(-D_HAS_AUTO_PTR_ETC)
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
-        message(FATAL_ERROR "Require GCC 7.0 or higher")
-    endif()
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.9)
-        message(FATAL_ERROR "Require Clang 3.9 or higher")
-    endif()
-endif()
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/${CONFIG})
+# Add target
+add_executable(run_test
+    "${CMAKE_CURRENT_SOURCE_DIR}/config.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_Surface_mesh.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ImgProc/test_Histogram.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/IO/test_OffIO.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/IO/test_PlyIO.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Matrix.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Transformation.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Vector.cpp")
 
+# Compiler settings
+target_compile_features(run_test PUBLIC cxx_std_17)
+
+if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR
+    ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "") # Override default cxx_flags
+    target_compile_options(run_test PUBLIC
+        $<$<CONFIG:Debug>:-O0 -Wall -Wextra>)
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
+endif()
+
+# Find Boost
+find_package(Boost REQUIRED)
+
+# Find Eigen3
 find_package(Eigen3 REQUIRED)
-find_package(CGAL REQUIRED)
-find_package(CGAL REQUIRED COMPONENTS CGAL_Core)
-find_package(OpenCV REQUIRED)
 
+# Find CGAL
+find_package(CGAL REQUIRED)
+include(${CGAL_USE_FILE})
+
+# Find OpenCV
+find_package(OpenCV REQUIRED core imgproc)
+
+# Find OpenMP
 set(WITH_OPENMP TRUE CACHE BOOL "Enable OpenMP")
-if (WITH_OPENMP)
+if(WITH_OPENMP)
     find_package(OpenMP)
-    if (OPENMP_FOUND)
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+    if(OPENMP_FOUND)
+        target_compile_options(run_test PUBLIC ${OpenMP_CXX_FLAGS})
     endif()
 endif()
 
-include(${CGAL_USE_FILE})
-set(EUCLID_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../include/)
-set(DEP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/)
-include_directories(${CGAL_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} ${OpenCV_INCLUDE_DIRS} ${EUCLID_INCLUDE_DIR} ${DEP_INCLUDE_DIR})
-
+# Config files
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
 
-file(GLOB_RECURSE SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
-file(GLOB_RECURSE HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
+# Include directories
+target_include_directories(run_test PUBLIC
+    ${Boost_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIR}
+    ${CGAL_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/
+    ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/)
 
-add_executable(run_test ${SOURCES} ${HEADERS})
+# Linking
+target_link_libraries(run_test PUBLIC
+    ${OpenMP_CXX_LIBRARIES}
+    ${CGAL_LIBRARIES}
+    ${GMP_LIBRARIES}
+    ${MPFR_LIBRARIES}
+    ${OpenCV_LIBS})
 
-target_link_libraries(run_test ${CGAL_LIBRARIES} ${OpenCV_LIBS})
+# Output
+set_target_properties(run_test PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
