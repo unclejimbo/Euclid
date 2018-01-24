@@ -6,6 +6,7 @@
  * @ingroup PkgMath
  */
 #pragma once
+
 #include <CGAL/Aff_transformation_3.h>
 
 namespace Euclid

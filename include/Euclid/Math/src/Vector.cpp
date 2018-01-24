@@ -1,7 +1,8 @@
-#include <CGAL/Kernel/global_functions.h>
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+
+#include <CGAL/Kernel/global_functions.h>
 
 namespace Euclid
 {
@@ -20,6 +21,7 @@ inline void normalize(CGAL::Vector_3<Kernel>& vec)
         vec /= Euclid::length(vec);
     }
     else {
+
         std::cerr << "Can't normalize zero vector" << std::endl;
     }
 }

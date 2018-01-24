@@ -1,6 +1,6 @@
+#include <exception>
 #include <fstream>
 #include <tuple>
-#include <exception>
 
 namespace Euclid
 {

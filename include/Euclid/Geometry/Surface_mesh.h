@@ -6,9 +6,11 @@
  *  @ingroup PkgGeometry
  */
 #pragma once
+
+#include <vector>
+
 #include <CGAL/Surface_mesh.h>
 #include <boost/property_map/property_map.hpp>
-#include <vector>
 
 namespace Euclid
 {

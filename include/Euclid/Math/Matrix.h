@@ -5,8 +5,10 @@
  * @ingroup PkgMath
  */
 #pragma once
-#include <Eigen/Dense>
+
 #include <vector>
+
+#include <Eigen/Dense>
 
 namespace Euclid
 {

@@ -1,6 +1,7 @@
-#include <CGAL/Simple_cartesian.h>
 #include <Euclid/Math/Transformation.h>
 #include <catch.hpp>
+
+#include <CGAL/Simple_cartesian.h>
 
 TEST_CASE("Package: Math/Transformation", "[transformation]")
 {

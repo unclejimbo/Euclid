@@ -6,6 +6,7 @@
  *  @ingroup PkgMath
  */
 #pragma once
+
 #include <CGAL/Point_3.h>
 #include <CGAL/Vector_3.h>
 #include <Eigen/Dense>

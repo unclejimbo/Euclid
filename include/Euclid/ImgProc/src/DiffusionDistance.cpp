@@ -52,7 +52,7 @@ inline double diffusion_distance(const std::vector<cv::Mat>& pyramid1,
     }
 
     double distance = 0.0;
-    for (auto i = 0; i < pyramid1.size(); ++i) {
+    for (size_t i = 0; i < pyramid1.size(); ++i) {
         cv::Mat diff;
         cv::absdiff(pyramid1[i], pyramid2[i], diff);
         auto difference = cv::sum(diff)[0];

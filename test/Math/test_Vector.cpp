@@ -1,8 +1,9 @@
+#include <Euclid/Math/Vector.h>
+#include <catch.hpp>
+
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Simple_cartesian.h>
 #include <Eigen/Dense>
-#include <Euclid/Math/Vector.h>
-#include <catch.hpp>
 
 TEST_CASE("Package: Math/Vector", "[vector]")
 {

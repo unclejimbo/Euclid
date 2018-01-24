@@ -1,5 +1,6 @@
-#include <Euclid/Math/Vector.h>
 #include <exception>
+
+#include <Euclid/Math/Vector.h>
 
 namespace Euclid
 {

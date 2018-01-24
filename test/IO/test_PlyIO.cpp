@@ -1,8 +1,10 @@
-#include "../config.h"
 #include <Euclid/IO/PlyIO.h>
 #include <catch.hpp>
+
 #include <iostream>
 #include <vector>
+
+#include "../config.h"
 
 TEST_CASE("Package: IO/PlyIO", "[plyio]")
 {

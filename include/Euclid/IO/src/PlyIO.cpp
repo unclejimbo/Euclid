@@ -1,10 +1,11 @@
-#include <Euclid/Util/Assert.h>
 #include <algorithm>
 #include <array>
 #include <exception>
 #include <fstream>
 #include <optional>
 #include <sstream>
+
+#include <Euclid/Util/Assert.h>
 
 namespace Euclid
 {

@@ -5,8 +5,10 @@
  *  @ingroup PkgImgProc
  */
 #pragma once
-#include <opencv2/imgproc.hpp>
+
 #include <vector>
+
+#include <opencv2/imgproc.hpp>
 
 namespace Euclid
 {
