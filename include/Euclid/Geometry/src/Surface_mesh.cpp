@@ -18,11 +18,11 @@ inline bool build_surface_mesh(CGAL::Surface_mesh<Point_3>& mesh,
 
     std::vector<Vertex_index> vindices;
     vindices.reserve(nv);
-    for (auto i = 0; i < vertices.size(); i += 3) {
+    for (size_t i = 0; i < vertices.size(); i += 3) {
         vindices.push_back(mesh.add_vertex(
             Point_3(vertices[i], vertices[i + 1], vertices[i + 2])));
     }
-    for (auto i = 0; i < indices.size(); i += 3) {
+    for (size_t i = 0; i < indices.size(); i += 3) {
         auto v0 = vindices[indices[i + 0]];
         auto v1 = vindices[indices[i + 1]];
         auto v2 = vindices[indices[i + 2]];
@@ -56,7 +56,7 @@ inline bool build_surface_mesh(CGAL::Surface_mesh<Point_3>& mesh,
     for (const auto& v : vertices) {
         vindices.push_back(mesh.add_vertex(v));
     }
-    for (auto i = 0; i < indices.size(); i += 3) {
+    for (size_t i = 0; i < indices.size(); i += 3) {
         auto v0 = vindices[indices[i + 0]];
         auto v1 = vindices[indices[i + 1]];
         auto v2 = vindices[indices[i + 2]];

@@ -11,7 +11,7 @@ inline Eigen::Matrix<FT, RowSize, RowSize> covariance_matrix(
 {
     if (points.size() > 1) {
         Eigen::Matrix<FT, RowSize, Eigen::Dynamic> mat(RowSize, points.size());
-        for (auto i = 0; i < points.size(); ++i) {
+        for (size_t i = 0; i < points.size(); ++i) {
             mat.col(i) = points[i];
         }
         auto centered = mat.colwise() - mat.rowwise().mean();

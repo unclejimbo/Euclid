@@ -65,7 +65,7 @@ static inline bool _sys_little_endian()
 /** Swap endianness for a buffer.*/
 static inline void _swap_bytes(char* bytes, size_t N)
 {
-    for (auto i = 0; i < (N + 1) / 2; ++i) {
+    for (size_t i = 0; i < (N + 1) / 2; ++i) {
         std::swap(bytes[i], bytes[N - 1 - i]);
     }
 }
@@ -102,7 +102,7 @@ static inline T _get_binary(std::ifstream& stream,
         T value;
         char bytes[sizeof(T)];
     } number;
-    for (auto i = 0; i < sizeof(T); ++i) {
+    for (size_t i = 0; i < sizeof(T); ++i) {
         number.bytes[i] = 0;
     }
     if (sys_little_endian) {
@@ -166,9 +166,8 @@ static inline void _put_binary(std::ofstream& stream,
 
 /** Make a specific type of PlyProperty.*/
 template<typename T>
-static inline std::unique_ptr<PlyProperty> _make_property(
-    const std::string& name,
-    bool is_list)
+static inline std::unique_ptr<PlyProperty> _make_property(const std::string&,
+                                                          bool)
 {
     return nullptr;
 }
@@ -763,7 +762,7 @@ void CommonPlyReader<FloatType, IndexType, ColorType, VN>::on_read(
 {
     for (const auto& e : header) {
         if (e.name() == "vertex") {
-            for (auto i = 0; i < e.n_props();) {
+            for (size_t i = 0; i < e.n_props();) {
                 if (e.property(i)->name() == "x") {
                     EASSERT(e.property(i + 1)->name() == "y");
                     EASSERT(e.property(i + 2)->name() == "z");
@@ -945,7 +944,7 @@ CommonPlyReader<FloatType, IndexType, ColorType, VN>::_store_indices(
             }
 
             values.resize(count);
-            for (auto i = 0; i < count; ++i) {
+            for (size_t i = 0; i < count; ++i) {
                 auto v = property->get_ascii(stream);
                 values[i] = static_cast<IndexType>(v);
             }
@@ -963,7 +962,7 @@ CommonPlyReader<FloatType, IndexType, ColorType, VN>::_store_indices(
             }
 
             values.resize(count);
-            for (auto i = 0; i < count; ++i) {
+            for (size_t i = 0; i < count; ++i) {
                 auto v = property->get_binary(
                     stream,
                     format == PlyFormat::binary_little_endian,
@@ -1223,7 +1222,7 @@ void read_ply(const std::string& file_name, PlyReader& reader)
     }
 
     for (const auto& elem : header) {
-        for (auto i = 0; i < elem.count(); ++i) {
+        for (size_t i = 0; i < elem.count(); ++i) {
             for (const auto& prop : elem) {
                 prop.apply(reader, stream, header.format());
             }
@@ -1262,8 +1261,8 @@ void write_ply(const std::string& file_name,
     }
 
     for (const auto& elem : header) {
-        for (auto i = 0; i < elem.count(); ++i) {
-            for (auto j = 0; j < elem.n_props(); ++j) {
+        for (size_t i = 0; i < elem.count(); ++i) {
+            for (size_t j = 0; j < elem.n_props(); ++j) {
                 const auto prop = elem.property(j);
                 prop->apply(writer, stream, format);
                 if (format == PlyFormat::ascii && j < elem.n_props() - 1) {

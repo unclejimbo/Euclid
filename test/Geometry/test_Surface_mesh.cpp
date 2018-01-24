@@ -18,7 +18,7 @@ TEST_CASE("Package: Geometry/Surface_mesh", "[suface_mesh]")
     Euclid::read_off<3>(file_name, positions, indices);
 
     std::vector<Point_3> points;
-    for (auto i = 0; i < positions.size(); i += 3) {
+    for (size_t i = 0; i < positions.size(); i += 3) {
         points.emplace_back(positions[i], positions[i + 1], positions[i + 2]);
     }
 

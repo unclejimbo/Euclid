@@ -696,79 +696,47 @@ public:
      *  wish to do some preprocessing before reader the ply body,
      *  e.g. allocate space for buffers.
      */
-    virtual void on_read(const PlyHeader& header) {}
+    virtual void on_read(const PlyHeader&) {}
 
     /** Read a PlyDoubleProperty.
      *
      */
-    virtual void read(const PlyDoubleProperty* property,
-                      std::ifstream& stream,
-                      PlyFormat format)
-    {
-    }
+    virtual void read(const PlyDoubleProperty*, std::ifstream&, PlyFormat) {}
 
     /** Read a PlyFloatProperty.
      *
      */
-    virtual void read(const PlyFloatProperty* property,
-                      std::ifstream& stream,
-                      PlyFormat format)
-    {
-    }
+    virtual void read(const PlyFloatProperty*, std::ifstream&, PlyFormat) {}
 
     /** Read a PlyIntProperty.
      *
      */
-    virtual void read(const PlyIntProperty* property,
-                      std::ifstream& stream,
-                      PlyFormat format)
-    {
-    }
+    virtual void read(const PlyIntProperty*, std::ifstream&, PlyFormat) {}
 
     /** Read a PlyUintProperty.
      *
      */
-    virtual void read(const PlyUintProperty* property,
-                      std::ifstream& stream,
-                      PlyFormat format)
-    {
-    }
+    virtual void read(const PlyUintProperty*, std::ifstream&, PlyFormat) {}
 
     /** Read a PlyShortProperty.
      *
      */
-    virtual void read(const PlyShortProperty* property,
-                      std::ifstream& stream,
-                      PlyFormat format)
-    {
-    }
+    virtual void read(const PlyShortProperty*, std::ifstream&, PlyFormat) {}
 
     /** Read a PlyUshortProperty.
      *
      */
-    virtual void read(const PlyUshortProperty* property,
-                      std::ifstream& stream,
-                      PlyFormat format)
-    {
-    }
+    virtual void read(const PlyUshortProperty*, std::ifstream&, PlyFormat) {}
 
     /** Read a PlyCharProperty.
      *
      */
-    virtual void read(const PlyCharProperty* property,
-                      std::ifstream& stream,
-                      PlyFormat format)
-    {
-    }
+    virtual void read(const PlyCharProperty*, std::ifstream&, PlyFormat) {}
 
     /** Read a PlyUcharProperty.
      *
      */
-    virtual void read(const PlyUcharProperty* property,
-                      std::ifstream& stream,
-                      PlyFormat format)
-    {
-    }
+    virtual void read(const PlyUcharProperty*, std::ifstream&, PlyFormat) {}
 
 protected:
     bool _sys_little_endian;
@@ -890,74 +858,42 @@ public:
     /** Write a PlyDoubleProperty.
      *
      */
-    virtual void write(const PlyDoubleProperty* property,
-                       std::ofstream& stream,
-                       PlyFormat format)
-    {
-    }
+    virtual void write(const PlyDoubleProperty*, std::ofstream&, PlyFormat) {}
 
     /** Write a PlyFloatProperty.
      *
      */
-    virtual void write(const PlyFloatProperty* property,
-                       std::ofstream& stream,
-                       PlyFormat format)
-    {
-    }
+    virtual void write(const PlyFloatProperty*, std::ofstream&, PlyFormat) {}
 
     /** Write a PlyIntProperty.
      *
      */
-    virtual void write(const PlyIntProperty* property,
-                       std::ofstream& stream,
-                       PlyFormat format)
-    {
-    }
+    virtual void write(const PlyIntProperty*, std::ofstream&, PlyFormat) {}
 
     /** Write a PlyUintProperty.
      *
      */
-    virtual void write(const PlyUintProperty* property,
-                       std::ofstream& stream,
-                       PlyFormat format)
-    {
-    }
+    virtual void write(const PlyUintProperty*, std::ofstream&, PlyFormat) {}
 
     /** Write a PlyShortProperty.
      *
      */
-    virtual void write(const PlyShortProperty* property,
-                       std::ofstream& stream,
-                       PlyFormat format)
-    {
-    }
+    virtual void write(const PlyShortProperty*, std::ofstream&, PlyFormat) {}
 
     /** Write a PlyUshortProperty.
      *
      */
-    virtual void write(const PlyUshortProperty* property,
-                       std::ofstream& stream,
-                       PlyFormat format)
-    {
-    }
+    virtual void write(const PlyUshortProperty*, std::ofstream&, PlyFormat) {}
 
     /** Write a PlyCharProperty.
      *
      */
-    virtual void write(const PlyCharProperty* property,
-                       std::ofstream& stream,
-                       PlyFormat format)
-    {
-    }
+    virtual void write(const PlyCharProperty*, std::ofstream&, PlyFormat) {}
 
     /** Write a PlyUcharProperty.
      *
      */
-    virtual void write(const PlyUcharProperty* property,
-                       std::ofstream& stream,
-                       PlyFormat format)
-    {
-    }
+    virtual void write(const PlyUcharProperty*, std::ofstream&, PlyFormat) {}
 
 protected:
     bool _sys_little_endian;
