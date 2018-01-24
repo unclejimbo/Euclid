@@ -15,7 +15,7 @@ TEST_CASE("Package: Geometry/Surface_mesh", "[suface_mesh]")
     std::vector<unsigned> indices;
     std::string file_name(DATA_DIR);
     file_name.append("chair.off");
-    Euclid::read_off(file_name, positions, &indices);
+    Euclid::read_off<3>(file_name, positions, indices);
 
     std::vector<Point_3> points;
     for (auto i = 0; i < positions.size(); i += 3) {

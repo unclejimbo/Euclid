@@ -10,7 +10,7 @@ TEST_CASE("Package: IO/OffIO", "[offio]")
         file.append("chair.off");
         std::vector<float> positions;
         std::vector<unsigned> indices;
-        Euclid::read_off(file, positions, &indices);
+        Euclid::read_off<3>(file, positions, indices);
 
         REQUIRE(positions.size() == 2382 * 3);
         REQUIRE(indices.size() == 2234 * 3);
@@ -19,10 +19,10 @@ TEST_CASE("Package: IO/OffIO", "[offio]")
 
         std::string tmp_file(TMP_DIR);
         tmp_file.append("chair.off");
-        Euclid::write_off(tmp_file, positions, &indices);
+        Euclid::write_off<3>(tmp_file, positions, indices);
         std::vector<double> new_positions;
         std::vector<int> new_indices;
-        Euclid::read_off(tmp_file, new_positions, &new_indices);
+        Euclid::read_off<3>(tmp_file, new_positions, new_indices);
 
         REQUIRE(new_positions.size() == positions.size());
         REQUIRE(new_indices.size() == indices.size());

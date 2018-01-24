@@ -15,29 +15,39 @@ namespace Euclid
 
 /** Read off file.
  *
- *  Read point set or triangle mesh from a off file.
+ *  Read positions from an off file. Omit indices in the file.
+ */
+template<typename T>
+void read_off(const std::string& file_name, std::vector<T>& positions);
+
+/** Read off file.
+ *
+ *  Read positions and indices from an off file.
  *  Note that index count can vary per face, but it's assumed
- *  to be 3, namely a triangle, by this reader.
+ *  to be fixed for all faces by this reader.
  *  Also note that off file format can also store edge indices,
  *  which is often 0 and useless, thus omitted by this reader.
- *
- *  @param[in] file_name Off file name.
- *  @param[in] positions The buffer to store point positions.
- *  @param[in] indices The buffer to store face indices.
  */
-template<typename T1, typename T2>
+template<int N, typename T1, typename T2>
 void read_off(const std::string& file_name,
-    std::vector<T1>& positions,
-    std::vector<T2>* indices = nullptr);
-
+              std::vector<T1>& positions,
+              std::vector<T2>& indices);
 
 /** Write off file.
  *
+ *  Write point positions to an off file.
  */
-template<typename T1, typename T2>
+template<typename T>
+void write_off(const std::string& file_name, const std::vector<T>& positions);
+
+/** Write off file.
+ *
+ *  Write point positions and indices to an off file.
+ */
+template<int N, typename T1, typename T2>
 void write_off(const std::string& file_name,
-    const std::vector<T1>& positions,
-    const std::vector<T2>* indices = nullptr);
+               const std::vector<T1>& positions,
+               const std::vector<T2>& indices = nullptr);
 
 /** @}*/
 } // namespace Euclid
