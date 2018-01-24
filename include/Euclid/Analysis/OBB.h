@@ -27,6 +27,11 @@ public:
     using FT = typename Kernel::FT;
 
 public:
+    /** Build OBB for a set of positions.
+     *
+     */
+    explicit OBB(const std::vector<FT>& positions);
+
     /** Build OBB for a set of points.
      *
      */

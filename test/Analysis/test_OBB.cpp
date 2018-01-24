@@ -21,10 +21,23 @@ TEST_CASE("Package: Analysis/OBB", "[obb]")
                                    1, 0, 4, 1, 4, 5, 3, 2, 6, 3, 6, 7,
                                    2, 1, 5, 2, 5, 6, 7, 6, 5, 7, 5, 4};
 
+    SECTION("Build obb from raw positions")
+    {
+        auto obb = Euclid::OBB<Kernel>(positions);
+
+        REQUIRE(obb.center() == Point_3(1.5f, 1.0f, 0.5f));
+        REQUIRE(obb.axis<0>() == Vector_3(1.0f, 0.0f, 0.0f));
+        REQUIRE(obb.axis<1>() == Vector_3(0.0f, 1.0f, 0.0f));
+        REQUIRE(obb.axis<2>() == Vector_3(0.0f, 0.0f, 1.0f));
+        REQUIRE(obb.length<0>() == 3.0);
+        REQUIRE(obb.length<1>() == 2.0);
+        REQUIRE(obb.length<2>() == 1.0);
+    }
+
     SECTION("Build obb from vector of points")
     {
         std::vector<Point_3> points;
-        for (auto i = 0; i < positions.size(); i += 3) {
+        for (size_t i = 0; i < positions.size(); i += 3) {
             points.emplace_back(
                 positions[i], positions[i + 1], positions[i + 2]);
         }
@@ -57,7 +70,7 @@ TEST_CASE("Package: Analysis/OBB", "[obb]")
     SECTION("Build obb from point_set")
     {
         Point_set_3 point_set;
-        for (auto i = 0; i < positions.size(); i += 3) {
+        for (size_t i = 0; i < positions.size(); i += 3) {
             point_set.insert(
                 Point_3(positions[i], positions[i + 1], positions[i + 2]));
         }

@@ -9,15 +9,13 @@ namespace Euclid
 namespace _impl
 {
 
-template<typename Mesh, typename FT>
-void _to_eigen(const Mesh& mesh, std::vector<Eigen::Matrix<FT, 3, 1>>& points)
+template<typename FT>
+void _to_eigen(const std::vector<FT>& positions,
+               std::vector<Eigen::Matrix<FT, 3, 1>>& points)
 {
-    points.reserve(num_vertices(mesh));
-    auto vpmap = get(CGAL::vertex_point, mesh);
-    auto[v_beg, v_end] = vertices(mesh);
-    while (v_beg != v_end) {
-        auto p = vpmap[*v_beg++];
-        points.emplace_back(p.x(), p.y(), p.z());
+    points.reserve(positions.size() / 3);
+    for (size_t i = 0; i < positions.size(); i += 3) {
+        points.emplace_back(positions[i], positions[i + 1], positions[i + 2]);
     }
 }
 
@@ -27,6 +25,18 @@ void _to_eigen(const std::vector<Point_3>& pointset,
 {
     points.reserve(pointset.size());
     for (const auto& p : pointset) {
+        points.emplace_back(p.x(), p.y(), p.z());
+    }
+}
+
+template<typename Mesh, typename FT>
+void _to_eigen(const Mesh& mesh, std::vector<Eigen::Matrix<FT, 3, 1>>& points)
+{
+    points.reserve(num_vertices(mesh));
+    auto vpmap = get(CGAL::vertex_point, mesh);
+    auto[v_beg, v_end] = vertices(mesh);
+    while (v_beg != v_end) {
+        auto p = vpmap[*v_beg++];
         points.emplace_back(p.x(), p.y(), p.z());
     }
 }
@@ -44,6 +54,14 @@ void _to_eigen(ForwardIterator first,
 }
 
 } // namespace _impl
+
+template<typename Kernel>
+inline OBB<Kernel>::OBB(const std::vector<FT>& positions)
+{
+    std::vector<EigenVec> points;
+    _impl::_to_eigen(positions, points);
+    _build_obb(points);
+}
 
 template<typename Kernel>
 inline OBB<Kernel>::OBB(const std::vector<Point_3>& pointset)
@@ -167,7 +185,7 @@ inline void OBB<Kernel>::_build_obb(
     auto y_min = y_max;
     auto z_max = vec.dot(pca.template eigen_vector<2>());
     auto z_min = z_max;
-    for (auto i = 1; i < points.size(); ++i) {
+    for (size_t i = 1; i < points.size(); ++i) {
         const auto& vec = points[i];
         x_max = std::max(x_max, vec.dot(pca.template eigen_vector<0>()));
         x_min = std::min(x_min, vec.dot(pca.template eigen_vector<0>()));
