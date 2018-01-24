@@ -1,10 +1,11 @@
-#include "../config.h"
-#include <CGAL/Simple_cartesian.h>
-#include <CGAL/Point_set_3.h>
-#include <Euclid/Geometry/Surface_mesh.h>
 #include <Euclid/Analysis/OBB.h>
 #include <catch.hpp>
-#include <iostream>
+
+#include <CGAL/Point_set_3.h>
+#include <CGAL/Simple_cartesian.h>
+#include <Euclid/Geometry/Surface_mesh.h>
+
+#include "../config.h"
 
 using Kernel = CGAL::Simple_cartesian<float>;
 using Point_3 = typename Kernel::Point_3;
@@ -56,7 +57,8 @@ TEST_CASE("Package: Analysis/OBB", "[obb]")
     {
         Surface_mesh mesh;
         Euclid::build_surface_mesh(mesh, positions, indices);
-        auto obb = Euclid::OBB<Kernel>(mesh);
+        auto obb = Euclid::OBB<Kernel>(
+            mesh.vertices_begin(), mesh.vertices_end(), mesh.points());
 
         REQUIRE(obb.center() == Point_3(1.5f, 1.0f, 0.5f));
         REQUIRE(obb.axis<0>() == Vector_3(1.0f, 0.0f, 0.0f));

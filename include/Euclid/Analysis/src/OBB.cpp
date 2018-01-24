@@ -1,7 +1,8 @@
-#include <Euclid/Math/Matrix.h>
-#include <Euclid/Math/Vector.h>
 #include <cmath>
 #include <tuple>
+
+#include <Euclid/Math/Matrix.h>
+#include <Euclid/Math/Vector.h>
 
 namespace Euclid
 {
@@ -25,18 +26,6 @@ void _to_eigen(const std::vector<Point_3>& pointset,
 {
     points.reserve(pointset.size());
     for (const auto& p : pointset) {
-        points.emplace_back(p.x(), p.y(), p.z());
-    }
-}
-
-template<typename Mesh, typename FT>
-void _to_eigen(const Mesh& mesh, std::vector<Eigen::Matrix<FT, 3, 1>>& points)
-{
-    points.reserve(num_vertices(mesh));
-    auto vpmap = get(CGAL::vertex_point, mesh);
-    auto[v_beg, v_end] = vertices(mesh);
-    while (v_beg != v_end) {
-        auto p = vpmap[*v_beg++];
         points.emplace_back(p.x(), p.y(), p.z());
     }
 }
@@ -68,15 +57,6 @@ inline OBB<Kernel>::OBB(const std::vector<Point_3>& pointset)
 {
     std::vector<EigenVec> points;
     _impl::_to_eigen(pointset, points);
-    _build_obb(points);
-}
-
-template<typename Kernel>
-template<typename Mesh>
-inline OBB<Kernel>::OBB(const Mesh& mesh)
-{
-    std::vector<EigenVec> points;
-    _impl::_to_eigen(mesh, points);
     _build_obb(points);
 }
 

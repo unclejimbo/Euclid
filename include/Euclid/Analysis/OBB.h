@@ -5,8 +5,11 @@
  *  @ingroup PkgAnalysis
  */
 #pragma once
+
 #include <array>
 #include <vector>
+
+#include <Eigen/Dense>
 
 namespace Euclid
 {
@@ -36,17 +39,6 @@ public:
      *
      */
     explicit OBB(const std::vector<Point_3>& pointset);
-
-    /** Build OBB for a mesh.
-     *
-     */
-    template<typename Mesh>
-    explicit OBB(const Mesh& mesh);
-
-    /** Build OBB for a CGAL::Point_set_3.
-     *
-     */
-    explicit OBB(const CGAL::Point_set_3<Point_3>& pointset);
 
     /** Build OBB for a range of points.
      *
