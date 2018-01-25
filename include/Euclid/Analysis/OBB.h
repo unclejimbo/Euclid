@@ -1,4 +1,4 @@
-/** Object oriented bounding box.
+/** Object oriented bounding box for 3D geometry.
  *
  *  Use pca analysis to generate an object oriented bounding box.
  *  @defgroup PkgOBB OBB
@@ -17,9 +17,6 @@ namespace Euclid
 
 /** Object Oriented Bounding Box.
  *
- *  The length of x, y, z axis decreases successively.
- *  And the coordniate system is right-hand based, thus right means
- *  x, up means y and front means z.
  */
 template<typename Kernel>
 class OBB
@@ -38,13 +35,13 @@ public:
     /** Build OBB for a set of points.
      *
      */
-    explicit OBB(const std::vector<Point_3>& pointset);
+    explicit OBB(const std::vector<Point_3>& points);
 
     /** Build OBB for a range of points.
      *
      */
     template<typename ForwardIterator, typename PPMap>
-    OBB(ForwardIterator first, ForwardIterator beyond, PPMap point_pmap);
+    OBB(ForwardIterator first, ForwardIterator beyond, PPMap ppmap);
 
     /** Return the center of the box.
      *
@@ -53,55 +50,20 @@ public:
 
     /** Return the unit-length axis.
      *
+     *  The accepted values of N are 0, 1 and 2. The axis are sorted in
+     *  descending order w.r.t. to the length, so OBB<KerneL>::axis<0>() returns
+     *  the longest axis, although the direction is arbitrary.
      */
-    template<size_t N>
+    template<int N>
     Vector_3 axis() const;
 
     /** Return the length of an axis.
      *
+     *  The accepted values of N are 0, 1 and 2. The length are sorted in
+     *  descending order.
      */
-    template<size_t N>
+    template<int N>
     FT length() const;
-
-    /** Return the left-bottom-back corner of the box.
-     *
-     */
-    Point_3 lbb() const;
-
-    /** Return the left-bottom-front corner of the box.
-     *
-     */
-    Point_3 lbf() const;
-
-    /** Return the left-top-back corner of the box.
-     *
-     */
-    Point_3 ltb() const;
-
-    /** Return the left-top-front corner of the box.
-     *
-     */
-    Point_3 ltf() const;
-
-    /** Return the right-bottom-back corner of the box.
-     *
-     */
-    Point_3 rbb() const;
-
-    /** Return the right-bottom-front corner of the box.
-     *
-     */
-    Point_3 rbf() const;
-
-    /** Return the right-top-back corner of the box.
-     *
-     */
-    Point_3 rtb() const;
-
-    /** Return the right-top-front corner of the box.
-     *
-     */
-    Point_3 rtf() const;
 
 private:
     using EigenVec = typename Eigen::Matrix<FT, 3, 1>;
@@ -110,7 +72,7 @@ private:
     void _build_obb(const std::vector<EigenVec>& points);
 
 private:
-    Point_3 _lbb;
+    Point_3 _center;
     std::array<Vector_3, 3> _directions;
 };
 

@@ -1,4 +1,5 @@
 #include <cmath>
+#include <exception>
 #include <tuple>
 
 #include <Euclid/Math/Matrix.h>
@@ -12,33 +13,33 @@ namespace _impl
 
 template<typename FT>
 void _to_eigen(const std::vector<FT>& positions,
-               std::vector<Eigen::Matrix<FT, 3, 1>>& points)
+               std::vector<Eigen::Matrix<FT, 3, 1>>& epoints)
 {
-    points.reserve(positions.size() / 3);
+    epoints.reserve(positions.size() / 3);
     for (size_t i = 0; i < positions.size(); i += 3) {
-        points.emplace_back(positions[i], positions[i + 1], positions[i + 2]);
+        epoints.emplace_back(positions[i], positions[i + 1], positions[i + 2]);
     }
 }
 
 template<typename Point_3, typename FT>
-void _to_eigen(const std::vector<Point_3>& pointset,
-               std::vector<Eigen::Matrix<FT, 3, 1>>& points)
+void _to_eigen(const std::vector<Point_3>& points,
+               std::vector<Eigen::Matrix<FT, 3, 1>>& epoints)
 {
-    points.reserve(pointset.size());
-    for (const auto& p : pointset) {
-        points.emplace_back(p.x(), p.y(), p.z());
+    epoints.reserve(points.size());
+    for (const auto& p : points) {
+        epoints.emplace_back(p.x(), p.y(), p.z());
     }
 }
 
 template<typename ForwardIterator, typename PPMap, typename FT>
 void _to_eigen(ForwardIterator first,
                ForwardIterator beyond,
-               PPMap point_pmap,
-               std::vector<Eigen::Matrix<FT, 3, 1>>& points)
+               PPMap ppmap,
+               std::vector<Eigen::Matrix<FT, 3, 1>>& epoints)
 {
     while (first != beyond) {
-        auto p = point_pmap[*first++];
-        points.emplace_back(p.x(), p.y(), p.z());
+        auto p = ppmap[*first++];
+        epoints.emplace_back(p.x(), p.y(), p.z());
     }
 }
 
@@ -47,39 +48,53 @@ void _to_eigen(ForwardIterator first,
 template<typename Kernel>
 inline OBB<Kernel>::OBB(const std::vector<FT>& positions)
 {
-    std::vector<EigenVec> points;
-    _impl::_to_eigen(positions, points);
-    _build_obb(points);
+    if (positions.empty()) {
+        throw std::runtime_error("Input is empty");
+    }
+    if (positions.size() % 3 != 0) {
+        throw std::runtime_error("Size of input is not divisble by 3");
+    }
+
+    std::vector<EigenVec> epoints;
+    _impl::_to_eigen(positions, epoints);
+    _build_obb(epoints);
 }
 
 template<typename Kernel>
-inline OBB<Kernel>::OBB(const std::vector<Point_3>& pointset)
+inline OBB<Kernel>::OBB(const std::vector<Point_3>& points)
 {
-    std::vector<EigenVec> points;
-    _impl::_to_eigen(pointset, points);
-    _build_obb(points);
+    if (points.empty()) {
+        throw std::runtime_error("Input is empty");
+    }
+
+    std::vector<EigenVec> epoints;
+    _impl::_to_eigen(points, epoints);
+    _build_obb(epoints);
 }
 
 template<typename Kernel>
 template<typename ForwardIterator, typename PPMap>
 inline OBB<Kernel>::OBB(ForwardIterator first,
                         ForwardIterator beyond,
-                        PPMap point_pmap)
+                        PPMap ppmap)
 {
-    std::vector<EigenVec> points;
-    _impl::_to_eigen(first, beyond, point_pmap, points);
-    _build_obb(points);
+    if (first == beyond) {
+        throw std::runtime_error("Input is empty");
+    }
+
+    std::vector<EigenVec> epoints;
+    _impl::_to_eigen(first, beyond, ppmap, epoints);
+    _build_obb(epoints);
 }
 
 template<typename Kernel>
 inline typename OBB<Kernel>::Point_3 OBB<Kernel>::center() const
 {
-    return _lbb + _directions[0] * 0.5 + _directions[1] * 0.5 +
-           _directions[2] * 0.5;
+    return _center;
 }
 
 template<typename Kernel>
-template<size_t N>
+template<int N>
 inline typename OBB<Kernel>::Vector_3 OBB<Kernel>::axis() const
 {
     static_assert(N < 3);
@@ -87,59 +102,11 @@ inline typename OBB<Kernel>::Vector_3 OBB<Kernel>::axis() const
 }
 
 template<typename Kernel>
-template<size_t N>
+template<int N>
 inline typename OBB<Kernel>::FT OBB<Kernel>::length() const
 {
     static_assert(N < 3);
-    return Euclid::length(_directions[N]);
-}
-
-template<typename Kernel>
-inline typename OBB<Kernel>::Point_3 OBB<Kernel>::lbb() const
-{
-    return _lbb;
-}
-
-template<typename Kernel>
-inline typename OBB<Kernel>::Point_3 OBB<Kernel>::lbf() const
-{
-    return _lbb + _directions[2];
-}
-
-template<typename Kernel>
-inline typename OBB<Kernel>::Point_3 OBB<Kernel>::ltb() const
-{
-    return _lbb + _directions[1];
-}
-
-template<typename Kernel>
-inline typename OBB<Kernel>::Point_3 OBB<Kernel>::ltf() const
-{
-    return _lbb + _directions[1] + _directions[2];
-}
-
-template<typename Kernel>
-inline typename OBB<Kernel>::Point_3 OBB<Kernel>::rbb() const
-{
-    return _lbb + _directions[0];
-}
-
-template<typename Kernel>
-inline typename OBB<Kernel>::Point_3 OBB<Kernel>::rbf() const
-{
-    return _lbb + _directions[0] + _directions[2];
-}
-
-template<typename Kernel>
-inline typename OBB<Kernel>::Point_3 OBB<Kernel>::rtb() const
-{
-    return _lbb + _directions[0] + _directions[1];
-}
-
-template<typename Kernel>
-inline typename OBB<Kernel>::Point_3 OBB<Kernel>::rtf() const
-{
-    return _lbb + _directions[0] + _directions[1] + _directions[2];
+    return Euclid::length(_directions[N]) * 2;
 }
 
 template<typename Kernel>
@@ -149,7 +116,7 @@ inline void OBB<Kernel>::_build_obb(
     // Conduct pca analysis
     Euclid::PCA<FT, 3> pca(points);
 
-    // Unit lengh, sorted
+    // Unit lengh, sorted in descending order w.r.t. eigen values
     _directions[0] =
         Euclid::eigen_to_cgal<Vector_3>(pca.template eigen_vector<0>());
     _directions[1] =
@@ -175,12 +142,15 @@ inline void OBB<Kernel>::_build_obb(
         z_min = std::min(z_min, vec.dot(pca.template eigen_vector<2>()));
     }
 
-    // Record corner point and direction vector
-    _lbb = CGAL::ORIGIN + x_min * _directions[0] + y_min * _directions[1] +
-           z_min * _directions[2];
-    _directions[0] *= (x_max - x_min);
-    _directions[1] *= (y_max - y_min);
-    _directions[2] *= (z_max - z_min);
+    // Record center point and direction vector
+    _center = CGAL::ORIGIN + 0.5 * (x_min + x_max) * _directions[0] +
+              0.5 * (y_max + y_min) * _directions[1] +
+              0.5 * (z_min + z_max) * _directions[2];
+    _directions[0] *= (x_max - x_min) * 0.5; // half of box edge length
+    _directions[1] *= (y_max - y_min) * 0.5;
+    _directions[2] *= (z_max - z_min) * 0.5;
+
+    // Store all corner points and their
 }
 
 } // namespace Euclid

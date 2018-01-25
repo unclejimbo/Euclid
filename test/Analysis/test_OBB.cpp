@@ -1,8 +1,10 @@
 #include <Euclid/Analysis/OBB.h>
 #include <catch.hpp>
 
-#include <CGAL/Point_set_3.h>
+#include <vector>
+
 #include <CGAL/Simple_cartesian.h>
+#include <CGAL/Point_set_3.h> // CGAL's bug, must be included after a kernel
 #include <Euclid/Geometry/Surface_mesh.h>
 
 #include "../config.h"
