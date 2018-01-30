@@ -42,6 +42,14 @@ template<int N, typename T1, typename T2>
 int remove_unreferenced_vertices(std::vector<T1>& positions,
                                  std::vector<T2>& indices);
 
+/** Remove degenerate faces of a mesh.
+ *
+ *  A face is degenerate when two consecutive edges are collinear.
+ */
+template<int N, typename T1, typename T2>
+int remove_degenerate_faces(const std::vector<T1>& positions,
+                            std::vector<T2>& indices);
+
 /** @}*/
 } // namespace Euclid
 

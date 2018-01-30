@@ -10,6 +10,8 @@
 #include <vector>
 
 #include <boost/functional/hash.hpp>
+#include <CGAL/Simple_cartesian.h>
+#include <CGAL/Kernel/global_functions.h>
 #include <Euclid/Util/Assert.h>
 
 namespace Euclid
@@ -205,6 +207,59 @@ int remove_unreferenced_vertices(std::vector<T1>& positions,
     positions.shrink_to_fit();
 
     return ref_count.size() - idx - 1;
+}
+
+template<int N, typename T1, typename T2>
+int remove_degenerate_faces(std::vector<T1>& positions,
+                            std::vector<T2>& indices)
+{
+    using Kernel = CGAL::Simple_cartesian<T1>;
+    using Point_3 = typename Kernel::Point_3;
+    static_assert(N >= 3);
+    if (positions.size() % 3 != 0) {
+        throw std::runtime_error("Input position size is not divisible by 3");
+    }
+    if (indices.size() % N != 0) {
+        std::string err_str("Input index size is not divisible by ");
+        err_str.append(std::to_string(N));
+        throw(err_str);
+    }
+
+    std::vector<T2> marks;
+    for (size_t i = 0; i < indices.size(); i += N) {
+        for (size_t j = 0; j < N - 1; ++j) {
+            auto p0 = indices[i + j];
+            auto p1 = indices[i + j + 1];
+            auto p2 = j == N - 2 ? indices[i] : indices[i + j + 2];
+            auto x0 = positions[p0];
+            auto y0 = positions[p0 + 1];
+            auto z0 = positions[p0 + 2];
+            auto x1 = positions[p1];
+            auto y1 = positions[p1 + 1];
+            auto z1 = positions[p1 + 2];
+            auto x2 = positions[p2];
+            auto y2 = positions[p2 + 1];
+            auto z2 = positions[p2 + 2];
+            if (CGAL::collinear<Kernel>(Point_3{ x0, y0, z0 },
+                                        Point_3{ x1, y1, z1 },
+                                        Point_3{ x2, y2, z2 })) {
+                marks.push_back(p0);
+                break;
+            }
+        }
+    }
+
+    auto idx = indices.size() - N;
+    for (auto iter = marks.rbegin(); iter != marks.rend(); ++iter, idx -= N) {
+        for (auto i = 0; i < N; ++i) {
+            indices[*iter + i] = indices[idx + i];
+        }
+    }
+
+    indices.erase(indices.begin() + idx + N, indices.end());
+    indices.shrink_to_fit();
+
+    return marks.size();
 }
 
 } // namespace Euclid

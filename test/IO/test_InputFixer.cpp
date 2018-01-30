@@ -61,4 +61,14 @@ TEST_CASE("Package: IO/InputFixer", "[input_fixer]")
                     positions[indices[i] * 3]);
         }
     }
+
+    SECTION("Fix degenerate faces")
+    {
+        std::vector<double> positions{ 0.0, 0.0, 0.0, 1.0, 2.0, 1.0,
+                                       4.0, 2.0, 1.0, 3.0, 1.0, 3.0 };
+        std::vector<unsigned> triangles{ 0, 1, 2, 0, 1, 1, 2, 2, 2, 1, 2, 3 };
+        auto tfixed = triangles;
+        REQUIRE(Euclid::remove_degenerate_faces<3>(positions, tfixed) == 2);
+        REQUIRE(tfixed.size() == 6);
+    }
 }
