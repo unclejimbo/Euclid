@@ -178,7 +178,7 @@ public:
                     bool sys_little_endian) const;
 };
 
-/** A int ply property.
+/** An int ply property.
  *
  */
 class PlyIntProperty : public PlyProperty
