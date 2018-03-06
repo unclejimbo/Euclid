@@ -16,7 +16,8 @@ namespace Euclid
 
 /** Remove duplicate vertices.
  *
- *  Note that if you want to remove duplicate vertices of a mesh,
+ *  #### Note
+ *  If you want to remove duplicate vertices of a mesh,
  *  use the other overload to fix indices.
  */
 template<typename T>
@@ -25,7 +26,7 @@ int remove_duplicate_vertices(std::vector<T>& positions);
 /** Remove duplicate vertices and fix indices.
  *
  */
-template<typename T1, typename T2>
+template<int N, typename T1, typename T2>
 int remove_duplicate_vertices(std::vector<T1>& positions,
                               std::vector<T2>& indices);
 

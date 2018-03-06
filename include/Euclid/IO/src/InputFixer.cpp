@@ -20,6 +20,8 @@ namespace Euclid
 namespace _impl
 {
 
+/** Convert face index order to a canonical form such that
+ *  the first index is the smallest.*/
 template<typename T, int N>
 std::array<T, N> to_canonical(const std::array<T, N>& face)
 {
@@ -69,58 +71,82 @@ int remove_duplicate_vertices(std::vector<T>& positions)
     return marks.size();
 }
 
-template<typename T1, typename T2>
+template<int N, typename T1, typename T2>
 int remove_duplicate_vertices(std::vector<T1>& positions,
                               std::vector<T2>& indices)
 {
     if (positions.size() % 3 != 0) {
         throw std::runtime_error("Input position size is not divisible by 3");
     }
+    if (indices.size() % N != 0) {
+        std::string err_str("Input index size is not divisible by ");
+        err_str.append(std::to_string(N));
+        throw(err_str);
+    }
+    if (*std::max_element(indices.begin(), indices.end()) >
+        static_cast<T2>(positions.size() / 3)) {
+        throw std::runtime_error(
+            "Input indices is out of range of the position vector");
+    }
     using Point = std::array<T1, 3>;
 
-    // Find duplicate points and correct their indices
-    std::map<size_t, size_t> marks; // marks[duplicate] = first
-    std::unordered_map<Point, size_t, boost::hash<Point>>
-        unique_points; // unique_points[point] = index
+    // marks[duplicate] = first
+    // duplicate and first are indices into the position vector
+    std::map<size_t, size_t> marks;
+
+    // unique_points[point] = index
+    // index refers to the position vector
+    std::unordered_map<Point, size_t, boost::hash<Point>> unique_points;
+
+    // Map all the duplicate positions to their first appearance
     for (size_t i = 0; i < positions.size(); i += 3) {
         Point p{ { positions[i], positions[i + 1], positions[i + 2] } };
         auto[iter, is_unique] = unique_points.try_emplace(std::move(p), i);
         if (!is_unique) {
+            EASSERT(p == iter->first);
             marks[i] = iter->second;
         }
     }
 
     size_t idx = positions.size() - 3;
+
+    // values in index_swap refers to the index of a Point
     std::vector<size_t> index_swap(positions.size() / 3);
     std::iota(index_swap.begin(), index_swap.end(), 0);
+
     for (auto iter = marks.rbegin(); iter != marks.rend(); ++iter, idx -= 3) {
-        // Swap to-be-removed positions to the back
+        // Replace positions in marks with positions in the back of the vector
         auto pos = iter->first;
         positions[pos] = positions[idx];
         positions[pos + 1] = positions[idx + 1];
         positions[pos + 2] = positions[idx + 2];
 
-        // Swap index accordingly
+        // Swap indices accordingly
         std::swap(index_swap[pos / 3], index_swap[idx / 3]);
     }
 
-    // Fix index map
-    std::unordered_map<size_t, size_t> index_map;
+    // index_map[old] = new
+    // old and new are indices of Point
+    std::vector<size_t> index_map(positions.size() / 3);
+
     for (size_t i = 0; i < index_swap.size() - marks.size(); ++i) {
+        EASSERT(marks.find(index_swap[i] * 3) == marks.end());
         index_map[index_swap[i]] = i;
     }
     for (size_t i = index_swap.size() - marks.size(); i < index_swap.size();
          ++i) {
-        index_map[index_swap[i]] = marks[index_swap[i] * 3] / 3;
+        EASSERT(marks.find(index_swap[i] * 3) != marks.end());
+        index_map[index_swap[i]] = index_map[marks[index_swap[i] * 3] / 3];
     }
 
     // Now fix indices
     for (auto& i : indices) {
-        EASSERT(index_map[i] < positions.size() / 3 - marks.size());
+        auto new_idx = index_map[i];
+        EASSERT(index_map[i] < (positions.size() / 3 - marks.size()));
         i = static_cast<T2>(index_map[i]);
     }
 
-    // Now drop the end
+    // Now erase garbage values at the tail of the vector
     positions.erase(positions.begin() + idx + 3, positions.end());
     positions.shrink_to_fit();
 
@@ -177,7 +203,7 @@ int remove_unreferenced_vertices(std::vector<T1>& positions,
         throw(err_str);
     }
 
-    std::vector<int> ref_count(positions.size() / N, 0);
+    std::vector<int> ref_count(positions.size() / 3, 0);
     for (auto i : indices) {
         ++ref_count[i];
     }
@@ -187,9 +213,9 @@ int remove_unreferenced_vertices(std::vector<T1>& positions,
     std::iota(index_swap.begin(), index_swap.end(), 0);
     for (int i = static_cast<int>(ref_count.size()) - 1; i >= 0; --i) {
         if (ref_count[i] == 0) {
-            positions[i * N] = positions[idx * N];
-            positions[i * N + 1] = positions[idx * N + 1];
-            positions[i * N + 2] = positions[idx * N + 2];
+            for (auto j = 0; j < 3; ++j) {
+                positions[i * 3 + j] = positions[idx * 3 + j];
+            }
             std::swap(index_swap[i], index_swap[idx--]);
         }
     }
@@ -203,14 +229,14 @@ int remove_unreferenced_vertices(std::vector<T1>& positions,
         i = index_map[i];
     }
 
-    positions.erase(positions.begin() + idx * N + N, positions.end());
+    positions.erase(positions.begin() + (idx + 1) * 3, positions.end());
     positions.shrink_to_fit();
 
     return ref_count.size() - idx - 1;
 }
 
 template<int N, typename T1, typename T2>
-int remove_degenerate_faces(std::vector<T1>& positions,
+int remove_degenerate_faces(const std::vector<T1>& positions,
                             std::vector<T2>& indices)
 {
     using Kernel = CGAL::Simple_cartesian<T1>;
@@ -228,9 +254,9 @@ int remove_degenerate_faces(std::vector<T1>& positions,
     std::vector<T2> marks;
     for (size_t i = 0; i < indices.size(); i += N) {
         for (size_t j = 0; j < N - 1; ++j) {
-            auto p0 = indices[i + j];
-            auto p1 = indices[i + j + 1];
-            auto p2 = j == N - 2 ? indices[i] : indices[i + j + 2];
+            auto p0 = indices[i + j] * 3;
+            auto p1 = indices[i + j + 1] * 3;
+            auto p2 = (j == N - 2 ? indices[i] : indices[i + j + 2]) * 3;
             auto x0 = positions[p0];
             auto y0 = positions[p0 + 1];
             auto z0 = positions[p0 + 2];
@@ -243,7 +269,7 @@ int remove_degenerate_faces(std::vector<T1>& positions,
             if (CGAL::collinear<Kernel>(Point_3{ x0, y0, z0 },
                                         Point_3{ x1, y1, z1 },
                                         Point_3{ x2, y2, z2 })) {
-                marks.push_back(p0);
+                marks.push_back(i);
                 break;
             }
         }
