@@ -767,17 +767,17 @@ protected:
  *  this type of ply files. Note that it's assumed that all faces
  *  have the same number of vertices.
  */
-template<typename FloatType, typename IndexType, typename ColorType, int VN>
+template<int VN, typename FloatType, typename IndexType, typename ColorType>
 class CommonPlyReader : public PlyReader
 {
 public:
     CommonPlyReader(std::vector<FloatType>& positions,
-                    std::vector<IndexType>* indices = nullptr,
                     std::vector<FloatType>* normals = nullptr,
                     std::vector<FloatType>* texcoords = nullptr,
+                    std::vector<IndexType>* indices = nullptr,
                     std::vector<ColorType>* colors = nullptr)
-        : _positions(positions), _indices(indices), _normals(normals),
-          _texcoords(texcoords), _colors(colors)
+        : _positions(positions), _normals(normals), _texcoords(texcoords),
+          _indices(indices), _colors(colors)
     {
     }
 
@@ -821,9 +821,9 @@ private:
 
 private:
     std::vector<FloatType>& _positions;
-    std::vector<IndexType>* _indices = nullptr;
     std::vector<FloatType>* _normals = nullptr;
     std::vector<FloatType>* _texcoords = nullptr;
+    std::vector<IndexType>* _indices = nullptr;
     std::vector<ColorType>* _colors = nullptr;
 };
 
@@ -924,17 +924,17 @@ protected:
  *  this type of ply files. Note that it's assumed that all faces
  *  have the same number of vertices.
  */
-template<typename FloatType, typename IndexType, typename ColorType, int VN>
+template<int VN, typename FloatType, typename IndexType, typename ColorType>
 class CommonPlyWriter : public PlyWriter
 {
 public:
     CommonPlyWriter(std::vector<FloatType>& positions,
-                    std::vector<IndexType>* indices = nullptr,
                     std::vector<FloatType>* normals = nullptr,
                     std::vector<FloatType>* texcoords = nullptr,
+                    std::vector<IndexType>* indices = nullptr,
                     std::vector<ColorType>* colors = nullptr)
-        : _positions(positions), _indices(indices), _normals(normals),
-          _texcoords(texcoords), _colors(colors)
+        : _positions(positions), _normals(normals), _texcoords(texcoords),
+          _indices(indices), _colors(colors)
     {
         auto n = positions.size() / 3;
         if (_normals != nullptr && _normals->size() != n * 3) {
@@ -1005,9 +1005,9 @@ private:
 
 private:
     std::vector<FloatType>& _positions;
-    std::vector<IndexType>* _indices = nullptr;
     std::vector<FloatType>* _normals = nullptr;
     std::vector<FloatType>* _texcoords = nullptr;
+    std::vector<IndexType>* _indices = nullptr;
     std::vector<ColorType>* _colors = nullptr;
     bool _has_alpha = false;
     size_t _piter = 0;
@@ -1030,12 +1030,15 @@ void read_ply(const std::string& file_name, PlyReader& reader);
 /** Read ply file using CommonPlyReader.
  *
  */
-template<typename FloatType, typename IndexType, typename ColorType, int VN>
+template<int VN,
+         typename FloatType = float,
+         typename IndexType = unsigned,
+         typename ColorType = unsigned>
 void read_ply(const std::string& file_name,
               std::vector<FloatType>& vertices,
-              std::vector<IndexType>* indices = nullptr,
               std::vector<FloatType>* normals = nullptr,
               std::vector<FloatType>* texcoords = nullptr,
+              std::vector<IndexType>* indices = nullptr,
               std::vector<ColorType>* colors = nullptr);
 
 /** Write ply file.
@@ -1048,7 +1051,7 @@ void write_ply(const std::string& file_name,
 /** Write ply file using CommonPlyWriter.
  *
  */
-template<typename FloatType, typename IndexType, typename ColorType, int VN>
+template<int VN, typename FloatType, typename IndexType, typename ColorType>
 void write_ply(const std::string& file_name,
                std::vector<FloatType>& vertices,
                std::vector<IndexType>* indices = nullptr,

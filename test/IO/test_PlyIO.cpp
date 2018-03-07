@@ -32,8 +32,8 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
         std::vector<float> texcoords;
         std::vector<unsigned> colors;
         std::vector<unsigned> indices;
-        Euclid::read_ply<float, unsigned, unsigned, 3>(
-            file, positions, &indices, &normals, &texcoords, &colors);
+        Euclid::read_ply<3>(
+            file, positions, &normals, &texcoords, &indices, &colors);
 
         REQUIRE(positions.size() == header.element(0).count() * 3);
         REQUIRE(normals.size() == header.element(0).count() * 3);
@@ -49,26 +49,25 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
         // Write file and read back again to test integrity
         std::string tmp_file(TMP_DIR);
         tmp_file.append("cube_ascii.ply");
-        Euclid::write_ply<float, unsigned, unsigned, 3>(
-            tmp_file,
-            positions,
-            &indices,
-            &normals,
-            &texcoords,
-            &colors,
-            Euclid::PlyFormat::ascii);
+        Euclid::write_ply<3>(tmp_file,
+                             positions,
+                             &normals,
+                             &texcoords,
+                             &indices,
+                             &colors,
+                             Euclid::PlyFormat::ascii);
 
         std::vector<double> new_positions;
         std::vector<double> new_normals;
         std::vector<double> new_texcoords;
         std::vector<int> new_colors;
         std::vector<int> new_indices;
-        Euclid::read_ply<double, int, int, 3>(tmp_file,
-                                              new_positions,
-                                              &new_indices,
-                                              &new_normals,
-                                              &new_texcoords,
-                                              &new_colors);
+        Euclid::read_ply<3>(tmp_file,
+                            new_positions,
+                            &new_normals,
+                            &new_texcoords,
+                            &new_indices,
+                            &new_colors);
 
         REQUIRE(positions.size() == new_positions.size());
         REQUIRE(normals.size() == new_normals.size());
@@ -106,8 +105,8 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
         std::vector<float> texcoords;
         std::vector<unsigned> colors;
         std::vector<unsigned> indices;
-        Euclid::read_ply<float, unsigned, unsigned, 3>(
-            file, positions, &indices, &normals, &texcoords, &colors);
+        Euclid::read_ply<3>(
+            file, positions, &normals, &texcoords, &indices, &colors);
 
         REQUIRE(positions.size() == header.element(0).count() * 3);
         REQUIRE(normals.size() == header.element(0).count() * 3);
@@ -123,26 +122,25 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
         // Write file and read back again to test integrity
         std::string tmp_file(TMP_DIR);
         tmp_file.append("cube_binary_big_endian.ply");
-        Euclid::write_ply<float, unsigned, unsigned, 3>(
-            tmp_file,
-            positions,
-            &indices,
-            &normals,
-            &texcoords,
-            &colors,
-            Euclid::PlyFormat::binary_big_endian);
+        Euclid::write_ply<3>(tmp_file,
+                             positions,
+                             &normals,
+                             &texcoords,
+                             &indices,
+                             &colors,
+                             Euclid::PlyFormat::binary_big_endian);
 
         std::vector<double> new_positions;
         std::vector<double> new_normals;
         std::vector<double> new_texcoords;
         std::vector<int> new_colors;
         std::vector<int> new_indices;
-        Euclid::read_ply<double, int, int, 3>(tmp_file,
-                                              new_positions,
-                                              &new_indices,
-                                              &new_normals,
-                                              &new_texcoords,
-                                              &new_colors);
+        Euclid::read_ply<3>(tmp_file,
+                            new_positions,
+                            &new_normals,
+                            &new_texcoords,
+                            &new_indices,
+                            &new_colors);
 
         REQUIRE(positions.size() == new_positions.size());
         REQUIRE(normals.size() == new_normals.size());
