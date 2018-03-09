@@ -39,6 +39,9 @@ std::array<T, N> to_canonical(const std::array<T, N>& face)
 template<typename T>
 int remove_duplicate_vertices(std::vector<T>& positions)
 {
+    if (positions.empty()) {
+        return 0;
+    }
     if (positions.size() % 3 != 0) {
         throw std::runtime_error("Input position size is not divisible by 3");
     }
@@ -75,6 +78,13 @@ template<int N, typename T1, typename T2>
 int remove_duplicate_vertices(std::vector<T1>& positions,
                               std::vector<T2>& indices)
 {
+    static_assert(N >= 3);
+    if (positions.empty()) {
+        return 0;
+    }
+    if (indices.empty()) {
+        remove_duplicate_vertices(positions);
+    }
     if (positions.size() % 3 != 0) {
         throw std::runtime_error("Input position size is not divisible by 3");
     }
@@ -83,7 +93,7 @@ int remove_duplicate_vertices(std::vector<T1>& positions,
         err_str.append(std::to_string(N));
         throw(err_str);
     }
-    if (*std::max_element(indices.begin(), indices.end()) >
+    if (*std::max_element(indices.begin(), indices.end()) >=
         static_cast<T2>(positions.size() / 3)) {
         throw std::runtime_error(
             "Input indices is out of range of the position vector");
@@ -156,6 +166,10 @@ int remove_duplicate_vertices(std::vector<T1>& positions,
 template<int N, typename T>
 int remove_duplicate_faces(std::vector<T>& indices)
 {
+    static_assert(N >= 3);
+    if (indices.empty()) {
+        return 0;
+    }
     if (indices.size() % N != 0) {
         std::string err_str("Input index size is not divisible by ");
         err_str.append(std::to_string(N));
@@ -194,6 +208,14 @@ template<int N, typename T1, typename T2>
 int remove_unreferenced_vertices(std::vector<T1>& positions,
                                  std::vector<T2>& indices)
 {
+    static_assert(N >= 3);
+    if (positions.empty()) {
+        return 0;
+    }
+    if (indices.empty()) {
+        std::cerr << "Warning: indices is empty, check your input" << std::endl;
+        return 0;
+    }
     if (positions.size() % 3 != 0) {
         throw std::runtime_error("Input position size is not divisible by 3");
     }
@@ -201,6 +223,11 @@ int remove_unreferenced_vertices(std::vector<T1>& positions,
         std::string err_str("Input index size is not divisible by ");
         err_str.append(std::to_string(N));
         throw(err_str);
+    }
+    if (*std::max_element(indices.begin(), indices.end()) >=
+        static_cast<T2>(positions.size() / 3)) {
+        throw std::runtime_error(
+            "Input indices is out of range of the position vector");
     }
 
     std::vector<int> ref_count(positions.size() / 3, 0);
@@ -239,9 +266,14 @@ template<int N, typename T1, typename T2>
 int remove_degenerate_faces(const std::vector<T1>& positions,
                             std::vector<T2>& indices)
 {
-    using Kernel = CGAL::Simple_cartesian<T1>;
-    using Point_3 = typename Kernel::Point_3;
     static_assert(N >= 3);
+    if (positions.empty()) {
+        return 0;
+    }
+    if (indices.empty()) {
+        std::cerr << "Warning: indices is empty, check your input" << std::endl;
+        return 0;
+    }
     if (positions.size() % 3 != 0) {
         throw std::runtime_error("Input position size is not divisible by 3");
     }
@@ -250,6 +282,13 @@ int remove_degenerate_faces(const std::vector<T1>& positions,
         err_str.append(std::to_string(N));
         throw(err_str);
     }
+    if (*std::max_element(indices.begin(), indices.end()) >=
+        static_cast<T2>(positions.size() / 3)) {
+        throw std::runtime_error(
+            "Input indices is out of range of the position vector");
+    }
+    using Kernel = CGAL::Simple_cartesian<T1>;
+    using Point_3 = typename Kernel::Point_3;
 
     std::vector<T2> marks;
     for (size_t i = 0; i < indices.size(); i += N) {
