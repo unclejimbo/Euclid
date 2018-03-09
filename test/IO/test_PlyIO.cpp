@@ -26,59 +26,121 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
         REQUIRE(header.element(1).n_props() == 1);
         REQUIRE(header.element(1).property(0)->name() == "vertex_indices");
 
-        // Read body
-        std::vector<float> positions;
-        std::vector<float> normals;
-        std::vector<float> texcoords;
-        std::vector<unsigned> colors;
-        std::vector<unsigned> indices;
-        Euclid::read_ply<3>(
-            file, positions, &normals, &texcoords, &indices, &colors);
+        SECTION("Positions only")
+        {
+            // Read body
+            std::vector<float> positions;
+            Euclid::read_ply<3>(
+                file, positions, nullptr, nullptr, nullptr, nullptr);
+            REQUIRE(positions.size() == header.element(0).count() * 3);
 
-        REQUIRE(positions.size() == header.element(0).count() * 3);
-        REQUIRE(normals.size() == header.element(0).count() * 3);
-        REQUIRE(texcoords.size() == header.element(0).count() * 2);
-        REQUIRE(colors.size() == header.element(0).count() * 3);
-        REQUIRE(indices.size() == header.element(1).count() * 3);
-        REQUIRE(positions[0] == 1.0f);
-        REQUIRE(normals[0] == 0.0f);
-        REQUIRE(texcoords[0] == 0.0);
-        REQUIRE(colors[0] == 255);
-        REQUIRE(indices[0] == 0);
+            // Write file and read back again to test integrity
+            std::string tmp_file(TMP_DIR);
+            tmp_file.append("cube_ascii.ply");
+            Euclid::write_ply<3>(
+                tmp_file, positions, nullptr, nullptr, nullptr, nullptr);
 
-        // Write file and read back again to test integrity
-        std::string tmp_file(TMP_DIR);
-        tmp_file.append("cube_ascii.ply");
-        Euclid::write_ply<3>(tmp_file,
-                             positions,
-                             &normals,
-                             &texcoords,
-                             &indices,
-                             &colors,
-                             Euclid::PlyFormat::ascii);
+            std::vector<double> new_positions;
+            Euclid::read_ply<3>(
+                tmp_file, new_positions, nullptr, nullptr, nullptr, nullptr);
 
-        std::vector<double> new_positions;
-        std::vector<double> new_normals;
-        std::vector<double> new_texcoords;
-        std::vector<int> new_colors;
-        std::vector<int> new_indices;
-        Euclid::read_ply<3>(tmp_file,
-                            new_positions,
-                            &new_normals,
-                            &new_texcoords,
-                            &new_indices,
-                            &new_colors);
+            REQUIRE(positions.size() == new_positions.size());
+            REQUIRE(positions[0] == new_positions[0]);
+        }
 
-        REQUIRE(positions.size() == new_positions.size());
-        REQUIRE(normals.size() == new_normals.size());
-        REQUIRE(texcoords.size() == new_texcoords.size());
-        REQUIRE(colors.size() == new_colors.size());
-        REQUIRE(indices.size() == new_indices.size());
-        REQUIRE(positions[0] == new_positions[0]);
-        REQUIRE(normals[0] == new_normals[0]);
-        REQUIRE(texcoords[0] == new_texcoords[0]);
-        REQUIRE(colors[0] == new_colors[0]);
-        REQUIRE(indices[0] == new_indices[0]);
+        SECTION("Positions, normals and texcoords")
+        {
+            // Read body
+            std::vector<float> positions;
+            std::vector<float> normals;
+            std::vector<float> texcoords;
+            Euclid::read_ply<3>(
+                file, positions, &normals, &texcoords, nullptr, nullptr);
+            REQUIRE(positions.size() == header.element(0).count() * 3);
+
+            // Write file and read back again to test integrity
+            std::string tmp_file(TMP_DIR);
+            tmp_file.append("cube_ascii.ply");
+            Euclid::write_ply<3>(
+                tmp_file, positions, &normals, &texcoords, nullptr, nullptr);
+
+            std::vector<double> new_positions;
+            std::vector<double> new_normals;
+            std::vector<double> new_texcoords;
+            Euclid::read_ply<3>(tmp_file,
+                                new_positions,
+                                &new_normals,
+                                &new_texcoords,
+                                nullptr,
+                                nullptr);
+
+            REQUIRE(positions.size() == new_positions.size());
+            REQUIRE(positions[0] == new_positions[0]);
+            REQUIRE(normals.size() == new_normals.size());
+            REQUIRE(texcoords.size() == new_texcoords.size());
+            REQUIRE(normals[0] == new_normals[0]);
+            REQUIRE(texcoords[0] == new_texcoords[0]);
+        }
+
+        SECTION("Positions and indices")
+        {
+            // Read body
+            std::vector<float> positions;
+            std::vector<unsigned> indices;
+            Euclid::read_ply<3>(
+                file, positions, nullptr, nullptr, &indices, nullptr);
+            REQUIRE(positions.size() == header.element(0).count() * 3);
+
+            // Write file and read back again to test integrity
+            std::string tmp_file(TMP_DIR);
+            tmp_file.append("cube_ascii.ply");
+            Euclid::write_ply<3>(
+                tmp_file, positions, nullptr, nullptr, &indices, nullptr);
+
+            std::vector<double> new_positions;
+            std::vector<int> new_indices;
+            Euclid::read_ply<3>(tmp_file,
+                                new_positions,
+                                nullptr,
+                                nullptr,
+                                &new_indices,
+                                nullptr);
+
+            REQUIRE(positions.size() == new_positions.size());
+            REQUIRE(positions[0] == new_positions[0]);
+            REQUIRE(indices.size() == new_indices.size());
+            REQUIRE(indices[0] == new_indices[0]);
+        }
+
+        SECTION("Positions and colors")
+        {
+            // Read body
+            std::vector<float> positions;
+            std::vector<unsigned> colors;
+            Euclid::read_ply<3>(
+                file, positions, nullptr, nullptr, nullptr, &colors);
+            REQUIRE(positions.size() == header.element(0).count() * 3);
+
+            // Write file and read back again to test integrity
+            std::string tmp_file(TMP_DIR);
+            tmp_file.append("cube_ascii.ply");
+            Euclid::write_ply<3>(
+                tmp_file, positions, nullptr, nullptr, nullptr, &colors);
+
+            std::vector<double> new_positions;
+            std::vector<int> new_colors;
+            Euclid::read_ply<3>(tmp_file,
+                                new_positions,
+                                nullptr,
+                                nullptr,
+                                nullptr,
+                                &new_colors);
+
+            REQUIRE(positions.size() == new_positions.size());
+            REQUIRE(positions[0] == new_positions[0]);
+            REQUIRE(colors.size() == new_colors.size());
+            REQUIRE(colors[0] == new_colors[0]);
+        }
     }
 
     SECTION("Read and write binary file")
@@ -99,58 +161,140 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
         REQUIRE(header.element(1).n_props() == 1);
         REQUIRE(header.element(1).property(0)->name() == "vertex_indices");
 
-        // Read body
-        std::vector<float> positions;
-        std::vector<float> normals;
-        std::vector<float> texcoords;
-        std::vector<unsigned> colors;
-        std::vector<unsigned> indices;
-        Euclid::read_ply<3>(
-            file, positions, &normals, &texcoords, &indices, &colors);
+        SECTION("Positions only")
+        {
+            // Read body
+            std::vector<float> positions;
+            Euclid::read_ply<3>(
+                file, positions, nullptr, nullptr, nullptr, nullptr);
+            REQUIRE(positions.size() == header.element(0).count() * 3);
 
-        REQUIRE(positions.size() == header.element(0).count() * 3);
-        REQUIRE(normals.size() == header.element(0).count() * 3);
-        REQUIRE(texcoords.size() == header.element(0).count() * 2);
-        REQUIRE(colors.size() == header.element(0).count() * 3);
-        REQUIRE(indices.size() == header.element(1).count() * 3);
-        REQUIRE(positions[0] == 1.0f);
-        REQUIRE(normals[0] == 0.0f);
-        REQUIRE(texcoords[0] == 0.0);
-        REQUIRE(colors[0] == 255);
-        REQUIRE(indices[0] == 0);
+            // Write file and read back again to test integrity
+            std::string tmp_file(TMP_DIR);
+            tmp_file.append("cube_binary_big_endian.ply");
+            Euclid::write_ply<3>(tmp_file,
+                                 positions,
+                                 nullptr,
+                                 nullptr,
+                                 nullptr,
+                                 nullptr,
+                                 Euclid::PlyFormat::binary_big_endian);
 
-        // Write file and read back again to test integrity
-        std::string tmp_file(TMP_DIR);
-        tmp_file.append("cube_binary_big_endian.ply");
-        Euclid::write_ply<3>(tmp_file,
-                             positions,
-                             &normals,
-                             &texcoords,
-                             &indices,
-                             &colors,
-                             Euclid::PlyFormat::binary_big_endian);
+            std::vector<double> new_positions;
+            Euclid::read_ply<3>(
+                tmp_file, new_positions, nullptr, nullptr, nullptr, nullptr);
 
-        std::vector<double> new_positions;
-        std::vector<double> new_normals;
-        std::vector<double> new_texcoords;
-        std::vector<int> new_colors;
-        std::vector<int> new_indices;
-        Euclid::read_ply<3>(tmp_file,
-                            new_positions,
-                            &new_normals,
-                            &new_texcoords,
-                            &new_indices,
-                            &new_colors);
+            REQUIRE(positions.size() == new_positions.size());
+            REQUIRE(positions[0] == new_positions[0]);
+        }
 
-        REQUIRE(positions.size() == new_positions.size());
-        REQUIRE(normals.size() == new_normals.size());
-        REQUIRE(texcoords.size() == new_texcoords.size());
-        REQUIRE(colors.size() == new_colors.size());
-        REQUIRE(indices.size() == new_indices.size());
-        REQUIRE(positions[0] == new_positions[0]);
-        REQUIRE(normals[0] == new_normals[0]);
-        REQUIRE(texcoords[0] == new_texcoords[0]);
-        REQUIRE(colors[0] == new_colors[0]);
-        REQUIRE(indices[0] == new_indices[0]);
+        SECTION("Positions, normals and texcoords")
+        {
+            // Read body
+            std::vector<float> positions;
+            std::vector<float> normals;
+            std::vector<float> texcoords;
+            Euclid::read_ply<3>(
+                file, positions, &normals, &texcoords, nullptr, nullptr);
+            REQUIRE(positions.size() == header.element(0).count() * 3);
+
+            // Write file and read back again to test integrity
+            std::string tmp_file(TMP_DIR);
+            tmp_file.append("cube_binary_big_endian.ply");
+            Euclid::write_ply<3>(tmp_file,
+                                 positions,
+                                 &normals,
+                                 &texcoords,
+                                 nullptr,
+                                 nullptr,
+                                 Euclid::PlyFormat::binary_big_endian);
+
+            std::vector<double> new_positions;
+            std::vector<double> new_normals;
+            std::vector<double> new_texcoords;
+            Euclid::read_ply<3>(tmp_file,
+                                new_positions,
+                                &new_normals,
+                                &new_texcoords,
+                                nullptr,
+                                nullptr);
+
+            REQUIRE(positions.size() == new_positions.size());
+            REQUIRE(positions[0] == new_positions[0]);
+            REQUIRE(normals.size() == new_normals.size());
+            REQUIRE(texcoords.size() == new_texcoords.size());
+            REQUIRE(normals[0] == new_normals[0]);
+            REQUIRE(texcoords[0] == new_texcoords[0]);
+        }
+
+        SECTION("Positions and indices")
+        {
+            // Read body
+            std::vector<float> positions;
+            std::vector<unsigned> indices;
+            Euclid::read_ply<3>(
+                file, positions, nullptr, nullptr, &indices, nullptr);
+            REQUIRE(positions.size() == header.element(0).count() * 3);
+
+            // Write file and read back again to test integrity
+            std::string tmp_file(TMP_DIR);
+            tmp_file.append("cube_binary_big_endian.ply");
+            Euclid::write_ply<3>(tmp_file,
+                                 positions,
+                                 nullptr,
+                                 nullptr,
+                                 &indices,
+                                 nullptr,
+                                 Euclid::PlyFormat::binary_big_endian);
+
+            std::vector<double> new_positions;
+            std::vector<int> new_indices;
+            Euclid::read_ply<3>(tmp_file,
+                                new_positions,
+                                nullptr,
+                                nullptr,
+                                &new_indices,
+                                nullptr);
+
+            REQUIRE(positions.size() == new_positions.size());
+            REQUIRE(positions[0] == new_positions[0]);
+            REQUIRE(indices.size() == new_indices.size());
+            REQUIRE(indices[0] == new_indices[0]);
+        }
+
+        SECTION("Positions and colors")
+        {
+            // Read body
+            std::vector<float> positions;
+            std::vector<unsigned> colors;
+            Euclid::read_ply<3>(
+                file, positions, nullptr, nullptr, nullptr, &colors);
+            REQUIRE(positions.size() == header.element(0).count() * 3);
+
+            // Write file and read back again to test integrity
+            std::string tmp_file(TMP_DIR);
+            tmp_file.append("cube_binary_big_endian.ply");
+            Euclid::write_ply<3>(tmp_file,
+                                 positions,
+                                 nullptr,
+                                 nullptr,
+                                 nullptr,
+                                 &colors,
+                                 Euclid::PlyFormat::binary_big_endian);
+
+            std::vector<double> new_positions;
+            std::vector<int> new_colors;
+            Euclid::read_ply<3>(tmp_file,
+                                new_positions,
+                                nullptr,
+                                nullptr,
+                                nullptr,
+                                &new_colors);
+
+            REQUIRE(positions.size() == new_positions.size());
+            REQUIRE(positions[0] == new_positions[0]);
+            REQUIRE(colors.size() == new_colors.size());
+            REQUIRE(colors[0] == new_colors[0]);
+        }
     }
 }

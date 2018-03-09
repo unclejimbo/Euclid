@@ -1022,27 +1022,87 @@ private:
  */
 PlyHeader read_ply_header(const std::string& file_name);
 
-/** Read ply file.
+/** Read ply file using a custom PlyReader.
  *
+ *  Read a custom ply file format by providing a PlyReader.
+ *  If you are reading a common ply file, consider using other overloadings
+ *  specifically designed to read common ply properties like positions, normals,
+ *  texcoords, indices and colors.
  */
 void read_ply(const std::string& file_name, PlyReader& reader);
 
 /** Read ply file using CommonPlyReader.
  *
  */
-template<int VN,
-         typename FloatType = float,
-         typename IndexType = unsigned,
-         typename ColorType = unsigned>
-void read_ply(const std::string& file_name,
-              std::vector<FloatType>& vertices,
-              std::vector<FloatType>* normals = nullptr,
-              std::vector<FloatType>* texcoords = nullptr,
-              std::vector<IndexType>* indices = nullptr,
-              std::vector<ColorType>* colors = nullptr);
+template<int VN, typename FloatType>
+void read_ply(
+    const std::string& file_name,
+    std::vector<FloatType>& positions,
+    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
+    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
+    std::nullptr_t indices,
+    std::nullptr_t colors);
+
+/** Read ply file using CommonPlyReader.
+ *
+ */
+template<int VN, typename FloatType, typename IndexType>
+void read_ply(
+    const std::string& file_name,
+    std::vector<FloatType>& positions,
+    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
+    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
+    std::vector<IndexType>* indices,
+    std::nullptr_t colors);
+
+/** Read ply file using CommonPlyReader.
+ *
+ */
+template<int VN, typename FloatType, typename ColorType>
+void read_ply(
+    const std::string& file_name,
+    std::vector<FloatType>& positions,
+    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
+    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
+    std::nullptr_t indices,
+    std::vector<ColorType>* colors);
+
+/** Read ply file using CommonPlyReader.
+ *
+ *  A convenient overload to read the most common ply properties.
+ *
+ *  @tparam VN Number of vertices per face.
+ *  @tparam FloatType Type of floating point value.
+ *  @tparam IndexType Type of index value.
+ *  @tparam ColorType Type of color value.
+ *
+ *  @param file_name Input file name.
+ *  @param positions Vertex positions.
+ *  @param normals Vertex normals, use nullptr if you don't want to read this
+ *  property.
+ *  @param texcoords Vertex texture coordinates, use nullptr if you don't want
+ *  to read this property.
+ *  @param indices Indices, use nullptr if you don't want to read this property.
+ *  @param colors Vertex colors, use nullptr if you don't want to read this
+ *  property.
+ *
+ *  @sa CommonPlyReader
+ */
+template<int VN, typename FloatType, typename IndexType, typename ColorType>
+void read_ply(
+    const std::string& file_name,
+    std::vector<FloatType>& positions,
+    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
+    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
+    std::vector<IndexType>* indices,
+    std::vector<ColorType>* colors);
 
 /** Write ply file.
  *
+ *  Write a custom ply file format by providing a PlyWriter.
+ *  If you are writing a common ply file, consider using other overloadings
+ *  specifically designed to write common ply properties like positions,
+ *  normals, texcoords, indices and colors.
  */
 void write_ply(const std::string& file_name,
                PlyWriter& writer,
@@ -1051,14 +1111,73 @@ void write_ply(const std::string& file_name,
 /** Write ply file using CommonPlyWriter.
  *
  */
+template<int VN, typename FloatType>
+void write_ply(
+    const std::string& file_name,
+    std::vector<FloatType>& vertices,
+    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
+    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
+    std::nullptr_t indices,
+    std::nullptr_t colors,
+    PlyFormat format = PlyFormat::ascii);
+
+/** Write ply file using CommonPlyWriter.
+ *
+ */
+template<int VN, typename FloatType, typename IndexType>
+void write_ply(
+    const std::string& file_name,
+    std::vector<FloatType>& vertices,
+    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
+    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
+    std::vector<IndexType>* indices,
+    std::nullptr_t colors,
+    PlyFormat format = PlyFormat::ascii);
+
+/** Write ply file using CommonPlyWriter.
+ *
+ */
+template<int VN, typename FloatType, typename ColorType>
+void write_ply(
+    const std::string& file_name,
+    std::vector<FloatType>& vertices,
+    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
+    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
+    std::nullptr_t indices,
+    std::vector<ColorType>* colors,
+    PlyFormat format = PlyFormat::ascii);
+
+/** Write ply file using CommonPlyWriter.
+ *
+ *  A convenient overload to write the most common ply properties.
+ *
+ *  @tparam VN Number of vertices per face.
+ *  @tparam FloatType Type of floating point value.
+ *  @tparam IndexType Type of index value.
+ *  @tparam ColorType Type of color value.
+ *
+ *  @param file_name Input file name.
+ *  @param positions Vertex positions.
+ *  @param normals Vertex normals, use nullptr if you don't want to read this
+ *  property.
+ *  @param texcoords Vertex texture coordinates, use nullptr if you don't want
+ *  to read this property.
+ *  @param indices Indices, use nullptr if you don't want to read this property.
+ *  @param colors Vertex colors, use nullptr if you don't want to read this
+ *  property.
+ *  @param format Ply encoding format.
+ *
+ *  @sa CommonPlyWriter
+ */
 template<int VN, typename FloatType, typename IndexType, typename ColorType>
-void write_ply(const std::string& file_name,
-               std::vector<FloatType>& vertices,
-               std::vector<IndexType>* indices = nullptr,
-               std::vector<FloatType>* normals = nullptr,
-               std::vector<FloatType>* texcoords = nullptr,
-               std::vector<ColorType>* colors = nullptr,
-               PlyFormat format = PlyFormat::ascii);
+void write_ply(
+    const std::string& file_name,
+    std::vector<FloatType>& vertices,
+    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
+    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
+    std::vector<IndexType>* indices,
+    std::vector<ColorType>* colors,
+    PlyFormat format = PlyFormat::ascii);
 
 /** @}*/
 } // namespace Euclid
