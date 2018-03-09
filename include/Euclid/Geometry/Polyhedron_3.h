@@ -6,41 +6,32 @@
  *  @ingroup PkgGeometry
  */
 #pragma once
+#include <type_traits>
 #include <CGAL/Polyhedron_3.h>
 
 namespace Euclid
 {
 /** @{*/
 
-/** Triangle mesh builder for Polyhedron_3.
+/** Build CGAL::Polyhedron_3 from positions and indices.
  *
  */
-template<typename Polyhedron_3>
-class TriMeshBuilder : public CGAL::Modifier_base<typename Polyhedron_3::HalfedgeDS>
-{
-	using FT = typename Polyhedron_3::Traits::Kernel::FT;
-	using HDS = typename Polyhedron_3::HalfedgeDS;
-	using Point_3 = typename Polyhedron_3::Traits::Kernel::Point_3;
+template<int N,
+         typename Kernel,
+         typename PT,
+         typename IT,
+         typename Enable = std::enable_if_t<std::is_arithmetic_v<PT>, void>>
+void build_polyhedron_3(CGAL::Polyhedron_3<Kernel>& mesh,
+                        const std::vector<PT>& positions,
+                        const std::vector<IT>& indices);
 
-public:
-	/** Build mesh from vertices and indices.
-	 *
-	 */
-	TriMeshBuilder(const std::vector<FT>& vertices, const std::vector<unsigned>& indices);
-
-
-	/** Build mesh from vertices and indices.
-	 *
-	 */
-	TriMeshBuilder(const std::vector<Point_3>& vertices, const std::vector<unsigned>& indices);
-
-
-	void operator()(HDS& hds);
-
-private:
-	std::vector<FT> _vertices;
-	std::vector<unsigned> _indices;
-};
+/** Build CGAL::Polyhedron_3<Kernel> from points and indices.
+ *
+ */
+template<int N, typename Kernel, typename IT>
+void build_polyhedron_3(CGAL::Polyhedron_3<Kernel>& mesh,
+                        const std::vector<typename Kernel::Point_3>& points,
+                        const std::vector<IT>& indices);
 
 /** @}*/
 } // namespace Euclid
