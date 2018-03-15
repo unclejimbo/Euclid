@@ -5,7 +5,8 @@
 
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Point_set_3.h> // CGAL's bug, must be included after a kernel
-#include <Euclid/Geometry/Surface_mesh.h>
+#include <CGAL/Surface_mesh.h>
+#include <Euclid/Geometry/MeshBuilder.h>
 
 #include "../config.h"
 
@@ -17,12 +18,13 @@ using Point_set_3 = CGAL::Point_set_3<Point_3>;
 
 TEST_CASE("Package: Analysis/OBB", "[obb]")
 {
-    const std::vector<float> positions{
-        0.0f, 0.0f, 0.0f, 3.0f, 0.0f, 0.0f, 3.0f, 2.0f, 0.0f, 0.0f, 2.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 3.0f, 0.0f, 1.0f, 3.0f, 2.0f, 1.0f, 0.0f, 2.0f, 1.0f};
-    const std::vector<int> indices{0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 7,
-                                   1, 0, 4, 1, 4, 5, 3, 2, 6, 3, 6, 7,
-                                   2, 1, 5, 2, 5, 6, 7, 6, 5, 7, 5, 4};
+    const std::vector<float> positions{ 0.0f, 0.0f, 0.0f, 3.0f, 0.0f, 0.0f,
+                                        3.0f, 2.0f, 0.0f, 0.0f, 2.0f, 0.0f,
+                                        0.0f, 0.0f, 1.0f, 3.0f, 0.0f, 1.0f,
+                                        3.0f, 2.0f, 1.0f, 0.0f, 2.0f, 1.0f };
+    const std::vector<int> indices{ 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 7,
+                                    1, 0, 4, 1, 4, 5, 3, 2, 6, 3, 6, 7,
+                                    2, 1, 5, 2, 5, 6, 7, 6, 5, 7, 5, 4 };
 
     SECTION("Build obb from raw positions")
     {
@@ -58,7 +60,7 @@ TEST_CASE("Package: Analysis/OBB", "[obb]")
     SECTION("Build obb from mesh")
     {
         Surface_mesh mesh;
-        Euclid::build_surface_mesh(mesh, positions, indices);
+        Euclid::build_mesh<3>(mesh, positions, indices);
         auto obb = Euclid::OBB<Kernel>(
             mesh.vertices_begin(), mesh.vertices_end(), mesh.points());
 
