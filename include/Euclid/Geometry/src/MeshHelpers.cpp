@@ -1,4 +1,7 @@
+#include <exception>
 #include <iostream>
+#include <string>
+#include <unordered_map>
 
 #include <CGAL/boost/graph/properties.h>
 #include <CGAL/boost/graph/Euler_operations.h>
@@ -7,7 +10,7 @@ namespace Euclid
 {
 
 template<int N, typename Mesh, typename FT, typename IT>
-std::enable_if_t<std::is_arithmetic_v<FT>, void> build_mesh(
+std::enable_if_t<std::is_arithmetic_v<FT>, void> make_mesh(
     Mesh& mesh,
     const std::vector<FT>& positions,
     const std::vector<IT>& indices)
@@ -54,7 +57,7 @@ std::enable_if_t<std::is_arithmetic_v<FT>, void> build_mesh(
 }
 
 template<int N, typename Mesh, typename Point_3, typename IT>
-std::enable_if_t<!std::is_arithmetic_v<Point_3>, void> build_mesh(
+std::enable_if_t<!std::is_arithmetic_v<Point_3>, void> make_mesh(
     Mesh& mesh,
     const std::vector<Point_3>& points,
     const std::vector<IT>& indices)
@@ -91,4 +94,77 @@ std::enable_if_t<!std::is_arithmetic_v<Point_3>, void> build_mesh(
         CGAL::Euler::add_face(face, mesh);
     }
 }
+
+template<int N, typename Mesh, typename FT, typename IT>
+std::enable_if_t<std::is_arithmetic_v<FT>, void>
+extract_mesh(Mesh& mesh, std::vector<FT>& positions, std::vector<IT>& indices)
+{
+    positions.clear();
+    indices.clear();
+    positions.reserve(num_vertices(mesh) * 3);
+    indices.reserve(num_faces(mesh) * N);
+    using vertex_descriptor =
+        typename boost::graph_traits<Mesh>::vertex_descriptor;
+
+    auto vpmap = get(CGAL::vertex_point, mesh);
+    std::unordered_map<vertex_descriptor, int> vimap;
+    int idx = 0;
+    for (auto[beg, end] = vertices(mesh); beg != end; ++beg) {
+        positions.push_back(vpmap[*beg].x());
+        positions.push_back(vpmap[*beg].y());
+        positions.push_back(vpmap[*beg].z());
+        vimap[*beg] = idx++;
+    }
+
+    for (auto[fb, fe] = faces(mesh); fb != fe; ++fb) {
+        int i = 0;
+        for (auto[vb, ve] = vertices_around_face(halfedge(*fb, mesh), mesh);
+             vb != ve;
+             ++vb) {
+            if (i++ >= N) {
+                std::string err_str("The mesh is not a regular ");
+                err_str.append(std::to_string(N));
+                err_str.append("-mesh");
+                throw std::runtime_error(err_str);
+            }
+            indices.push_back(vimap[*vb]);
+        }
+    }
 }
+
+template<int N, typename Mesh, typename Point_3, typename IT>
+std::enable_if_t<!std::is_arithmetic_v<Point_3>, void>
+extract_mesh(Mesh& mesh, std::vector<Point_3>& points, std::vector<IT>& indices)
+{
+    points.clear();
+    indices.clear();
+    points.reserve(num_vertices(mesh));
+    indices.reserve(num_faces(mesh) * 3);
+    using vertex_descriptor =
+        typename boost::graph_traits<Mesh>::vertex_descriptor;
+
+    auto vpmap = get(CGAL::vertex_point, mesh);
+    std::unordered_map<vertex_descriptor, int> vimap;
+    int idx = 0;
+    for (auto[beg, end] = vertices(mesh); beg != end; ++beg) {
+        points.push_back(vpmap[*beg]);
+        vimap[*beg] = idx++;
+    }
+
+    for (auto[fb, fe] = faces(mesh); fb != fe; ++fb) {
+        int i = 0;
+        for (auto[vb, ve] = vertices_around_face(halfedge(*fb, mesh), mesh);
+             vb != ve;
+             ++vb) {
+            if (i++ >= N) {
+                std::string err_str("The mesh is not a regular ");
+                err_str.append(std::to_string(N));
+                err_str.append("-mesh");
+                throw std::runtime_error(err_str);
+            }
+            indices.push_back(vimap[*vb]);
+        }
+    }
+}
+
+} // namespace Euclid

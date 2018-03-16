@@ -6,7 +6,7 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Point_set_3.h> // CGAL's bug, must be included after a kernel
 #include <CGAL/Surface_mesh.h>
-#include <Euclid/Geometry/MeshBuilder.h>
+#include <Euclid/Geometry/MeshHelpers.h>
 
 #include "../config.h"
 
@@ -60,7 +60,7 @@ TEST_CASE("Package: Analysis/OBB", "[obb]")
     SECTION("Build obb from mesh")
     {
         Surface_mesh mesh;
-        Euclid::build_mesh<3>(mesh, positions, indices);
+        Euclid::make_mesh<3>(mesh, positions, indices);
         auto obb = Euclid::OBB<Kernel>(
             mesh.vertices_begin(), mesh.vertices_end(), mesh.points());
 
