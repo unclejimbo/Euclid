@@ -6,41 +6,26 @@
  */
 #pragma once
 
+#include <CGAL/boost/graph/helpers.h>
+
 namespace Euclid
 {
 /** @{*/
 
-/** A primitive generator.
+/** Create a subdivision sphere.
  *
+ *  Create a subdivision sphere from icosahedron
+ *  using Loop subdivision method.
  */
-template<typename Mesh>
-class PrimitiveGenerator
-{
-	using Point_3 = typename boost::property_traits<
-		typename boost::property_map<Mesh, boost::vertex_point_t>
-		::type>::value_type;
-
-public:
-	/** Generate an icosahedron.
-	 *
-	 */
-	template<typename T>
-	static void icosahedron(
-		Mesh& mesh,
-		T radius = 1.0,
-		const Point_3& center = { 0.0, 0.0, 0.0 });
-
-
-	/** Generate a subdivision_sphere.
-	 *
-	 */
-	template<typename T>
-	static void subdivision_sphere(
-		Mesh& mesh,
-		T radius = 1.0,
-		const Point_3& center = { 0.0, 0.0, 0.0 },
-		int iterations = 4);
-};
+template<typename Mesh,
+         typename Point_3 = typename boost::property_traits<
+             typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+             value_type>
+static void make_subdivision_sphere(
+    Mesh& mesh,
+    const Point_3& center = { 0.0, 0.0, 0.0 },
+    typename CGAL::Kernel_traits<Point_3>::Kernel::FT radius = 1.0,
+    int iterations = 4);
 
 /** @}*/
 } // namespace Euclid
