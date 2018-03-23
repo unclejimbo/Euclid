@@ -36,6 +36,9 @@ find_package(Eigen3 REQUIRED)
 find_package(CGAL REQUIRED)
 include(${CGAL_USE_FILE})
 
+# Find Libigl
+find_package(Libigl REQUIRED)
+
 # Find OpenCV
 find_package(OpenCV REQUIRED core imgproc)
 
@@ -56,6 +59,7 @@ target_include_directories(run_test PUBLIC
     ${Boost_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIR}
     ${CGAL_INCLUDE_DIRS}
+    ${Libigl_INCLUDE_DIR}
     ${OpenCV_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/
     ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/)

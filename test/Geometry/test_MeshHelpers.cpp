@@ -53,7 +53,7 @@ TEST_CASE("Package: Geometry/MeshHelpers", "[meshhelpers]")
         REQUIRE(new_indices == indices);
     }
 
-    SECTION("Build a CGAL::Polyhedron_3")
+    SECTION("Make and extract a CGAL::Polyhedron_3 with raw positions")
     {
         using Mesh = CGAL::Polyhedron_3<Kernel>;
         Mesh mesh;
@@ -66,7 +66,7 @@ TEST_CASE("Package: Geometry/MeshHelpers", "[meshhelpers]")
         REQUIRE(new_indices == indices);
     }
 
-    SECTION("Build a CGAL::Polyhedron_3")
+    SECTION("Make and extract a CGAL::Polyhedron_3 with points")
     {
         using Mesh = CGAL::Polyhedron_3<Kernel>;
         Mesh mesh;
@@ -76,6 +76,19 @@ TEST_CASE("Package: Geometry/MeshHelpers", "[meshhelpers]")
         Euclid::extract_mesh<3>(mesh, new_points, new_indices);
 
         REQUIRE(new_points == points);
+        REQUIRE(new_indices == indices);
+    }
+
+    SECTION("Make and extract a Eigen::Matrix")
+    {
+        Eigen::MatrixXd V;
+        Eigen::MatrixXi F;
+        Euclid::make_mesh<3>(V, F, positions, indices);
+        std::vector<double> new_positions;
+        std::vector<unsigned> new_indices;
+        Euclid::extract_mesh<3>(V, F, new_positions, new_indices);
+
+        REQUIRE(new_positions == positions);
         REQUIRE(new_indices == indices);
     }
 }

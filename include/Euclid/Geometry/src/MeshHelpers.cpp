@@ -95,9 +95,48 @@ std::enable_if_t<!std::is_arithmetic_v<Point_3>, void> make_mesh(
     }
 }
 
+template<int N, typename DerivedV, typename DerivedF, typename FT, typename IT>
+void make_mesh(Eigen::PlainObjectBase<DerivedV>& V,
+               Eigen::PlainObjectBase<DerivedF>& F,
+               const std::vector<FT>& positions,
+               const std::vector<IT>& indices)
+{
+    static_assert(N >= 3);
+    if (positions.empty() || indices.empty()) {
+        std::cerr << "Warning: positions or indices is empty, check your input"
+                  << std::endl;
+        return;
+    }
+    if (positions.size() % 3 != 0) {
+        throw std::runtime_error("Input positions size is not divisible by 3");
+    }
+    if (indices.size() % N != 0) {
+        std::string err_str("Input indices size is not divisible by ");
+        err_str.append(std::to_string(N));
+        throw std::runtime_error(err_str);
+    }
+
+    V.resize(positions.size() / 3, 3);
+    F.resize(indices.size() / 3, N);
+    for (size_t i = 0; i < positions.size(); i += 3) {
+        auto row = i / 3;
+        V(row, 0) = positions[i + 0];
+        V(row, 1) = positions[i + 1];
+        V(row, 2) = positions[i + 2];
+    }
+    for (size_t i = 0; i < indices.size(); i += N) {
+        auto row = i / N;
+        for (size_t j = 0; j < N; ++j) {
+            F(row, j) = indices[i + j];
+        }
+    }
+}
+
 template<int N, typename Mesh, typename FT, typename IT>
-std::enable_if_t<std::is_arithmetic_v<FT>, void>
-extract_mesh(Mesh& mesh, std::vector<FT>& positions, std::vector<IT>& indices)
+std::enable_if_t<std::is_arithmetic_v<FT>, void> extract_mesh(
+    const Mesh& mesh,
+    std::vector<FT>& positions,
+    std::vector<IT>& indices)
 {
     positions.clear();
     indices.clear();
@@ -133,8 +172,10 @@ extract_mesh(Mesh& mesh, std::vector<FT>& positions, std::vector<IT>& indices)
 }
 
 template<int N, typename Mesh, typename Point_3, typename IT>
-std::enable_if_t<!std::is_arithmetic_v<Point_3>, void>
-extract_mesh(Mesh& mesh, std::vector<Point_3>& points, std::vector<IT>& indices)
+std::enable_if_t<!std::is_arithmetic_v<Point_3>, void> extract_mesh(
+    const Mesh& mesh,
+    std::vector<Point_3>& points,
+    std::vector<IT>& indices)
 {
     points.clear();
     indices.clear();
@@ -163,6 +204,29 @@ extract_mesh(Mesh& mesh, std::vector<Point_3>& points, std::vector<IT>& indices)
                 throw std::runtime_error(err_str);
             }
             indices.push_back(vimap[*vb]);
+        }
+    }
+}
+
+template<int N, typename DerivedV, typename DerivedF, typename FT, typename IT>
+void extract_mesh(const Eigen::MatrixBase<DerivedV>& V,
+                  const Eigen::MatrixBase<DerivedF>& F,
+                  std::vector<FT>& positions,
+                  std::vector<IT>& indices)
+{
+    positions.clear();
+    indices.clear();
+    positions.reserve(V.rows() * 3);
+    indices.reserve(F.rows() * N);
+
+    for (size_t i = 0; i < V.rows(); ++i) {
+        positions.push_back(V(i, 0));
+        positions.push_back(V(i, 1));
+        positions.push_back(V(i, 2));
+    }
+    for (size_t i = 0; i < F.rows(); ++i) {
+        for (size_t j = 0; j < N; ++j) {
+            indices.push_back(F(i, j));
         }
     }
 }
