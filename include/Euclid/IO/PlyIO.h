@@ -51,8 +51,7 @@ public:
 
     PlyProperty(const std::string& name, bool is_list)
         : _name(name), _is_list(is_list)
-    {
-    }
+    {}
 
     virtual ~PlyProperty() = default;
 
@@ -111,8 +110,7 @@ public:
 
     PlyDoubleProperty(const std::string& name, bool is_list)
         : PlyProperty(name, is_list)
-    {
-    }
+    {}
 
     std::string type_str() const override { return "double"; }
 
@@ -151,8 +149,7 @@ public:
 
     PlyFloatProperty(const std::string& name, bool is_list)
         : PlyProperty(name, is_list)
-    {
-    }
+    {}
 
     std::string type_str() const override { return "float"; }
 
@@ -191,8 +188,7 @@ public:
 
     PlyIntProperty(const std::string& name, bool is_list)
         : PlyProperty(name, is_list)
-    {
-    }
+    {}
 
     std::string type_str() const override { return "int"; }
 
@@ -231,8 +227,7 @@ public:
 
     PlyUintProperty(const std::string& name, bool is_list)
         : PlyProperty(name, is_list)
-    {
-    }
+    {}
 
     std::string type_str() const override { return "uint"; }
 
@@ -271,8 +266,7 @@ public:
 
     PlyShortProperty(const std::string& name, bool is_list)
         : PlyProperty(name, is_list)
-    {
-    }
+    {}
 
     std::string type_str() const override { return "short"; }
 
@@ -311,8 +305,7 @@ public:
 
     PlyUshortProperty(const std::string& name, bool is_list)
         : PlyProperty(name, is_list)
-    {
-    }
+    {}
 
     std::string type_str() const override { return "ushort"; }
 
@@ -351,8 +344,7 @@ public:
 
     PlyCharProperty(const std::string& name, bool is_list)
         : PlyProperty(name, is_list)
-    {
-    }
+    {}
 
     std::string type_str() const override { return "char"; }
 
@@ -391,8 +383,7 @@ public:
 
     PlyUcharProperty(const std::string& name, bool is_list)
         : PlyProperty(name, is_list)
-    {
-    }
+    {}
 
     std::string type_str() const override { return "uchar"; }
 
@@ -508,8 +499,7 @@ public:
      */
     PlyElement(const std::string& name, unsigned count)
         : _name(name), _count(count)
-    {
-    }
+    {}
 
     ~PlyElement() = default;
 
@@ -778,8 +768,7 @@ public:
                     std::vector<ColorType>* colors = nullptr)
         : _positions(positions), _normals(normals), _texcoords(texcoords),
           _indices(indices), _colors(colors)
-    {
-    }
+    {}
 
     void on_read(const PlyHeader& header) override;
 
@@ -946,9 +935,7 @@ public:
                 "Size of texcoords not compatible with positions");
         }
         if (_colors != nullptr) {
-            if (_colors->size() == n * 3) {
-                _has_alpha = false;
-            }
+            if (_colors->size() == n * 3) { _has_alpha = false; }
             else if (_colors->size() == n * 4) {
                 _has_alpha = true;
             }
@@ -1114,7 +1101,7 @@ void write_ply(const std::string& file_name,
 template<int VN, typename FloatType>
 void write_ply(
     const std::string& file_name,
-    std::vector<FloatType>& vertices,
+    std::vector<FloatType>& positions,
     typename std::enable_if<true, std::vector<FloatType>*>::type normals,
     typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
     std::nullptr_t indices,
@@ -1127,7 +1114,7 @@ void write_ply(
 template<int VN, typename FloatType, typename IndexType>
 void write_ply(
     const std::string& file_name,
-    std::vector<FloatType>& vertices,
+    std::vector<FloatType>& positions,
     typename std::enable_if<true, std::vector<FloatType>*>::type normals,
     typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
     std::vector<IndexType>* indices,
@@ -1140,7 +1127,7 @@ void write_ply(
 template<int VN, typename FloatType, typename ColorType>
 void write_ply(
     const std::string& file_name,
-    std::vector<FloatType>& vertices,
+    std::vector<FloatType>& positions,
     typename std::enable_if<true, std::vector<FloatType>*>::type normals,
     typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
     std::nullptr_t indices,
@@ -1172,7 +1159,7 @@ void write_ply(
 template<int VN, typename FloatType, typename IndexType, typename ColorType>
 void write_ply(
     const std::string& file_name,
-    std::vector<FloatType>& vertices,
+    std::vector<FloatType>& positions,
     typename std::enable_if<true, std::vector<FloatType>*>::type normals,
     typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
     std::vector<IndexType>* indices,

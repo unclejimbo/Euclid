@@ -39,12 +39,6 @@ bool eq_almost(T a, T b, T epsilon = std::numeric_limits<T>::epsilon());
  *
  *  This is the most versatile equality check to use. It returns true when
  *  either a relative or absolute error bound is satified.
- *
- *  @param a
- *  @param b
- *  @param epsilon Default value is sufficient for most cases. However, when
- *  comparing very closed values less than one, try to increase epsilon because
- *  this senario is equivalent to using eq_abs_err().
  */
 template<typename T,
          typename = std::enable_if_t<std::is_floating_point<T>::value>>
