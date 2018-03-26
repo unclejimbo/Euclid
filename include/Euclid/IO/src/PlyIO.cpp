@@ -6,6 +6,8 @@
 
 #include <Euclid/Util/Assert.h>
 
+#include "IOHelpers.h"
+
 namespace Euclid
 {
 
@@ -27,28 +29,6 @@ static inline std::vector<std::string> read_ply_header_line(
                   std::back_inserter(words));
     } while (words[0] == "comment");
     return words;
-}
-
-/** Check if a file is opened.*/
-static inline void check_stream(const std::ifstream& stream,
-                                const std::string& file_name)
-{
-    if (!stream.is_open()) {
-        std::string err_str("Can't open file ");
-        err_str.append(file_name);
-        throw std::runtime_error(err_str);
-    }
-}
-
-/** Check if a file is opened.*/
-static inline void check_stream(const std::ofstream& stream,
-                                const std::string& file_name)
-{
-    if (!stream.is_open()) {
-        std::string err_str("Can't open file ");
-        err_str.append(file_name);
-        throw std::runtime_error(err_str);
-    }
 }
 
 /** Check if system is little endian.*/
@@ -238,18 +218,12 @@ static PlyHeader _read_ply_header(std::ifstream& stream)
 {
     std::string line;
     std::getline(stream, line);
-    if (line != "ply") {
-        throw std::runtime_error("Bad ply file");
-    }
+    if (line != "ply") { throw std::runtime_error("Bad ply file"); }
 
     PlyFormat format;
     auto words = read_ply_header_line(stream);
-    if (words[0] != "format") {
-        throw std::runtime_error("Bad ply file");
-    }
-    if (words[1] == "ascii") {
-        format = PlyFormat::ascii;
-    }
+    if (words[0] != "format") { throw std::runtime_error("Bad ply file"); }
+    if (words[1] == "ascii") { format = PlyFormat::ascii; }
     else if (words[1] == "binary_little_endian") {
         format = PlyFormat::binary_little_endian;
     }
@@ -366,9 +340,7 @@ static PlyHeader _read_ply_header(std::ifstream& stream)
 static void write_ply_header(std::ofstream& stream, const PlyHeader& header)
 {
     stream << "ply" << std::endl << "format ";
-    if (header.format() == PlyFormat::ascii) {
-        stream << "ascii ";
-    }
+    if (header.format() == PlyFormat::ascii) { stream << "ascii "; }
     else if (header.format() == PlyFormat::binary_little_endian) {
         stream << "binary_little_endian ";
     }
@@ -380,9 +352,7 @@ static void write_ply_header(std::ofstream& stream, const PlyHeader& header)
         stream << "element " << e.name() << " " << e.count() << std::endl;
         for (const auto& p : e) {
             stream << "property ";
-            if (p.is_list()) {
-                stream << "list uchar ";
-            }
+            if (p.is_list()) { stream << "list uchar "; }
             stream << p.type_str() << " " << p.name() << std::endl;
         }
     }
@@ -1111,9 +1081,7 @@ void CommonPlyWriter<VN, FloatType, IndexType, ColorType>::_write_float(
     }
 
     auto v = static_cast<typename TPlyProperty::value_type>(value);
-    if (format == PlyFormat::ascii) {
-        property->put_ascii(stream, v);
-    }
+    if (format == PlyFormat::ascii) { property->put_ascii(stream, v); }
     else {
         property->put_binary(stream,
                              v,
@@ -1140,9 +1108,7 @@ void CommonPlyWriter<VN, FloatType, IndexType, ColorType>::_write_color(
     }
 
     auto v = static_cast<typename TPlyProperty::value_type>(value);
-    if (format == PlyFormat::ascii) {
-        property->put_ascii(stream, v);
-    }
+    if (format == PlyFormat::ascii) { property->put_ascii(stream, v); }
     else {
         property->put_binary(stream,
                              v,
@@ -1163,9 +1129,7 @@ void CommonPlyWriter<VN, FloatType, IndexType, ColorType>::_write_indices(
         EASSERT(_indices != nullptr);
 
         // Write vertex number
-        if (format == PlyFormat::ascii) {
-            stream << VN << " ";
-        }
+        if (format == PlyFormat::ascii) { stream << VN << " "; }
         else {
             auto vn = static_cast<char>(VN);
             stream.put(vn);
@@ -1176,9 +1140,7 @@ void CommonPlyWriter<VN, FloatType, IndexType, ColorType>::_write_indices(
             auto v = (*_indices)[_iiter++];
             if (format == PlyFormat::ascii) {
                 property->put_ascii(stream, v);
-                if (i < VN - 1) {
-                    stream << " ";
-                }
+                if (i < VN - 1) { stream << " "; }
             }
             else {
                 property->put_binary(stream,
@@ -1198,7 +1160,7 @@ void CommonPlyWriter<VN, FloatType, IndexType, ColorType>::_write_indices(
 inline PlyHeader read_ply_header(const std::string& file_name)
 {
     std::ifstream stream(file_name);
-    _impl::check_stream(stream, file_name);
+    _impl::check_fstream(stream, file_name);
 
     return _impl::_read_ply_header(stream);
 }
@@ -1206,7 +1168,7 @@ inline PlyHeader read_ply_header(const std::string& file_name)
 inline void read_ply(const std::string& file_name, PlyReader& reader)
 {
     std::ifstream stream(file_name);
-    _impl::check_stream(stream, file_name);
+    _impl::check_fstream(stream, file_name);
 
     auto header = _impl::_read_ply_header(stream);
     reader.on_read(header);
@@ -1291,7 +1253,7 @@ inline void write_ply(const std::string& file_name,
                       PlyFormat format)
 {
     std::ofstream stream(file_name, std::ios::out | std::ios::trunc);
-    _impl::check_stream(stream, file_name);
+    _impl::check_fstream(stream, file_name);
 
     writer.on_write();
 
@@ -1312,9 +1274,7 @@ inline void write_ply(const std::string& file_name,
                     stream << " ";
                 }
             }
-            if (format == PlyFormat::ascii) {
-                stream << std::endl;
-            }
+            if (format == PlyFormat::ascii) { stream << std::endl; }
         }
     }
 }
