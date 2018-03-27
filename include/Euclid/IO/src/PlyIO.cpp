@@ -1061,7 +1061,7 @@ void CommonPlyWriter<VN, FloatType, IndexType, ColorType>::_write_float(
     std::ofstream& stream,
     PlyFormat format)
 {
-    FloatType value;
+    FloatType value = 0.0;
     if (property->name() == "x" || property->name() == "y" ||
         property->name() == "z") {
         value = _positions[_piter++];
@@ -1097,7 +1097,7 @@ void CommonPlyWriter<VN, FloatType, IndexType, ColorType>::_write_color(
     std::ofstream& stream,
     PlyFormat format)
 {
-    ColorType value;
+    ColorType value = 0.0;
     if (property->name() == "red" || property->name() == "green" ||
         property->name() == "blue" || property->name() == "alpha") {
         EASSERT(_colors != nullptr);

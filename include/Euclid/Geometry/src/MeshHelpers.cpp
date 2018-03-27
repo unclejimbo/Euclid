@@ -148,16 +148,16 @@ std::enable_if_t<std::is_arithmetic_v<FT>, void> extract_mesh(
     auto vpmap = get(CGAL::vertex_point, mesh);
     std::unordered_map<vertex_descriptor, int> vimap;
     int idx = 0;
-    for (auto[beg, end] = vertices(mesh); beg != end; ++beg) {
+    for (auto [beg, end] = vertices(mesh); beg != end; ++beg) {
         positions.push_back(vpmap[*beg].x());
         positions.push_back(vpmap[*beg].y());
         positions.push_back(vpmap[*beg].z());
         vimap[*beg] = idx++;
     }
 
-    for (auto[fb, fe] = faces(mesh); fb != fe; ++fb) {
+    for (auto [fb, fe] = faces(mesh); fb != fe; ++fb) {
         int i = 0;
-        for (auto[vb, ve] = vertices_around_face(halfedge(*fb, mesh), mesh);
+        for (auto [vb, ve] = vertices_around_face(halfedge(*fb, mesh), mesh);
              vb != ve;
              ++vb) {
             if (i++ >= N) {
@@ -187,14 +187,14 @@ std::enable_if_t<!std::is_arithmetic_v<Point_3>, void> extract_mesh(
     auto vpmap = get(CGAL::vertex_point, mesh);
     std::unordered_map<vertex_descriptor, int> vimap;
     int idx = 0;
-    for (auto[beg, end] = vertices(mesh); beg != end; ++beg) {
+    for (auto [beg, end] = vertices(mesh); beg != end; ++beg) {
         points.push_back(vpmap[*beg]);
         vimap[*beg] = idx++;
     }
 
-    for (auto[fb, fe] = faces(mesh); fb != fe; ++fb) {
+    for (auto [fb, fe] = faces(mesh); fb != fe; ++fb) {
         int i = 0;
-        for (auto[vb, ve] = vertices_around_face(halfedge(*fb, mesh), mesh);
+        for (auto [vb, ve] = vertices_around_face(halfedge(*fb, mesh), mesh);
              vb != ve;
              ++vb) {
             if (i++ >= N) {
@@ -219,12 +219,12 @@ void extract_mesh(const Eigen::MatrixBase<DerivedV>& V,
     positions.reserve(V.rows() * 3);
     indices.reserve(F.rows() * N);
 
-    for (size_t i = 0; i < V.rows(); ++i) {
+    for (auto i = 0; i < V.rows(); ++i) {
         positions.push_back(V(i, 0));
         positions.push_back(V(i, 1));
         positions.push_back(V(i, 2));
     }
-    for (size_t i = 0; i < F.rows(); ++i) {
+    for (auto i = 0; i < F.rows(); ++i) {
         for (size_t j = 0; j < N; ++j) {
             indices.push_back(F(i, j));
         }
