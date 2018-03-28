@@ -40,6 +40,7 @@ template<typename T>
 int remove_duplicate_vertices(std::vector<T>& positions)
 {
     if (positions.empty()) {
+        EWARNING("positions is empty.");
         return 0;
     }
     if (positions.size() % 3 != 0) {
@@ -52,10 +53,8 @@ int remove_duplicate_vertices(std::vector<T>& positions)
     std::unordered_set<Point, boost::hash<Point>> unique_points;
     for (size_t i = 0; i < positions.size(); i += 3) {
         Point p{ { positions[i], positions[i + 1], positions[i + 2] } };
-        auto[dummy, is_unique] = unique_points.insert(std::move(p));
-        if (!is_unique) {
-            marks.push_back(i);
-        }
+        auto [dummy, is_unique] = unique_points.insert(std::move(p));
+        if (!is_unique) { marks.push_back(i); }
     }
 
     // Move elements in the back into slots to be removed
@@ -80,11 +79,10 @@ int remove_duplicate_vertices(std::vector<T1>& positions,
 {
     static_assert(N >= 3);
     if (positions.empty()) {
+        EWARNING("positions is empty.");
         return 0;
     }
-    if (indices.empty()) {
-        remove_duplicate_vertices(positions);
-    }
+    if (indices.empty()) { remove_duplicate_vertices(positions); }
     if (positions.size() % 3 != 0) {
         throw std::runtime_error("Input position size is not divisible by 3");
     }
@@ -111,7 +109,7 @@ int remove_duplicate_vertices(std::vector<T1>& positions,
     // Map all the duplicate positions to their first appearance
     for (size_t i = 0; i < positions.size(); i += 3) {
         Point p{ { positions[i], positions[i + 1], positions[i + 2] } };
-        auto[iter, is_unique] = unique_points.try_emplace(std::move(p), i);
+        auto [iter, is_unique] = unique_points.try_emplace(std::move(p), i);
         if (!is_unique) {
             EASSERT(p == iter->first);
             marks[i] = iter->second;
@@ -168,6 +166,7 @@ int remove_duplicate_faces(std::vector<T>& indices)
 {
     static_assert(N >= 3);
     if (indices.empty()) {
+        EWARNING("indices is empty.");
         return 0;
     }
     if (indices.size() % N != 0) {
@@ -185,10 +184,8 @@ int remove_duplicate_faces(std::vector<T>& indices)
             f[j] = indices[i + j];
         }
         auto cf = _impl::to_canonical<T, N>(f);
-        auto[iter, is_unique] = unique_faces.insert(std::move(cf));
-        if (!is_unique) {
-            marks.push_back(i);
-        }
+        auto [iter, is_unique] = unique_faces.insert(std::move(cf));
+        if (!is_unique) { marks.push_back(i); }
     }
 
     size_t idx = indices.size() - N;
@@ -210,10 +207,11 @@ int remove_unreferenced_vertices(std::vector<T1>& positions,
 {
     static_assert(N >= 3);
     if (positions.empty()) {
+        EWARNING("positions is empty.");
         return 0;
     }
     if (indices.empty()) {
-        std::cerr << "Warning: indices is empty, check your input" << std::endl;
+        EWARNING("indices is empty.");
         return 0;
     }
     if (positions.size() % 3 != 0) {
@@ -268,10 +266,11 @@ int remove_degenerate_faces(const std::vector<T1>& positions,
 {
     static_assert(N >= 3);
     if (positions.empty()) {
+        EWARNING("position is empty.")
         return 0;
     }
     if (indices.empty()) {
-        std::cerr << "Warning: indices is empty, check your input" << std::endl;
+        EWARNING("indices is empty.");
         return 0;
     }
     if (positions.size() % 3 != 0) {

@@ -8,4 +8,3 @@ It contains modules including
 - Geometry
 - Analysis
 - ImgProc
-- Util

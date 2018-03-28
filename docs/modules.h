@@ -18,6 +18,6 @@
  *  @defgroup PkgMath Math
  */
 
-/** Utilities.
- *  @defgroup PkgUtil Util
+/** Mesh renderer.
+ *  @defgroup PkgRender Render
  */

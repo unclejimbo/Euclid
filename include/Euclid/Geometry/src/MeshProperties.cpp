@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include <Euclid/Math/Vector.h>
+#include <Euclid/Util/Assert.h>
 
 namespace Euclid
 {
@@ -61,9 +62,7 @@ typename boost::property_traits<FaceNormalMap>::value_type vertex_normal(
         auto f = face(he, mesh);
         auto fn = fnmap[f];
 
-        if (weight == VertexNormal::uniform) {
-            normal += fn;
-        }
+        if (weight == VertexNormal::uniform) { normal += fn; }
         else if (weight == VertexNormal::face_area) {
             auto area = face_area(f, mesh);
             normal += area * fn;
@@ -222,7 +221,7 @@ face_normal(const typename boost::graph_traits<const Mesh>::face_descriptor& f,
 
     Vector_3 result;
     if (CGAL::collinear(p1, p2, p3)) {
-        std::cerr << "Degenerate facet, normal is set to zero!" << std::endl;
+        EWARNING("Degenerate face, normal is set to zero vector");
         result = Vector_3(0.0, 0.0, 0.0);
     }
     else {

@@ -4,6 +4,7 @@
 
 #include <CGAL/Kernel/global_functions.h>
 #include <Euclid/Math/Numeric.h>
+#include <Euclid/Util/Assert.h>
 
 namespace Euclid
 {
@@ -24,7 +25,7 @@ inline void normalize(CGAL::Vector_3<Kernel>& vec)
         vec /= l;
     }
     else {
-        std::cerr << "Can't normalize zero vector" << std::endl;
+        EWARNING("Can't normalize zero vector.");
     }
 }
 
@@ -39,7 +40,7 @@ inline CGAL::Vector_3<Kernel> normalized(const CGAL::Vector_3<Kernel>& vec)
         rtn /= l;
     }
     else {
-        std::cerr << "Can't normalize zero vector" << std::endl;
+        EWARNING("Can't normalize zero vector.");
     }
     return rtn;
 }
@@ -50,7 +51,7 @@ inline typename Kernel::FT area(const CGAL::Point_3<Kernel>& p1,
                                 const CGAL::Point_3<Kernel>& p3)
 {
     if (CGAL::collinear(p1, p2, p3)) {
-        std::cerr << "Input points are collinear, area is zero" << std::endl;
+        EWARNING("Input points are collinear, resulting in zero area");
         return 0.0;
     }
     else {

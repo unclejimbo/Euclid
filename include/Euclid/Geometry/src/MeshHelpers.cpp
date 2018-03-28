@@ -5,6 +5,7 @@
 
 #include <CGAL/boost/graph/properties.h>
 #include <CGAL/boost/graph/Euler_operations.h>
+#include <Euclid/Util/Assert.h>
 
 namespace Euclid
 {
@@ -16,9 +17,12 @@ std::enable_if_t<std::is_arithmetic_v<FT>, void> make_mesh(
     const std::vector<IT>& indices)
 {
     static_assert(N >= 3);
-    if (positions.empty() || indices.empty()) {
-        std::cerr << "Warning: positions or indices is empty, check your input"
-                  << std::endl;
+    if (positions.empty()) {
+        EWARNING("positions is empty.");
+        return;
+    }
+    if (indices.empty()) {
+        EWARNING("indices is empty.");
         return;
     }
     if (positions.size() % 3 != 0) {
@@ -63,9 +67,12 @@ std::enable_if_t<!std::is_arithmetic_v<Point_3>, void> make_mesh(
     const std::vector<IT>& indices)
 {
     static_assert(N >= 3);
-    if (points.empty() || indices.empty()) {
-        std::cerr << "Warning: points or indices is empty, check your input"
-                  << std::endl;
+    if (points.empty()) {
+        EWARNING("points is empty.");
+        return;
+    }
+    if (indices.empty()) {
+        EWARNING("indices is empty.");
         return;
     }
     if (indices.size() % N != 0) {
@@ -102,9 +109,12 @@ void make_mesh(Eigen::PlainObjectBase<DerivedV>& V,
                const std::vector<IT>& indices)
 {
     static_assert(N >= 3);
-    if (positions.empty() || indices.empty()) {
-        std::cerr << "Warning: positions or indices is empty, check your input"
-                  << std::endl;
+    if (positions.empty()) {
+        EWARNING("positions is empty.");
+        return;
+    }
+    if (indices.empty()) {
+        EWARNING("indices is empty.");
         return;
     }
     if (positions.size() % 3 != 0) {
