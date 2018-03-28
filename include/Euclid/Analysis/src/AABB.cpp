@@ -7,11 +7,9 @@ namespace Euclid
 template<typename Kernel>
 inline AABB<Kernel>::AABB(const std::vector<FT>& positions)
 {
-    if (positions.empty()) {
-        throw std::runtime_error("Input is empty");
-    }
+    if (positions.empty()) { throw std::invalid_argument("Input is empty"); }
     if (positions.size() % 3 != 0) {
-        throw std::runtime_error("Size of input is not divisible by 3");
+        throw std::invalid_argument("Size of input is not divisible by 3");
     }
 
     auto xmin = positions[0];
@@ -43,9 +41,7 @@ inline AABB<Kernel>::AABB(const std::vector<FT>& positions)
 template<typename Kernel>
 inline AABB<Kernel>::AABB(const std::vector<Point_3>& points)
 {
-    if (points.empty()) {
-        throw std::runtime_error("Input is empty");
-    }
+    if (points.empty()) { throw std::invalid_argument("Input is empty"); }
 
     auto xmin = points[0].x();
     auto xmax = xmin;
@@ -79,9 +75,7 @@ inline AABB<Kernel>::AABB(ForwardIterator first,
                           ForwardIterator beyond,
                           PPMap ppmap)
 {
-    if (first == beyond) {
-        throw std::runtime_error("Input is empty");
-    }
+    if (first == beyond) { throw std::invalid_argument("Input is empty"); }
 
     auto xmin = ppmap[*first].x();
     auto xmax = xmin;

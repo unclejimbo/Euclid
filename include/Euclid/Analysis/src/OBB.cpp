@@ -48,9 +48,7 @@ void _to_eigen(ForwardIterator first,
 template<typename Kernel>
 inline OBB<Kernel>::OBB(const std::vector<FT>& positions)
 {
-    if (positions.empty()) {
-        throw std::runtime_error("Input is empty");
-    }
+    if (positions.empty()) { throw std::invalid_argument("Input is empty"); }
     if (positions.size() % 3 != 0) {
         throw std::runtime_error("Size of input is not divisble by 3");
     }
@@ -63,9 +61,7 @@ inline OBB<Kernel>::OBB(const std::vector<FT>& positions)
 template<typename Kernel>
 inline OBB<Kernel>::OBB(const std::vector<Point_3>& points)
 {
-    if (points.empty()) {
-        throw std::runtime_error("Input is empty");
-    }
+    if (points.empty()) { throw std::invalid_argument("Input is empty"); }
 
     std::vector<EigenVec> epoints;
     _impl::_to_eigen(points, epoints);
@@ -78,9 +74,7 @@ inline OBB<Kernel>::OBB(ForwardIterator first,
                         ForwardIterator beyond,
                         PPMap ppmap)
 {
-    if (first == beyond) {
-        throw std::runtime_error("Input is empty");
-    }
+    if (first == beyond) { throw std::invalid_argument("Input is empty"); }
 
     std::vector<EigenVec> epoints;
     _impl::_to_eigen(first, beyond, ppmap, epoints);
