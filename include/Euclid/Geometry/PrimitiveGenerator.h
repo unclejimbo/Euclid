@@ -21,7 +21,7 @@ template<typename Mesh,
          typename Point_3 = typename boost::property_traits<
              typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
              value_type>
-static void make_subdivision_sphere(
+void make_subdivision_sphere(
     Mesh& mesh,
     const Point_3& center = { 0.0, 0.0, 0.0 },
     typename CGAL::Kernel_traits<Point_3>::Kernel::FT radius = 1.0,
