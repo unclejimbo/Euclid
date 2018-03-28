@@ -16,6 +16,9 @@ namespace Euclid
 
 /** Remove duplicate vertices.
  *
+ *  @param positions A vector of point positions.
+ *  @return Number of duplicate vertices.
+ *
  *  #### Note
  *  If you want to remove duplicate vertices of a mesh,
  *  use the other overload to fix indices.
@@ -25,6 +28,9 @@ int remove_duplicate_vertices(std::vector<T>& positions);
 
 /** Remove duplicate vertices and fix indices.
  *
+ *  @param positions A vector of point positions.
+ *  @param indices A vector of point indices.
+ *  @return Number of duplicate vertices.
  */
 template<int N, typename T1, typename T2>
 int remove_duplicate_vertices(std::vector<T1>& positions,
@@ -32,12 +38,17 @@ int remove_duplicate_vertices(std::vector<T1>& positions,
 
 /** Remove duplicate faces of a mesh.
  *
+ *  @param indices A vector point indices.
+ *  @return Number of duplicate faces.
  */
 template<int N, typename T>
 int remove_duplicate_faces(std::vector<T>& indices);
 
 /** Remove unreferenced vertices and fix indices.
  *
+ *  @param positions A vector of point positions.
+ *  @param indices A vector of point indices.
+ *  @return Number of unreferenced vertices.
  */
 template<int N, typename T1, typename T2>
 int remove_unreferenced_vertices(std::vector<T1>& positions,
@@ -46,6 +57,10 @@ int remove_unreferenced_vertices(std::vector<T1>& positions,
 /** Remove degenerate faces of a mesh.
  *
  *  A face is degenerate when two consecutive edges are collinear.
+ *
+ *  @param positions A vector of point positions.
+ *  @param indices A vector of point indices.
+ *  @return Number of degenerate faces.
  */
 template<int N, typename T1, typename T2>
 int remove_degenerate_faces(const std::vector<T1>& positions,
