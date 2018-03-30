@@ -17,6 +17,7 @@ namespace Euclid
 
 /** Object Oriented Bounding Box.
  *
+ *  This class uses right-handed coordinate system.
  */
 template<typename Kernel>
 class OBB

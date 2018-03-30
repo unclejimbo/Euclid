@@ -15,8 +15,7 @@ namespace Euclid
 
 /** Axis Aligned Bounding Box.
  *
- *  And the coordniate system is right-hand based, thus right means
- *  x, up means y and front means z.
+ *  This class uses right-handed coordinate system.
  */
 template<typename Kernel>
 class AABB
@@ -96,7 +95,8 @@ public:
      *
      *  The accepted values for X, Y, Z are 0 and 1. 0 for the smaller value
      *  in that axis, and 1 for the larger one. So, e.g.,
-     *  OBB<K>::point<0, 0, 0>() returns the left-bottom-back corner of the box.
+     *  AABB<K>::point<0, 0, 0>() returns the left-bottom-back corner of the
+     *  box.
      */
     template<int X, int Y, int Z>
     Point_3 point() const;
