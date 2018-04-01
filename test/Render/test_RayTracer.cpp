@@ -53,7 +53,7 @@ TEST_CASE("Package: Render/RayTracer", "[raytracer]")
                 raytracer.render_shaded(pixels.data(), cam, width, height, 1);
 
                 std::string outfile(TMP_DIR);
-                outfile.append("bumpy_shaded1.png");
+                outfile.append("bunny_shaded1.png");
                 stbi_write_png(outfile.c_str(),
                                width,
                                height,
@@ -71,7 +71,7 @@ TEST_CASE("Package: Render/RayTracer", "[raytracer]")
                 raytracer.render_shaded(pixels.data(), cam, width, height, 1);
 
                 std::string outfile(TMP_DIR);
-                outfile.append("bumpy_shaded2.png");
+                outfile.append("bunny_shaded2.png");
                 stbi_write_png(outfile.c_str(),
                                width,
                                height,
@@ -92,7 +92,7 @@ TEST_CASE("Package: Render/RayTracer", "[raytracer]")
                 raytracer.render_shaded(pixels.data(), cam, width, height, 1);
 
                 std::string outfile(TMP_DIR);
-                outfile.append("bumpy_shaded3.png");
+                outfile.append("bunny_shaded3.png");
                 stbi_write_png(outfile.c_str(),
                                width,
                                height,
@@ -109,7 +109,7 @@ TEST_CASE("Package: Render/RayTracer", "[raytracer]")
                 raytracer.render_shaded(pixels.data(), cam, width, height, 1);
 
                 std::string outfile(TMP_DIR);
-                outfile.append("bumpy_shaded4.png");
+                outfile.append("bunny_shaded4.png");
                 stbi_write_png(outfile.c_str(),
                                width,
                                height,
@@ -126,7 +126,7 @@ TEST_CASE("Package: Render/RayTracer", "[raytracer]")
             raytracer.render_shaded(pixels.data(), cam, width, height, 8);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bumpy_shaded5.png");
+            outfile.append("bunny_shaded5.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
@@ -138,7 +138,7 @@ TEST_CASE("Package: Render/RayTracer", "[raytracer]")
             raytracer.render_depth(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bumpy_depth.png");
+            outfile.append("bunny_depth.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 1, pixels.data(), width);
         }
@@ -150,7 +150,7 @@ TEST_CASE("Package: Render/RayTracer", "[raytracer]")
             raytracer.render_silhouette(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bumpy_sillouette.png");
+            outfile.append("bunny_sillouette.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 1, pixels.data(), width);
         }

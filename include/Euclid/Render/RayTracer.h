@@ -20,15 +20,6 @@ namespace Euclid
 {
 /** @{*/
 
-// /** View projection types.
-//  *
-//  */
-// enum class ProjectionType
-// {
-//     perspective, /**< Perspective projection.*/
-//     orthogonal   /**< Orthogonal projection.*/
-// };
-
 /** The film plane.
  *
  */
