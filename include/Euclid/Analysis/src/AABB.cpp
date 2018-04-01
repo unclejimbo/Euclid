@@ -5,7 +5,7 @@ namespace Euclid
 {
 
 template<typename Kernel>
-inline AABB<Kernel>::AABB(const std::vector<FT>& positions)
+AABB<Kernel>::AABB(const std::vector<FT>& positions)
 {
     if (positions.empty()) { throw std::invalid_argument("Input is empty"); }
     if (positions.size() % 3 != 0) {
@@ -39,7 +39,7 @@ inline AABB<Kernel>::AABB(const std::vector<FT>& positions)
 }
 
 template<typename Kernel>
-inline AABB<Kernel>::AABB(const std::vector<Point_3>& points)
+AABB<Kernel>::AABB(const std::vector<Point_3>& points)
 {
     if (points.empty()) { throw std::invalid_argument("Input is empty"); }
 
@@ -71,9 +71,7 @@ inline AABB<Kernel>::AABB(const std::vector<Point_3>& points)
 
 template<typename Kernel>
 template<typename ForwardIterator, typename PPMap>
-inline AABB<Kernel>::AABB(ForwardIterator first,
-                          ForwardIterator beyond,
-                          PPMap ppmap)
+AABB<Kernel>::AABB(ForwardIterator first, ForwardIterator beyond, PPMap ppmap)
 {
     if (first == beyond) { throw std::invalid_argument("Input is empty"); }
 
@@ -104,89 +102,86 @@ inline AABB<Kernel>::AABB(ForwardIterator first,
 }
 
 template<typename Kernel>
-inline typename AABB<Kernel>::Point_3 AABB<Kernel>::center() const
+typename AABB<Kernel>::Point_3 AABB<Kernel>::center() const
 {
     return _center;
 }
 
 template<typename Kernel>
-inline typename AABB<Kernel>::FT AABB<Kernel>::xmin() const
+typename AABB<Kernel>::FT AABB<Kernel>::xmin() const
 {
     return _center.x() - _xlen;
 }
 
 template<typename Kernel>
-inline typename AABB<Kernel>::FT AABB<Kernel>::xmax() const
+typename AABB<Kernel>::FT AABB<Kernel>::xmax() const
 {
     return _center.x() + _xlen;
 }
 
 template<typename Kernel>
-inline typename AABB<Kernel>::FT AABB<Kernel>::xlen() const
+typename AABB<Kernel>::FT AABB<Kernel>::xlen() const
 {
     return _xlen * 2.0;
 }
 
 template<typename Kernel>
-inline typename AABB<Kernel>::FT AABB<Kernel>::ymin() const
+typename AABB<Kernel>::FT AABB<Kernel>::ymin() const
 {
     return _center.y() - _ylen;
 }
 
 template<typename Kernel>
-inline typename AABB<Kernel>::FT AABB<Kernel>::ymax() const
+typename AABB<Kernel>::FT AABB<Kernel>::ymax() const
 {
     return _center.y() + _ylen;
 }
 
 template<typename Kernel>
-inline typename AABB<Kernel>::FT AABB<Kernel>::ylen() const
+typename AABB<Kernel>::FT AABB<Kernel>::ylen() const
 {
     return _ylen * 2.0;
 }
 
 template<typename Kernel>
-inline typename AABB<Kernel>::FT AABB<Kernel>::zmin() const
+typename AABB<Kernel>::FT AABB<Kernel>::zmin() const
 {
     return _center.z() - _zlen;
 }
 
 template<typename Kernel>
-inline typename AABB<Kernel>::FT AABB<Kernel>::zmax() const
+typename AABB<Kernel>::FT AABB<Kernel>::zmax() const
 {
     return _center.z() + _zlen;
 }
 
 template<typename Kernel>
-inline typename AABB<Kernel>::FT AABB<Kernel>::zlen() const
+typename AABB<Kernel>::FT AABB<Kernel>::zlen() const
 {
     return _zlen * 2.0;
 }
 
 template<typename Kernel>
-template<int X, int Y, int Z>
-inline typename AABB<Kernel>::Point_3 AABB<Kernel>::point() const
+typename AABB<Kernel>::Point_3 AABB<Kernel>::point(bool xlarge,
+                                                   bool ylarge,
+                                                   bool zlarge) const
 {
-    static_assert(X == 0 || X == 1);
-    static_assert(Y == 0 || Y == 1);
-    static_assert(Z == 0 || Z == 1);
-
     auto x = _xlen;
     auto y = _ylen;
     auto z = _zlen;
-    if (X == 0) x = -_xlen;
-    if (Y == 0) y = -_ylen;
-    if (Z == 0) z = -_zlen;
+    if (!xlarge) x = -_xlen;
+    if (!ylarge) y = -_ylen;
+    if (!zlarge) z = -_zlen;
     return Point_3(_center.x() + x, _center.y() + y, _center.z() + z);
 }
 
 template<typename Kernel>
-inline void AABB<Kernel>::_build_aabb(FT xmin,
-                                      FT xmax,
-                                      FT ymin,
-                                      FT ymax,
-                                      FT zmin,
-                                      FT zmax)
+void AABB<Kernel>::_build_aabb(FT xmin,
+                               FT xmax,
+                               FT ymin,
+                               FT ymax,
+                               FT zmin,
+                               FT zmax)
 {
     _center =
         Point_3((xmin + xmax) * 0.5, (ymin + ymax) * 0.5, (zmin + zmax) * 0.5);

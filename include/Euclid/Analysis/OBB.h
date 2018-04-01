@@ -51,20 +51,18 @@ public:
 
     /** Return the unit-length axis.
      *
-     *  The accepted values of N are 0, 1 and 2. The axis are sorted in
-     *  descending order w.r.t. to the length, so OBB<KerneL>::axis<0>() returns
+     *  The accepted values of n are 0, 1 and 2. The axis are sorted in
+     *  descending order w.r.t. to the length, so OBB<KerneL>::axis(0) returns
      *  the longest axis, although the direction is arbitrary.
      */
-    template<int N>
-    Vector_3 axis() const;
+    Vector_3 axis(int n) const;
 
     /** Return the length of an axis.
      *
-     *  The accepted values of N are 0, 1 and 2. The length are sorted in
+     *  The accepted values of n are 0, 1 and 2. The length are sorted in
      *  descending order.
      */
-    template<int N>
-    FT length() const;
+    FT length(int n) const;
 
 private:
     using EigenVec = typename Eigen::Matrix<FT, 3, 1>;

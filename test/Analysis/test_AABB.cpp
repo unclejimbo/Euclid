@@ -40,7 +40,7 @@ TEST_CASE("Pacakge: Analysis/AABB", "[aabb]")
         REQUIRE(aabb.zmin() == 0.0f);
         REQUIRE(aabb.zmax() == 1.0f);
         REQUIRE(aabb.zlen() == 1.0f);
-        REQUIRE(aabb.point<0, 1, 0>() == Point_3(0.0f, 2.0f, 0.0f));
+        REQUIRE(aabb.point(0, 1, 0) == Point_3(0.0f, 2.0f, 0.0f));
     }
 
     SECTION("Build obb from a vector of points")
@@ -62,7 +62,7 @@ TEST_CASE("Pacakge: Analysis/AABB", "[aabb]")
         REQUIRE(aabb.zmin() == 0.0f);
         REQUIRE(aabb.zmax() == 1.0f);
         REQUIRE(aabb.zlen() == 1.0f);
-        REQUIRE(aabb.point<0, 1, 0>() == Point_3(0.0f, 2.0f, 0.0f));
+        REQUIRE(aabb.point(0, 1, 0) == Point_3(0.0f, 2.0f, 0.0f));
     }
 
     SECTION("Build aabb from mesh")
@@ -82,7 +82,7 @@ TEST_CASE("Pacakge: Analysis/AABB", "[aabb]")
         REQUIRE(aabb.zmin() == 0.0f);
         REQUIRE(aabb.zmax() == 1.0f);
         REQUIRE(aabb.zlen() == 1.0f);
-        REQUIRE(aabb.point<0, 1, 0>() == Point_3(0.0f, 2.0f, 0.0f));
+        REQUIRE(aabb.point(0, 1, 0) == Point_3(0.0f, 2.0f, 0.0f));
     }
 
     SECTION("Build aabb from point_set")
@@ -105,6 +105,6 @@ TEST_CASE("Pacakge: Analysis/AABB", "[aabb]")
         REQUIRE(aabb.zmin() == 0.0f);
         REQUIRE(aabb.zmax() == 1.0f);
         REQUIRE(aabb.zlen() == 1.0f);
-        REQUIRE(aabb.point<0, 1, 0>() == Point_3(0.0f, 2.0f, 0.0f));
+        REQUIRE(aabb.point(0, 1, 0) == Point_3(0.0f, 2.0f, 0.0f));
     }
 }

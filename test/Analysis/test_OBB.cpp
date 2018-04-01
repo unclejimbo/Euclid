@@ -31,12 +31,12 @@ TEST_CASE("Package: Analysis/OBB", "[obb]")
         auto obb = Euclid::OBB<Kernel>(positions);
 
         REQUIRE(obb.center() == Point_3(1.5f, 1.0f, 0.5f));
-        REQUIRE(obb.axis<0>() == Vector_3(1.0f, 0.0f, 0.0f));
-        REQUIRE(obb.axis<1>() == Vector_3(0.0f, 1.0f, 0.0f));
-        REQUIRE(obb.axis<2>() == Vector_3(0.0f, 0.0f, 1.0f));
-        REQUIRE(obb.length<0>() == 3.0);
-        REQUIRE(obb.length<1>() == 2.0);
-        REQUIRE(obb.length<2>() == 1.0);
+        REQUIRE(obb.axis(0) == Vector_3(1.0f, 0.0f, 0.0f));
+        REQUIRE(obb.axis(1) == Vector_3(0.0f, 1.0f, 0.0f));
+        REQUIRE(obb.axis(2) == Vector_3(0.0f, 0.0f, 1.0f));
+        REQUIRE(obb.length(0) == 3.0);
+        REQUIRE(obb.length(1) == 2.0);
+        REQUIRE(obb.length(2) == 1.0);
     }
 
     SECTION("Build obb from vector of points")
@@ -49,12 +49,12 @@ TEST_CASE("Package: Analysis/OBB", "[obb]")
         auto obb = Euclid::OBB<Kernel>(points);
 
         REQUIRE(obb.center() == Point_3(1.5f, 1.0f, 0.5f));
-        REQUIRE(obb.axis<0>() == Vector_3(1.0f, 0.0f, 0.0f));
-        REQUIRE(obb.axis<1>() == Vector_3(0.0f, 1.0f, 0.0f));
-        REQUIRE(obb.axis<2>() == Vector_3(0.0f, 0.0f, 1.0f));
-        REQUIRE(obb.length<0>() == 3.0);
-        REQUIRE(obb.length<1>() == 2.0);
-        REQUIRE(obb.length<2>() == 1.0);
+        REQUIRE(obb.axis(0) == Vector_3(1.0f, 0.0f, 0.0f));
+        REQUIRE(obb.axis(1) == Vector_3(0.0f, 1.0f, 0.0f));
+        REQUIRE(obb.axis(2) == Vector_3(0.0f, 0.0f, 1.0f));
+        REQUIRE(obb.length(0) == 3.0);
+        REQUIRE(obb.length(1) == 2.0);
+        REQUIRE(obb.length(2) == 1.0);
     }
 
     SECTION("Build obb from mesh")
@@ -65,12 +65,12 @@ TEST_CASE("Package: Analysis/OBB", "[obb]")
             mesh.vertices_begin(), mesh.vertices_end(), mesh.points());
 
         REQUIRE(obb.center() == Point_3(1.5f, 1.0f, 0.5f));
-        REQUIRE(obb.axis<0>() == Vector_3(1.0f, 0.0f, 0.0f));
-        REQUIRE(obb.axis<1>() == Vector_3(0.0f, 1.0f, 0.0f));
-        REQUIRE(obb.axis<2>() == Vector_3(0.0f, 0.0f, 1.0f));
-        REQUIRE(obb.length<0>() == 3.0);
-        REQUIRE(obb.length<1>() == 2.0);
-        REQUIRE(obb.length<2>() == 1.0);
+        REQUIRE(obb.axis(0) == Vector_3(1.0f, 0.0f, 0.0f));
+        REQUIRE(obb.axis(1) == Vector_3(0.0f, 1.0f, 0.0f));
+        REQUIRE(obb.axis(2) == Vector_3(0.0f, 0.0f, 1.0f));
+        REQUIRE(obb.length(0) == 3.0);
+        REQUIRE(obb.length(1) == 2.0);
+        REQUIRE(obb.length(2) == 1.0);
     }
 
     SECTION("Build obb from point_set")
@@ -84,11 +84,11 @@ TEST_CASE("Package: Analysis/OBB", "[obb]")
             point_set.begin(), point_set.end(), point_set.point_map());
 
         REQUIRE(obb.center() == Point_3(1.5f, 1.0f, 0.5f));
-        REQUIRE(obb.axis<0>() == Vector_3(1.0f, 0.0f, 0.0f));
-        REQUIRE(obb.axis<1>() == Vector_3(0.0f, 1.0f, 0.0f));
-        REQUIRE(obb.axis<2>() == Vector_3(0.0f, 0.0f, 1.0f));
-        REQUIRE(obb.length<0>() == 3.0);
-        REQUIRE(obb.length<1>() == 2.0);
-        REQUIRE(obb.length<2>() == 1.0);
+        REQUIRE(obb.axis(0) == Vector_3(1.0f, 0.0f, 0.0f));
+        REQUIRE(obb.axis(1) == Vector_3(0.0f, 1.0f, 0.0f));
+        REQUIRE(obb.axis(2) == Vector_3(0.0f, 0.0f, 1.0f));
+        REQUIRE(obb.length(0) == 3.0);
+        REQUIRE(obb.length(1) == 2.0);
+        REQUIRE(obb.length(2) == 1.0);
     }
 }

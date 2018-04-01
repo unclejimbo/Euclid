@@ -46,7 +46,7 @@ void _to_eigen(ForwardIterator first,
 } // namespace _impl
 
 template<typename Kernel>
-inline OBB<Kernel>::OBB(const std::vector<FT>& positions)
+OBB<Kernel>::OBB(const std::vector<FT>& positions)
 {
     if (positions.empty()) { throw std::invalid_argument("Input is empty"); }
     if (positions.size() % 3 != 0) {
@@ -59,7 +59,7 @@ inline OBB<Kernel>::OBB(const std::vector<FT>& positions)
 }
 
 template<typename Kernel>
-inline OBB<Kernel>::OBB(const std::vector<Point_3>& points)
+OBB<Kernel>::OBB(const std::vector<Point_3>& points)
 {
     if (points.empty()) { throw std::invalid_argument("Input is empty"); }
 
@@ -70,9 +70,7 @@ inline OBB<Kernel>::OBB(const std::vector<Point_3>& points)
 
 template<typename Kernel>
 template<typename ForwardIterator, typename PPMap>
-inline OBB<Kernel>::OBB(ForwardIterator first,
-                        ForwardIterator beyond,
-                        PPMap ppmap)
+OBB<Kernel>::OBB(ForwardIterator first, ForwardIterator beyond, PPMap ppmap)
 {
     if (first == beyond) { throw std::invalid_argument("Input is empty"); }
 
@@ -82,29 +80,31 @@ inline OBB<Kernel>::OBB(ForwardIterator first,
 }
 
 template<typename Kernel>
-inline typename OBB<Kernel>::Point_3 OBB<Kernel>::center() const
+typename OBB<Kernel>::Point_3 OBB<Kernel>::center() const
 {
     return _center;
 }
 
 template<typename Kernel>
-template<int N>
-inline typename OBB<Kernel>::Vector_3 OBB<Kernel>::axis() const
+typename OBB<Kernel>::Vector_3 OBB<Kernel>::axis(int n) const
 {
-    static_assert(N < 3);
-    return Euclid::normalized(_directions[N]);
+    if (n < 0 || n >= 3) {
+        throw std::invalid_argument("Invalid argument for OBB::length(int).");
+    }
+    return Euclid::normalized(_directions[n]);
 }
 
 template<typename Kernel>
-template<int N>
-inline typename OBB<Kernel>::FT OBB<Kernel>::length() const
+typename OBB<Kernel>::FT OBB<Kernel>::length(int n) const
 {
-    static_assert(N < 3);
-    return Euclid::length(_directions[N]) * 2;
+    if (n < 0 || n >= 3) {
+        throw std::invalid_argument("Invalid argument for OBB::length(int).");
+    }
+    return Euclid::length(_directions[n]) * 2;
 }
 
 template<typename Kernel>
-inline void OBB<Kernel>::_build_obb(
+void OBB<Kernel>::_build_obb(
     const std::vector<typename OBB<Kernel>::EigenVec>& points)
 {
     // Conduct pca analysis

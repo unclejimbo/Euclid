@@ -98,8 +98,7 @@ public:
      *  AABB<K>::point<0, 0, 0>() returns the left-bottom-back corner of the
      *  box.
      */
-    template<int X, int Y, int Z>
-    Point_3 point() const;
+    Point_3 point(bool xlarge, bool ylarge, bool zlarge) const;
 
 private:
     void _build_aabb(FT xmin, FT xmax, FT ymin, FT ymax, FT zmin, FT zmax);
