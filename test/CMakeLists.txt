@@ -14,7 +14,8 @@ add_executable(run_test
     "${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Matrix.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Numeric.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Transformation.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Vector.cpp")
+    "${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Vector.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Render/test_RayTracer.cpp")
 
 # Compiler settings
 # TODO: msvc is not tested
@@ -44,6 +45,9 @@ find_package(Libigl REQUIRED)
 # Find OpenCV
 find_package(OpenCV REQUIRED core imgproc)
 
+# Find Embree
+find_package(embree 3.0 REQUIRED)
+
 # Config files
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
 
@@ -56,6 +60,7 @@ target_include_directories(run_test PUBLIC
     ${MPFR_INCLUDE_DIR}
     ${Libigl_INCLUDE_DIR}
     ${OpenCV_INCLUDE_DIRS}
+    ${EMBREE_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/
     ${CMAKE_CURRENT_SOURCE_DIR}/../3rdparty/)
 
@@ -65,7 +70,10 @@ target_link_libraries(run_test PUBLIC
     ${CGAL_3RD_PARTY_LIBRARIES}
     ${GMP_LIBRARIES}
     ${MPFR_LIBRARIES}
-    ${OpenCV_LIBS})
+    ${OpenCV_LIBS}
+    ${EMBREE_LIBRARY})
+
+    message(STATUS ${EMBREE_LIBRARY})
 
 # Output
 set_target_properties(run_test PROPERTIES
