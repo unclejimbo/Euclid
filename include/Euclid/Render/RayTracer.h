@@ -281,6 +281,19 @@ public:
                       const unsigned height,
                       bool tone_mapped = true);
 
+    /** Render the mesh into a silhouette image.
+     *
+     *  @param pixels Output pixels.
+     *  @param camera Camera.
+     *  @param width Image width.
+     *  @param height Image height.
+     */
+    template<typename T>
+    void render_silhouette(T* pixels,
+                           const Camera& camera,
+                           const unsigned width,
+                           const unsigned height);
+
 private:
     RTCDevice _device;
     RTCScene _scene;

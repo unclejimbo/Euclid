@@ -142,5 +142,17 @@ TEST_CASE("Package: Render/RayTracer", "[raytracer]")
             stbi_write_png(
                 outfile.c_str(), width, height, 1, pixels.data(), width);
         }
+
+        SECTION("silhouette")
+        {
+            Euclid::PerspectiveCamera cam(
+                view, center, up, 60.0f, static_cast<float>(width) / height);
+            raytracer.render_silhouette(pixels.data(), cam, width, height);
+
+            std::string outfile(TMP_DIR);
+            outfile.append("bumpy_sillouette.png");
+            stbi_write_png(
+                outfile.c_str(), width, height, 1, pixels.data(), width);
+        }
     }
 }

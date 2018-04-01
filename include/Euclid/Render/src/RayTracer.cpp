@@ -357,6 +357,7 @@ void RayTracer::render_shaded(T* pixels,
         }
     }
 }
+
 template<typename T>
 void RayTracer::render_depth(T* pixels,
                              const Camera& camera,
@@ -393,6 +394,27 @@ void RayTracer::render_depth(T* pixels,
                     pixels[(height - y - 1) * width + x] =
                         static_cast<T>(depth);
                 }
+            }
+        }
+    }
+}
+
+template<typename T>
+void RayTracer::render_silhouette(T* pixels,
+                                  const Camera& camera,
+                                  const unsigned width,
+                                  const unsigned height)
+{
+    RTCIntersectContext context;
+    rtcInitIntersectContext(&context);
+    for (unsigned y = 0; y < height; ++y) {
+        for (unsigned x = 0; x < width; ++x) {
+            auto u = static_cast<float>(x) / width;
+            auto v = static_cast<float>(y) / height;
+            auto rayhit = camera.gen_ray(u, v);
+            rtcIntersect1(_scene, &context, &rayhit);
+            if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID) {
+                pixels[(height - y - 1) * width + x] = static_cast<T>(255);
             }
         }
     }
