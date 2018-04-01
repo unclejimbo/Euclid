@@ -20,7 +20,7 @@
 // which may not hinder the program from running.
 // #define EUCLID_NO_WARNING before including this header to disable the
 // warning message
-#ifndef EUCLID_NO_WARNIN
+#ifndef EUCLID_NO_WARNING
 #define EWARNING(msg)                                                          \
     std::cerr << "Euclid Warning: " << msg << std::endl                        \
               << "(In file " << __FILE__ << ", line " << __LINE__              \
