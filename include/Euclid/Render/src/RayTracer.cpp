@@ -115,7 +115,7 @@ inline RTCRayHit OrthogonalCamera::gen_ray(float s,
     return rayhit;
 }
 
-RayTracer::RayTracer(int threads)
+inline RayTracer::RayTracer(int threads)
 {
     // Create device
     std::string cfg("threads=");
