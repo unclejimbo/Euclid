@@ -1,142 +1,123 @@
+#include <algorithm>
+#include <array>
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include <Euclid/Analysis/OBB.h>
 #include <Euclid/Geometry/PrimitiveGenerator.h>
-#include <Euclid/Geometry/Polyhedron_3.h>
-#include <Eigen/Dense>
-#include <array>
-#include <vector>
-#include <cmath>
-#include <algorithm>
+#include <Euclid/Geometry/MeshProperties.h>
+#include <Euclid/Geometry/MeshHelpers.h>
+#include <Euclid/Math/Vector.h>
+#include <Euclid/Render/RayTracer.h>
 
 namespace Euclid
 {
 
-template<typename Polyhedron_3>
-inline void proxy_view_selection(
-	const Polyhedron_3& mesh,
-	const std::array<Eigen::MatrixXf, 6>& zbuffers,
-	std::vector<Eigen::Vector3f>& view_points,
-	std::vector<float>& view_scores,
-	int subdiv_level = 4,
-	std::vector<size_t>* sphere_indices = nullptr,
-	OBB<Polyhedron_3>* precomputed_obb = nullptr)
+template<typename Mesh, typename FT>
+void proxy_view_selection(const Mesh& mesh,
+                          Mesh& view_sphere,
+                          std::vector<FT>& view_scores,
+                          int subdiv_level,
+                          float weight,
+                          const Eigen::Vector3f& up)
 {
-	// Generate PCA if not provided
-	OBB<Polyhedron_3>* pca = nullptr;
-	if (precomputed_obb != nullptr) {
-		pca = precomputed_obb;
-	}
-	else {
-		pca = new OBB<Polyhedron_3>(mesh);
-	}
+    using Point_3 = typename boost::property_traits<
+        typename boost::property_map<Mesh,
+                                     boost::vertex_point_t>::type>::value_type;
+    using Kernel = typename CGAL::Kernel_traits<Point_3>::Kernel;
+    const int proxies = 6;
+    const int width = 256;
+    const int height = 256;
+    const float least_visible = std::cos(M_PI / 3.0f);
+    const float w1 = weight;    // weight for projected areas
+    const float w2 = 1.0f - w1; // weight for visible ratios
 
-	// Generate sample sphere
-	auto radius = pca->radius() * 3.0f;
-	auto sphere = euclid::subdivision_sphere<Polyhedron_3>(radius, pca->center(), subdiv_level);
-	view_points.clear();
-	std::transform(sphere.points_begin(), sphere.points_end(), std::back_inserter(view_points),
-		[](const decltype(sphere.points_begin())::value_type& p) {
-		return Eigen::Vector3f(p.x(), p.y(), p.z());
-	}
-	);
-	if (sphere_indices != nullptr) {
-		size_t idx = 0;
-		for (auto v = sphere.vertices_begin(); v != sphere.vertices_end(); ++v) {
-			v->id() = idx++;
-		}
+    auto [vbeg, vend] = vertices(mesh);
+    auto mesh_vpmap = get(boost::vertex_point, mesh);
+    OBB<Kernel> obb(vbeg, vend, mesh_vpmap);
 
-		sphere_indices->clear();
-		sphere_indices->reserve(sphere.size_of_facets() * 3);
-		for (auto f = sphere.facets_begin(); f != sphere.facets_end(); ++f) {
-			auto v = f->facet_begin();
-			do {
-				sphere_indices->push_back(v->vertex()->id());
-			} while (++v != f->facet_begin());
-		}
-	}
+    // Generate sample sphere
+    auto a = obb.length(0) * 0.5f;
+    auto b = obb.length(1) * 0.5f;
+    auto c = obb.length(2) * 0.5f;
+    auto radius = std::sqrt(a * a + b * b + c * c) * 2.0f;
+    make_subdivision_sphere(view_sphere, obb.center(), radius, subdiv_level);
 
-	// Compute projected area
-	std::vector<float> projected_areas(zbuffers.size());
-	for (size_t i = 0; i < projected_areas.size(); ++i) {
-		auto proj = 0.0f;
-		for (size_t j = 0; j < zbuffers[i].size(); ++j) {
-			auto z = zbuffers[i](j);
-			if (z < 1.0f) {
-				proj += 1;
-			}
-		}
-		projected_areas[i] = proj / zbuffers[i].size();
-	}
-	auto max_proj_area = *std::max_element(projected_areas.begin(), projected_areas.end());
-	for (auto& proj_area : projected_areas) {
-		proj_area /= max_proj_area;
-	}
+    // Compute projected area
+    std::vector<float> positions;
+    std::vector<unsigned> indices;
+    extract_mesh<3>(mesh, positions, indices);
+    RayTracer raytracer;
+    raytracer.attach_geometry_shared(positions, indices);
 
-	// Compute visible ratio
-	const float least_visible = std::cosf(3.14159265359 / 3.0f);
-	std::vector<float> visible_ratios(zbuffers.size());
-	std::vector<int> n_visible_facets(zbuffers.size(), 0);
-	for (auto f = mesh.facets_begin(); f != mesh.facets_end(); ++f) {
-		Eigen::Vector3f normal_dir;
-		try { // Denerate face should be non-visible
-			auto norm = compute_facet_normal<Polyhedron_3>(*f);
-			normal_dir = norm;
-		}
-		catch (...) {
-			normal_dir.setZero();
-		}
-		auto principal_dirs = pca->directions();
-		if (principal_dirs[0].dot(normal_dir) > least_visible) {
-			++n_visible_facets[0];
-		}
-		if (principal_dirs[1].dot(normal_dir) > least_visible) {
-			++n_visible_facets[1];
-		}
-		if (principal_dirs[2].dot(normal_dir) > least_visible) {
-			++n_visible_facets[2];
-		}
-		if ((-principal_dirs[0]).dot(normal_dir) > least_visible) {
-			++n_visible_facets[3];
-		}
-		if ((-principal_dirs[1]).dot(normal_dir) > least_visible) {
-			++n_visible_facets[4];
-		}
-		if ((-principal_dirs[2]).dot(normal_dir) > least_visible) {
-			++n_visible_facets[5];
-		}
-	}
-	float inv_nf = 1.0f / mesh.size_of_facets();
-	std::transform(n_visible_facets.begin(), n_visible_facets.end(), visible_ratios.begin(),
-		[inv_nf](const int& nf) { return nf * inv_nf; });
-	auto max_visible_ratio = *std::max_element(visible_ratios.begin(), visible_ratios.end());
-	for (auto& visible_ratio : visible_ratios) {
-		visible_ratio /= max_visible_ratio;
-	}
+    std::vector<float> projected_areas(proxies);
+    for (size_t i = 0; i < projected_areas.size(); ++i) {
+        OrthogonalCamera cam;
+        auto view_dir = radius * obb.axis(i % 3);
+        if (i >= 3) { view_dir = -view_dir; }
+        cam.lookat(cgal_to_eigen<float>(obb.center() + view_dir),
+                   cgal_to_eigen<float>(obb.center()),
+                   up);
+        cam.set_extent(radius, radius);
 
-	// Compute final score
-	view_scores.clear();
-	view_scores.resize(view_points.size(), 0.0f);
-	const float w = 0.9f;
-	const float v = 1.0f - w;
-	for (size_t i = 0; i < view_scores.size(); ++i) {
-		auto principal_dirs = pca->directions();
-		auto view_dir = (view_points[i] - pca->center()).normalized();
-		view_scores[i] += (w * projected_areas[0] + v * visible_ratios[0]) *
-			std::max(view_dir.dot(principal_dirs[0]), 0.0f);
-		view_scores[i] += (w * projected_areas[1] + v * visible_ratios[1]) *
-			std::max(view_dir.dot(principal_dirs[1]), 0.0f);
-		view_scores[i] += (w * projected_areas[2] + v * visible_ratios[2]) *
-			std::max(view_dir.dot(principal_dirs[2]), 0.0f);
-		view_scores[i] += (w * projected_areas[3] + v * visible_ratios[3]) *
-			std::max(view_dir.dot(-principal_dirs[0]), 0.0f);
-		view_scores[i] += (w * projected_areas[4] + v * visible_ratios[4]) *
-			std::max(view_dir.dot(-principal_dirs[1]), 0.0f);
-		view_scores[i] += (w * projected_areas[5] + v * visible_ratios[5]) *
-			std::max(view_dir.dot(-principal_dirs[2]), 0.0f);
-	}
+        std::vector<unsigned char> pixels(width * height, 0);
+        raytracer.render_silhouette(pixels.data(), cam, width, height);
+        auto proj = 0;
+        for (size_t j = 0; j < pixels.size(); ++j) {
+            if (pixels[j] != 0) { ++proj; }
+        }
+        projected_areas[i] = static_cast<float>(proj) / pixels.size();
+    }
+    auto max_proj_area =
+        *std::max_element(projected_areas.begin(), projected_areas.end());
+    for (auto& proj_area : projected_areas) {
+        proj_area /= max_proj_area;
+    }
 
-	if (precomputed_obb == nullptr) {
-		delete pca;
-	}
+    // Compute visible ratio
+    std::vector<float> visible_ratios(proxies);
+    std::vector<int> n_visible_facets(proxies, 0);
+    for (const auto& f : faces(mesh)) {
+        auto normal = face_normal(f, mesh);
+        if (normal * obb.axis(0) > least_visible) { ++n_visible_facets[0]; }
+        if (normal * obb.axis(1) > least_visible) { ++n_visible_facets[1]; }
+        if (normal * obb.axis(2) > least_visible) { ++n_visible_facets[2]; }
+        if (-normal * obb.axis(0) > least_visible) { ++n_visible_facets[3]; }
+        if (-normal * obb.axis(1) > least_visible) { ++n_visible_facets[4]; }
+        if (-normal * obb.axis(2) > least_visible) { ++n_visible_facets[5]; }
+    }
+    float inv_nf = 1.0f / num_faces(mesh);
+    std::transform(n_visible_facets.begin(),
+                   n_visible_facets.end(),
+                   visible_ratios.begin(),
+                   [inv_nf](int nf) { return nf * inv_nf; });
+    auto max_visible_ratio =
+        *std::max_element(visible_ratios.begin(), visible_ratios.end());
+    for (auto& visible_ratio : visible_ratios) {
+        visible_ratio /= max_visible_ratio;
+    }
+
+    // Compute final score
+    view_scores.clear();
+    view_scores.resize(num_vertices(view_sphere), 0.0f);
+    auto sphere_vpmap = get(boost::vertex_point, view_sphere);
+    auto sphere_vimap = get(boost::vertex_index, view_sphere);
+    for (const auto& v : vertices(view_sphere)) {
+        auto view_dir = normalized(sphere_vpmap[v] - obb.center());
+        auto i = sphere_vimap[v];
+        view_scores[i] += (w1 * projected_areas[0] + w2 * visible_ratios[0]) *
+                          std::max(view_dir * obb.axis(0), 0.0f);
+        view_scores[i] += (w1 * projected_areas[1] + w2 * visible_ratios[1]) *
+                          std::max(view_dir * obb.axis(1), 0.0f);
+        view_scores[i] += (w1 * projected_areas[2] + w2 * visible_ratios[2]) *
+                          std::max(view_dir * obb.axis(2), 0.0f);
+        view_scores[i] += (w1 * projected_areas[3] + w2 * visible_ratios[3]) *
+                          std::max(-view_dir * obb.axis(0), 0.0f);
+        view_scores[i] += (w1 * projected_areas[4] + w2 * visible_ratios[4]) *
+                          std::max(-view_dir * obb.axis(1), 0.0f);
+        view_scores[i] += (w1 * projected_areas[5] + w2 * visible_ratios[5]) *
+                          std::max(-view_dir * obb.axis(2), 0.0f);
+    }
 }
 
 } // namespace Euclid
