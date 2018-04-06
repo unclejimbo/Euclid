@@ -67,6 +67,7 @@ target_include_directories(run_test PUBLIC
 
 # Linking
 target_link_libraries(run_test PUBLIC
+    stdc++fs
     ${CGAL_LIBRARIES}
     ${CGAL_3RD_PARTY_LIBRARIES}
     ${GMP_LIBRARIES}
