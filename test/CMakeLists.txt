@@ -36,9 +36,6 @@ find_package(Eigen3 REQUIRED)
 find_package(CGAL REQUIRED)
 set(CGAL_DONT_OVERRIDE_CMAKE_FLAGS TRUE CACHE BOOL "Force GGAL to maintain CMAKE_*_FLAGS")
 include(${CGAL_USE_FILE})
-message(STATUS "cgal include ${CGAL_INCLUDE_DIRS}")
-message(STATUS "cgal lib ${CGAL_LIBRARIES}")
-message(STATUS "cgal 3rd ${CGAL_3RD_PARTY_LIBRARIES}")
 
 # Find Libigl
 find_package(Libigl REQUIRED)
@@ -74,8 +71,6 @@ target_link_libraries(run_test PUBLIC
     ${MPFR_LIBRARIES}
     ${OpenCV_LIBS}
     ${EMBREE_LIBRARY})
-
-    message(STATUS ${EMBREE_LIBRARY})
 
 # Output
 set_target_properties(run_test PROPERTIES
