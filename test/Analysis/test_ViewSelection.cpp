@@ -34,7 +34,7 @@ TEST_CASE("Package: Analysis/ViewSelection", "[viewselection]")
         std::vector<float> vpositions;
         std::vector<unsigned> vindices;
         Euclid::extract_mesh<3>(view_sphere, vpositions, vindices);
-        auto [smax, smin] =
+        auto [smin, smax] =
             std::minmax_element(view_scores.begin(), view_scores.end());
         std::vector<unsigned char> colors;
         colors.reserve(view_scores.size() * 4);
