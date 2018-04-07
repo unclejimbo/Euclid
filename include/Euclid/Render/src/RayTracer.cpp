@@ -390,8 +390,8 @@ void RayTracer::render_depth(T* pixels,
                 Eigen::Vector3f p2(positions[3 * v2 + 0],
                                    positions[3 * v2 + 1],
                                    positions[3 * v2 + 2]);
-                Eigen::Vector3f p = p0 * rayhit.hit.u + p1 * rayhit.hit.v +
-                                    p2 * (1.0f - rayhit.hit.u - rayhit.hit.v);
+                Eigen::Vector3f p = p1 * rayhit.hit.u + p2 * rayhit.hit.v +
+                                    p0 * (1.0f - rayhit.hit.u - rayhit.hit.v);
                 auto depth = (p - camera.pos).norm();
                 if (tone_mapped) {
                     auto value = depth / (depth + 1.0);
