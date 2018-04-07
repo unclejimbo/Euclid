@@ -19,6 +19,7 @@ void proxy_view_selection(const Mesh& mesh,
                           std::vector<FT>& view_scores,
                           int subdiv_level,
                           float weight,
+                          float scale,
                           const Eigen::Vector3f& up)
 {
     using Point_3 = typename boost::property_traits<
@@ -40,7 +41,7 @@ void proxy_view_selection(const Mesh& mesh,
     auto a = obb.length(0) * 0.5f;
     auto b = obb.length(1) * 0.5f;
     auto c = obb.length(2) * 0.5f;
-    auto radius = std::sqrt(a * a + b * b + c * c) * 2.0f;
+    auto radius = std::sqrt(a * a + b * b + c * c) * scale;
     make_subdivision_sphere(view_sphere, obb.center(), radius, subdiv_level);
 
     // Compute projected area

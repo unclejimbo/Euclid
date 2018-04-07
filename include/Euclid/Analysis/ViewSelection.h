@@ -1,6 +1,10 @@
 /** View selection.
  *
  *  View selection methods try to find a proper viewpoint to observe the shape.
+ *  Within this package, the center of the view sphere is located at the center
+ *  of the bounding box of the mesh, and the radius of the view sphere is equal
+ *  to the length of diagonal length of the bounding box.
+ *
  *  @defgroup PkgView View Selection
  *  @ingroup PkgAnalysis
  */
@@ -21,6 +25,7 @@ namespace Euclid
  *  @param subdiv_level The subdivision level of the subdivision viewing sphere.
  *  @param weight The weighting of the projected area term, (1 - weight) is the
  *  weighting for the visible ratio term.
+ *  @param scale The scale of the view sphere's radius.
  *  @param up The up vector of the mesh model.
  *
  *  #### Reference
@@ -34,6 +39,7 @@ void proxy_view_selection(const Mesh& mesh,
                           std::vector<FT>& view_scores,
                           int subdiv_level = 4,
                           float weight = 0.5f,
+                          float scale = 1.0f,
                           const Eigen::Vector3f& up = Eigen::Vector3f(0.0f,
                                                                       1.0f,
                                                                       0.0f));
