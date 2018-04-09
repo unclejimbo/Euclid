@@ -333,7 +333,7 @@ void RayTracer::render_shaded(T* pixels,
                     Eigen::Vector3f ambient = base_color * 0.3f;
                     Eigen::Vector3f diffuse =
                         base_color *
-                        std::clamp(normal.dot(-lightdir), 0.0f, 1.0f) * 0.7f;
+                        std::min(std::abs(normal.dot(-lightdir)), 1.0f) * 0.7f;
                     color += ambient + diffuse;
                 }
             }
