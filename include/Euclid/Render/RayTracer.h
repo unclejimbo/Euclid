@@ -186,8 +186,19 @@ public:
         float far = std::numeric_limits<float>::max()) const override;
 };
 
+/** A simple Phong material model.
+ *
+ */
+struct Material
+{
+    Eigen::Vector3f ambient;
+    Eigen::Vector3f diffuse;
+};
+
 /** A simple ray tracer.
  *
+ *  This ray tracer could render the shaded, depth or silhouette image of a
+ *  single mesh model.
  */
 class RayTracer
 {
@@ -235,10 +246,14 @@ public:
     /** Release geometry.*/
     void release_geometry();
 
+    /** Change the material of the model.*/
+    void set_material(const Material& material);
+
     /** Render the mesh into a shaded image.
      *
-     *  This function renders the mesh with simple lambertian
-     *  shading and store the pixel values to an array.
+     *  This function renders the mesh with simple lambertian shading and store
+     *  the pixel values to an array, using a point light located at the camera
+     *  position.
      *
      *  @param pixels Output pixels
      *  @param camera Camera.
@@ -290,6 +305,7 @@ private:
     RTCScene _scene;
     RTCGeometry _geometry;
     int _geom_id = -1;
+    Material _material;
 };
 
 /** @}*/

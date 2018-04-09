@@ -117,7 +117,6 @@ inline RTCRayHit OrthogonalCamera::gen_ray(float s,
 
 inline RayTracer::RayTracer(int threads)
 {
-    // Create device
     std::string cfg("threads=");
     cfg.append(std::to_string(threads));
     _device = rtcNewDevice(cfg.c_str());
@@ -128,7 +127,6 @@ inline RayTracer::RayTracer(int threads)
         throw std::runtime_error(err_str);
     }
 
-    // Create scene
     _scene = rtcNewScene(_device);
     if (!_scene) {
         auto err = rtcGetDeviceError(_device);
@@ -136,6 +134,9 @@ inline RayTracer::RayTracer(int threads)
         err_str.append(std::to_string(err));
         throw std::runtime_error(err_str);
     }
+
+    _material.ambient << 0.1f, 0.1f, 0.1f;
+    _material.diffuse << 0.7f, 0.7f, 0.7f;
 }
 
 inline RayTracer::~RayTracer()
@@ -295,6 +296,11 @@ inline void RayTracer::release_geometry()
     }
 }
 
+inline void RayTracer::set_material(const Material& material)
+{
+    _material = material;
+}
+
 template<typename T>
 void RayTracer::render_shaded(T* pixels,
                               const Camera& camera,
@@ -305,7 +311,6 @@ void RayTracer::render_shaded(T* pixels,
 {
     RTCIntersectContext context;
     rtcInitIntersectContext(&context);
-    Eigen::Vector3f base_color = Eigen::Vector3f(1.0f, 1.0f, 1.0f);
     std::random_device rd;
     std::minstd_rand rd_gen(rd());
     std::uniform_real_distribution<> rd_number(0.0f, 1.0f);
@@ -330,11 +335,13 @@ void RayTracer::render_shaded(T* pixels,
                                                                rayhit.ray.dir_z)
                                                    .normalized();
 
-                    Eigen::Vector3f ambient = base_color * 0.3f;
+                    Eigen::Vector3f ambient = _material.ambient;
                     Eigen::Vector3f diffuse =
-                        base_color *
-                        std::min(std::abs(normal.dot(-lightdir)), 1.0f) * 0.7f;
-                    color += ambient + diffuse;
+                        _material.diffuse * std::abs(normal.dot(-lightdir));
+                    Eigen::Vector3f shading = ambient + diffuse;
+                    color(0) += std::min(shading(0), 1.0f);
+                    color(1) += std::min(shading(1), 1.0f);
+                    color(2) += std::min(shading(2), 1.0f);
                 }
             }
             color /= samples;

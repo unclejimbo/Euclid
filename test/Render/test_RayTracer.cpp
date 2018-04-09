@@ -131,6 +131,22 @@ TEST_CASE("Package: Render/RayTracer", "[raytracer]")
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
 
+        SECTION("change material")
+        {
+            Euclid::PerspectiveCamera cam(
+                view, center, up, 60.0f, static_cast<float>(width) / height);
+            Euclid::Material material;
+            material.ambient << 0.2f, 0.0f, 0.0f;
+            material.diffuse << 0.7f, 0.0f, 0.0f;
+            raytracer.set_material(material);
+            raytracer.render_shaded(pixels.data(), cam, width, height, 8);
+
+            std::string outfile(TMP_DIR);
+            outfile.append("bunny_shaded6.png");
+            stbi_write_png(
+                outfile.c_str(), width, height, 3, pixels.data(), width * 3);
+        }
+
         SECTION("depth")
         {
             Euclid::PerspectiveCamera cam(
