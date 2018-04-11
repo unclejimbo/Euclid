@@ -8,6 +8,7 @@ add_executable(run_test
     "${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_MeshProperties.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_PrimitiveGenerator.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/ImgProc/test_Histogram.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/IO/test_ObjIO.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/IO/test_OffIO.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/IO/test_PlyIO.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/IO/test_InputFixer.cpp"

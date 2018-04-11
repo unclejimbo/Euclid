@@ -4,6 +4,8 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace Euclid
 {
@@ -31,6 +33,21 @@ void check_fstream(std::basic_ofstream<CharT>& stream,
         err_str.append(filename);
         throw std::runtime_error(err_str);
     }
+}
+
+inline std::vector<std::string_view>
+split(std::string_view str, char delim, std::string_view::size_type start = 0)
+{
+    std::vector<std::string_view> substrs;
+    std::string_view::size_type beg = start;
+    std::string_view::size_type pos = str.find(delim, beg);
+    while (pos != std::string_view::npos) {
+        substrs.push_back(str.substr(beg, pos - beg));
+        beg = pos + 1;
+        pos = str.find(delim, beg);
+    }
+    substrs.push_back(str.substr(beg, pos - beg));
+    return substrs;
 }
 
 } // namespace _impl
