@@ -24,7 +24,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_DI
 # TODO: msvc is not tested
 target_compile_features(run_test PRIVATE cxx_std_17)
 target_compile_options(run_test PRIVATE
-    -pipe -fstack-protector-strong -fno-plt
+    -pipe -fstack-protector-strong -fno-plt -march=native
     $<$<CXX_COMPILER_ID:GNU>:-frounding-math>
     $<$<CONFIG:Debug>:-O0 -Wall -Wextra>
 )
