@@ -6,7 +6,7 @@ namespace Euclid
 {
 
 template<typename Kernel>
-inline CGAL::Aff_transformation_3<Kernel> transform_between_2_coord_systems(
+CGAL::Aff_transformation_3<Kernel> transform_between_2_coord_systems(
     const typename Kernel::Point_3& from_origin,
     const typename Kernel::Point_3& from_x,
     const typename Kernel::Point_3& from_y,
@@ -43,7 +43,7 @@ inline CGAL::Aff_transformation_3<Kernel> transform_between_2_coord_systems(
 }
 
 template<typename Kernel>
-inline CGAL::Aff_transformation_3<Kernel> transform_between_2_coord_systems(
+CGAL::Aff_transformation_3<Kernel> transform_from_world_coord(
     const typename Kernel::Point_3& to_origin,
     const typename Kernel::Point_3& to_x,
     const typename Kernel::Point_3& to_y)
@@ -67,4 +67,31 @@ inline CGAL::Aff_transformation_3<Kernel> transform_between_2_coord_systems(
 
     return transformation;
 }
+
+template<typename Kernel>
+CGAL::Aff_transformation_3<Kernel> transform_to_world_coord(
+    const typename Kernel::Point_3& from_origin,
+    const typename Kernel::Point_3& from_x,
+    const typename Kernel::Point_3& from_y)
+{
+    using Transform = CGAL::Aff_transformation_3<Kernel>;
+
+    if (CGAL::collinear(from_origin, from_x, from_y)) {
+        throw std::invalid_argument("Inputs are collinear!");
+    }
+
+    auto x1 = Euclid::normalized(from_x - from_origin);
+    auto y1 = Euclid::normalized(from_y - from_origin);
+    auto z1 = CGAL::cross_product(x1, y1);
+
+    Transform tf(
+        x1.x(), x1.y(), x1.z(), y1.x(), y1.y(), y1.z(), z1.x(), z1.y(), z1.z());
+
+    auto transformation =
+        Transform(CGAL::Translation(), from_origin - CGAL::ORIGIN);
+    transformation = tf.inverse() * transformation;
+
+    return transformation;
 }
+
+} // namespace Euclid

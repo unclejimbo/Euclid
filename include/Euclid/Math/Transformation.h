@@ -25,17 +25,29 @@ CGAL::Aff_transformation_3<Kernel> transform_between_2_coord_systems(
     const typename Kernel::Point_3& to_x,
     const typename Kernel::Point_3& to_y);
 
-/** Transform from the "standard" coordinate system.
+/** Transform from the "standard" world coordinate system.
  *
  *  The standard coordinate system is assumed to be (1, 0, 0),
  *  (0, 1, 0), (0, 0, 1) under the world coordinate system
  *  that the arguments are defined.
  */
 template<typename Kernel>
-CGAL::Aff_transformation_3<Kernel> transform_between_2_coord_systems(
+CGAL::Aff_transformation_3<Kernel> transform_from_world_coord(
     const typename Kernel::Point_3& to_origin,
     const typename Kernel::Point_3& to_x,
     const typename Kernel::Point_3& to_y);
+
+/** Transform to the "standard" world coordinate system.
+ *
+ *  The standard coordinate system is assumed to be (1, 0, 0),
+ *  (0, 1, 0), (0, 0, 1) under the world coordinate system
+ *  that the arguments are defined.
+ */
+template<typename Kernel>
+CGAL::Aff_transformation_3<Kernel> transform_to_world_coord(
+    const typename Kernel::Point_3& from_origin,
+    const typename Kernel::Point_3& from_x,
+    const typename Kernel::Point_3& from_y);
 
 /** @}*/
 } // namespace Euclid

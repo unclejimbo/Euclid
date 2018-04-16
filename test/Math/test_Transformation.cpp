@@ -13,17 +13,27 @@ TEST_CASE("Package: Math/Transformation", "[transformation]")
     Point_3 y0(0.0f, 1.0f, 0.0f);
     Point_3 p(1.0f, 2.0f, 3.0f);
 
-    SECTION("Function: transform_between_2_coorad_systems")
+    SECTION("transform_between_2_coorad_systems")
     {
         auto t1 = Euclid::transform_between_2_coord_systems<Kernel>(
             o0, x0, y0, o0, x0, y0);
         auto t2 = Euclid::transform_between_2_coord_systems<Kernel>(
             o0, x0, y0, o0, y0, x0);
-        auto t3 = Euclid::transform_between_2_coord_systems<Kernel>(o0, y0, x0);
         REQUIRE_THROWS(Euclid::transform_between_2_coord_systems<Kernel>(
             x0, x0, x0, x0, x0, x0));
         REQUIRE(t1.transform(p) == p);
         REQUIRE(t2.transform(p) == Point_3(2.0f, 1.0f, -3.0f));
-        REQUIRE(t3.transform(p) == Point_3(2.0f, 1.0f, -3.0f));
+    }
+
+    SECTION("transform_from_world_coord")
+    {
+        auto t = Euclid::transform_from_world_coord<Kernel>(o0, y0, x0);
+        REQUIRE(t.transform(p) == Point_3(2.0f, 1.0f, -3.0f));
+    }
+
+    SECTION("transform_to_world_coord")
+    {
+        auto t = Euclid::transform_to_world_coord<Kernel>(o0, y0, x0);
+        REQUIRE(t.transform(p) == Point_3(2.0f, 1.0f, -3.0f));
     }
 }
