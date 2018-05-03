@@ -229,6 +229,10 @@ public:
 
     /** Attach geoemtry to the ray tracer.
      *
+     *  When using a shared geometry buffer, the user is responsible of padding
+     *  the positions buffer with one more float for Embree's SSE instructions
+     *  to work correctly.
+     *
      *  @param positions The geometry's positions buffer.
      *  @param indices The geometry's indices buffer.
      *  @param type The geometry's type, be either RTC_GEOMETRY_TYPE_TRIANGLE or

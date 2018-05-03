@@ -228,9 +228,10 @@ inline void RayTracer::attach_geometry_shared(
         EWARNING("Input geometry is empty.");
         return;
     }
-    if (positions.size() % 3 != 0) {
-        throw std::invalid_argument(
-            "Size of input positions is not divisible by 3.");
+    if (positions.size() % 3 != 1) {
+        throw std::invalid_argument("The last element of the positions buffer "
+                                    "is not padded to 16 bytes, add "
+                                    "one more 0.0f to your positions buffer.");
     }
     if (!(type == RTC_GEOMETRY_TYPE_TRIANGLE ||
           type == RTC_GEOMETRY_TYPE_QUAD)) {

@@ -48,6 +48,7 @@ void proxy_view_selection(const Mesh& mesh,
     std::vector<float> positions;
     std::vector<unsigned> indices;
     extract_mesh<3>(mesh, positions, indices);
+    positions.push_back(0.0f); // Embree alignment
     RayTracer raytracer;
     raytracer.attach_geometry_shared(positions, indices);
 
