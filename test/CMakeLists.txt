@@ -72,6 +72,11 @@ if(LAPACK_FOUND)
     target_compile_definitions(run_test PRIVATE "EIGEN_USE_LAPACK")
 endif()
 
+find_package(OpenMP)
+if(OpenMP_FOUND)
+    target_link_libraries(run_test PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
 # Output
 set_target_properties(run_test PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/

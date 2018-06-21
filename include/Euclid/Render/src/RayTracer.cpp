@@ -305,9 +305,9 @@ inline void RayTracer::set_material(const Material& material)
 template<typename T>
 void RayTracer::render_shaded(T* pixels,
                               const Camera& camera,
-                              const unsigned width,
-                              const unsigned height,
-                              const unsigned samples,
+                              int width,
+                              int height,
+                              int samples,
                               bool interleaved)
 {
     RTCIntersectContext context;
@@ -316,10 +316,11 @@ void RayTracer::render_shaded(T* pixels,
     std::minstd_rand rd_gen(rd());
     std::uniform_real_distribution<> rd_number(0.0f, 1.0f);
 
-    for (unsigned y = 0; y < height; ++y) {
-        for (unsigned x = 0; x < width; ++x) {
+#pragma omp parallel for schedule(dynamic)
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
             Eigen::Vector3f color(0.0f, 0.0f, 0.0f);
-            for (unsigned s = 0; s < samples; ++s) {
+            for (int s = 0; s < samples; ++s) {
                 auto u = static_cast<float>(x + rd_number(rd_gen)) / width;
                 auto v = static_cast<float>(y + rd_number(rd_gen)) / height;
                 auto rayhit = camera.gen_ray(u, v);
@@ -369,8 +370,8 @@ void RayTracer::render_shaded(T* pixels,
 template<typename T>
 void RayTracer::render_depth(T* pixels,
                              const Camera& camera,
-                             const unsigned width,
-                             const unsigned height,
+                             int width,
+                             int height,
                              bool tone_mapped)
 {
     RTCIntersectContext context;
@@ -379,8 +380,9 @@ void RayTracer::render_depth(T* pixels,
         rtcGetGeometryBufferData(_geometry, RTC_BUFFER_TYPE_VERTEX, 0));
     auto indices = reinterpret_cast<unsigned*>(
         rtcGetGeometryBufferData(_geometry, RTC_BUFFER_TYPE_INDEX, 0));
-    for (unsigned y = 0; y < height; ++y) {
-        for (unsigned x = 0; x < width; ++x) {
+#pragma omp parallel for schedule(dynamic)
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
             auto u = static_cast<float>(x) / width;
             auto v = static_cast<float>(y) / height;
             auto rayhit = camera.gen_ray(u, v);
@@ -418,13 +420,14 @@ void RayTracer::render_depth(T* pixels,
 template<typename T>
 void RayTracer::render_silhouette(T* pixels,
                                   const Camera& camera,
-                                  const unsigned width,
-                                  const unsigned height)
+                                  int width,
+                                  int height)
 {
     RTCIntersectContext context;
     rtcInitIntersectContext(&context);
-    for (unsigned y = 0; y < height; ++y) {
-        for (unsigned x = 0; x < width; ++x) {
+#pragma omp parallel for schedule(dynamic)
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
             auto u = static_cast<float>(x) / width;
             auto v = static_cast<float>(y) / height;
             auto rayhit = camera.gen_ray(u, v);

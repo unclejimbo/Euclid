@@ -270,9 +270,9 @@ public:
     template<typename T>
     void render_shaded(T* pixels,
                        const Camera& camera,
-                       const unsigned width,
-                       const unsigned height,
-                       const unsigned samples = 1,
+                       int width,
+                       int height,
+                       int samples = 1,
                        bool interleaved = true);
 
     /** Render the mesh into a depth image.
@@ -287,8 +287,8 @@ public:
     template<typename T>
     void render_depth(T* pixels,
                       const Camera& camera,
-                      const unsigned width,
-                      const unsigned height,
+                      int width,
+                      int height,
                       bool tone_mapped = true);
 
     /** Render the mesh into a silhouette image.
@@ -301,8 +301,8 @@ public:
     template<typename T>
     void render_silhouette(T* pixels,
                            const Camera& camera,
-                           const unsigned width,
-                           const unsigned height);
+                           int width,
+                           int height);
 
 private:
     RTCDevice _device;
