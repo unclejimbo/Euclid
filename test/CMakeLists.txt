@@ -1,6 +1,7 @@
 add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_AABB.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_Descriptor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_OBB.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_ViewSelection.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_MeshHelpers.cpp

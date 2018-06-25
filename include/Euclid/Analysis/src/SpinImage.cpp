@@ -1,116 +1,78 @@
+#include <tuple>
+
 #define _USE_MATH_DEFINES
+#include <cmath>
+
 #include <Euclid/Geometry/MeshProperties.h>
 #include <Euclid/Math/Vector.h>
 #include <Euclid/Math/Transformation.h>
-#include <tuple>
-#include <cmath>
 
 namespace Euclid
 {
 
 template<typename Mesh, typename VertexNormalMap, typename T>
-inline void spin_image(
-	const Mesh& mesh,
-	const VertexNormalMap& vnmap,
-	std::vector<std::vector<T>>& spin_imgs,
-	unsigned bin_size,
-	unsigned image_width,
-	float support_angle)
+void spin_image(const Mesh& mesh,
+                const VertexNormalMap& vnmap,
+                const typename boost::graph_traits<Mesh>::vertex_descriptor& v,
+                std::vector<T>& spin_img,
+                float bin_size,
+                unsigned image_width,
+                float support_angle)
 {
-	using VPMap = boost::property_map<Mesh, boost::vertex_point_t>::type;
-	using Point_3 = boost::property_traits<VPMap>::value_type;
-	using FT = CGAL::Kernel_traits<Point_3>::Kernel::FT;
-	using VIter = boost::graph_traits<Mesh>::vertex_iterator;
-	using EIter = boost::graph_traits<Mesh>::edge_iterator;
-	using Transform = CGAL::Aff_transformation_3<Kernel>;
-	auto vpmap = get(boost::vertex_point, mesh);
-	const auto to_radian = M_PI / 180.0f;
+    using VPMap =
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type;
+    using Point_3 = typename boost::property_traits<VPMap>::value_type;
+    using Kernel = typename CGAL::Kernel_traits<Point_3>::Kernel;
+    using FT = typename Kernel::FT;
+    auto vpmap = get(boost::vertex_point, mesh);
+    const auto to_radian = M_PI / 180.0f;
 
-	if (support_angle < 0.0f || support_angle > 180.0f) {
-		std::cerr << "Invalid support angle" << std::endl;
-		return;
-	}
+    if (support_angle < 0.0f || support_angle > 180.0f) {
+        throw std::invalid_argument(
+            "Support angle should be in range [0, 180]");
+    }
 
-	auto nv = num_vertices(mesh);
-	spin_imgs.resize(nv);
-	for (auto& i : spin_imgs) {
-		i.resize(image_width * image_width);
-	}
+    // Calculate the resolution of mesh
+    FT median = 0.0;
+    for (const auto& e : edges(mesh)) {
+        median += edge_length(e, mesh);
+    }
+    median /= static_cast<FT>(num_edges(mesh));
+    auto bin_width = median * static_cast<FT>(bin_size);
 
-	// Calculate the resolution of mesh
-	T median = 0.0;
-	EIter e_iter, e_end;
-	std::tie(e_iter, e_end) = edges(mesh);
-	while (e_iter != e_end) {
-		median += Euclid::edge_length(*e_iter++, mesh);
-	}
-	median /= static_cast<T>(num_edges(mesh));
-	auto bin_width = median * static_cast<T>(bin_size);
-	auto inv_bin_width = 1.0 / bin_width;
+    // Transform the coordinate system so that vi is at origin and the vertex
+    // normal points in the y axis, while the x and z axes are arbitrary
+    const auto& pi = vpmap[v];
+    const auto& ni = vnmap[v];
+    CGAL::Plane_3<Kernel> plane(pi, ni);
+    auto tangent = normalized(plane.base1());
+    auto transform =
+        transform_from_world_coord<Kernel>(pi, pi + tangent, pi + ni);
 
-	// Compute spin images for all vertices
-	VIter vi, vi_end;
-	std::tie(vi, vi_end) = vertices(mesh);
-	unsigned i = 0;
-	while (vi != vi_end) {
-		auto max_value = static_cast<FT>(1);
+    // Find all vertices that lie in the support and compute the spin image
+    spin_img.resize((image_width + 1) * (image_width + 1), 0.0);
+    for (const auto& vj : vertices(mesh)) {
+        if (ni * vnmap[vj] <= std::cos(support_angle * to_radian)) { continue; }
 
-		// Transform the coordinate system so that vi is at origin
-		// and its normal points in the y axis
-		Transform transform;
-		auto pi = vpmap[*vi];
-		auto ni = vnmap[*vi];
-		CGAL::Plane_3<Kernel> plane(pi, ni);
-		auto tangent = Euclid::normalized(plane.base1());
-		Euclid::transform_between_2_coord_systems(
-			pi, pi + tangent, pi + ni,
-			transform);
+        auto pj = transform(vpmap[vj]);
 
-		VIter vj, vj_end;
-		std::tie(vj, vj_end) = vertices(mesh);
-		while (vj != vj_end) {
-			auto nj = vnmap[*vj];
-			if (ni * nj < std::cos(support_angle * to_radian)) {
-				++vj;
-				continue;
-			}
+        auto alpha = std::sqrt(pj.x() * pj.x() + pj.z() * pj.z()) / bin_width;
+        auto col = static_cast<int>(std::floor(alpha));
+        if (col >= image_width) { continue; }
+        alpha -= col;
 
-			auto pj = transform(vpmap[*vj]);
+        auto beta = pj.y() / bin_width;
+        auto beta_max = image_width * 0.5f;
+        auto row = static_cast<int>(std::floor(beta_max - beta));
+        if (row >= image_width || row < 0) { continue; }
+        beta = beta_max - beta - row;
 
-			auto xz = std::sqrt(pj.x() * pj.x() + pj.z() * pj.z()) * inv_bin_width;
-			auto col = static_cast<unsigned>(std::floor(xz));
-			if (col >= image_width) {
-				++vj;
-				continue;
-			}
-			xz = xz - col;
-
-			auto y = pj.y() * inv_bin_width + static_cast<FT>(0.5) + image_width / 2;
-			auto row = static_cast<unsigned>(std::floor(y));
-			if (row >= image_width || row < 0) {
-				++vj;
-				continue;
-			}
-			y = y - row;
-
-			auto value = static_cast<FT>(0.5) * xz + static_cast<FT>(0.5) * y;
-			auto index = row * image_width + col;
-			spin_imgs[i][index] += value;
-			if (spin_imgs[i][index] > max_value) {
-				max_value = spin_imgs[i][index];
-			}
-			++vj;
-		}
-
-		// Normalize
-		auto inv_max = 1 / max_value;
-		for (auto& v : spin_imgs[i]) {
-			v *= inv_max;
-		}
-
-		++i;
-		++vi;
-	}
+        // Bilinear interpolation
+        spin_img[row * image_width + col] += (1.0f - alpha) * (1.0f - beta);
+        spin_img[row * image_width + col + 1] += alpha * (1.0f - beta);
+        spin_img[(row + 1) * image_width + col] += (1.0f - alpha) * beta;
+        spin_img[(row + 1) * image_width + col + 1] += alpha * beta;
+    }
 }
 
 } // namespace Euclid
