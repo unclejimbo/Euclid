@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 
-#include "../config.h"
+#include <config.h>
 
 TEST_CASE("Package: IO/PlyIO", "[plyio]")
 {

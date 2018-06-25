@@ -8,7 +8,7 @@
 #include <CGAL/Surface_mesh.h>
 #include <Euclid/Geometry/MeshHelpers.h>
 
-#include "../config.h"
+#include <config.h>
 
 using Kernel = CGAL::Simple_cartesian<float>;
 using Point_3 = typename Kernel::Point_3;

@@ -6,7 +6,8 @@
 #include <vector>
 #include <Euclid/Util/Assert.h>
 #include <Euclid/IO/OffIO.h>
-#include "../config.h"
+
+#include <config.h>
 
 // Test whether two position vectors are identical
 template<typename T>
@@ -14,9 +15,7 @@ static bool _pos_eq(const std::vector<T>& test, const std::vector<T>& expect)
 {
     EASSERT(test.size() % 3 == 0);
     EASSERT(expect.size() % 3 == 0);
-    if (test.size() != expect.size()) {
-        return false;
-    }
+    if (test.size() != expect.size()) { return false; }
 
     using Point = std::array<T, 3>;
 
@@ -46,9 +45,7 @@ static bool _pos_eq(const std::vector<T1>& test_pos,
 {
     EASSERT(test_idx.size() % N == 0);
     EASSERT(expect_idx.size() % N == 0);
-    if (!_pos_eq(test_pos, expect_pos)) {
-        return false;
-    }
+    if (!_pos_eq(test_pos, expect_pos)) { return false; }
 
     using Point = std::array<T1, 3>;
     using Face = std::array<Point, N>;

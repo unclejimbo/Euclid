@@ -1,7 +1,7 @@
 #include <Euclid/IO/OffIO.h>
 #include <catch.hpp>
 
-#include "../config.h"
+#include <config.h>
 
 TEST_CASE("Package: IO/OffIO", "[offio]")
 {

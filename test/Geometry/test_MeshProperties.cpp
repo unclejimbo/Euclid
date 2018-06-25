@@ -14,7 +14,7 @@
 #include <Euclid/Math/Numeric.h>
 #include <igl/invert_diag.h>
 
-#include "../config.h"
+#include <config.h>
 
 using Kernel = CGAL::Simple_cartesian<float>;
 using Point_3 = typename Kernel::Point_3;
@@ -164,7 +164,7 @@ TEST_CASE("Package: Geometry/MeshProperties", "[meshprop]")
 
     SECTION("edge length and squared length")
     {
-        auto[ebeg, eend] = edges(cube);
+        auto [ebeg, eend] = edges(cube);
         auto e = *(++ebeg);
         auto he = halfedge(e, cube);
         REQUIRE(Euclid::eq_almost(Euclid::edge_length(e, cube), 2.0f));
@@ -175,14 +175,14 @@ TEST_CASE("Package: Geometry/MeshProperties", "[meshprop]")
 
     SECTION("face normal")
     {
-        auto[fbeg, fend] = faces(cube);
+        auto [fbeg, fend] = faces(cube);
         auto f = *fbeg;
         REQUIRE(Euclid::face_normal(f, cube) == Vector_3(0.0f, 0.0f, -1.0f));
     }
 
     SECTION("face area")
     {
-        auto[fbeg, fend] = faces(cube);
+        auto [fbeg, fend] = faces(cube);
         auto f = *fbeg;
         REQUIRE(Euclid::face_area(f, cube) == 2.0f);
     }

@@ -9,7 +9,7 @@
 #include <CGAL/Polyhedron_3.h>
 #include <Euclid/IO/OffIO.h>
 
-#include "../config.h"
+#include <config.h>
 
 using Kernel = CGAL::Simple_cartesian<double>;
 using Point_3 = typename Kernel::Point_3;

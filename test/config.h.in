@@ -1,2 +1,2 @@
-#define DATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../data/"
+#define DATA_DIR "${CMAKE_SOURCE_DIR}/data/"
 #define TMP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tmp/"

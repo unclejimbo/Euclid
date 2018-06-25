@@ -9,7 +9,7 @@
 #include <Euclid/Geometry/MeshHelpers.h>
 #include <igl/colormap.h>
 
-#include "../config.h"
+#include <config.h>
 
 using Kernel = CGAL::Simple_cartesian<float>;
 using Point_3 = Kernel::Point_3;

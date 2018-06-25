@@ -11,7 +11,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
-#include "../config.h"
+#include <config.h>
 
 using Kernel = CGAL::Simple_cartesian<float>;
 
