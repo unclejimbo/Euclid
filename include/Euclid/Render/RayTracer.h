@@ -191,8 +191,8 @@ public:
  */
 struct Material
 {
-    Eigen::Vector3f ambient;
-    Eigen::Vector3f diffuse;
+    Eigen::Array3f ambient;
+    Eigen::Array3f diffuse;
 };
 
 /** A simple ray tracer.

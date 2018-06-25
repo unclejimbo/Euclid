@@ -74,7 +74,9 @@ endif()
 
 find_package(OpenMP)
 if(OpenMP_FOUND)
-    target_link_libraries(run_test PRIVATE OpenMP::OpenMP_CXX)
+    target_link_libraries(run_test PRIVATE
+        $<$<CONFIG:Release>:OpenMP::OpenMP_CXX>
+    )
 endif()
 
 # Output

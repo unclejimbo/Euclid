@@ -319,7 +319,7 @@ void RayTracer::render_shaded(T* pixels,
 #pragma omp parallel for schedule(dynamic)
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            Eigen::Vector3f color(0.0f, 0.0f, 0.0f);
+            Eigen::Array3f color(0.0f, 0.0f, 0.0f);
             for (int s = 0; s < samples; ++s) {
                 auto u = static_cast<float>(x + rd_number(rd_gen)) / width;
                 auto v = static_cast<float>(y + rd_number(rd_gen)) / height;
@@ -337,31 +337,31 @@ void RayTracer::render_shaded(T* pixels,
                                                                rayhit.ray.dir_z)
                                                    .normalized();
 
-                    Eigen::Vector3f ambient = _material.ambient;
-                    Eigen::Vector3f diffuse =
+                    Eigen::Array3f ambient = _material.ambient;
+                    Eigen::Array3f diffuse =
                         _material.diffuse * std::abs(normal.dot(-lightdir));
-                    Eigen::Vector3f shading = ambient + diffuse;
-                    color(0) += std::min(shading(0), 1.0f);
-                    color(1) += std::min(shading(1), 1.0f);
-                    color(2) += std::min(shading(2), 1.0f);
+                    color += ambient + diffuse;
                 }
             }
             color /= samples;
+            color(0) = std::min(color(0), 1.0f);
+            color(1) = std::min(color(1), 1.0f);
+            color(2) = std::min(color(2), 1.0f);
+            const float gamma = 1.0f / 2.2f;
+            color = color.pow(gamma);
             color *= 255;
+            auto r = static_cast<T>(color(0));
+            auto g = static_cast<T>(color(1));
+            auto b = static_cast<T>(color(2));
             if (interleaved) {
-                pixels[3 * ((height - y - 1) * width + x) + 0] =
-                    static_cast<T>(color(0));
-                pixels[3 * ((height - y - 1) * width + x) + 1] =
-                    static_cast<T>(color(1));
-                pixels[3 * ((height - y - 1) * width + x) + 2] =
-                    static_cast<T>(color(2));
+                pixels[3 * ((height - y - 1) * width + x) + 0] = r;
+                pixels[3 * ((height - y - 1) * width + x) + 1] = g;
+                pixels[3 * ((height - y - 1) * width + x) + 2] = b;
             }
             else {
-                pixels[(height - y - 1) * width + x] = static_cast<T>(color(0));
-                pixels[width * height + (height - y - 1) * width + x] =
-                    static_cast<T>(color(1));
-                pixels[2 * width * height + (height - y - 1) * width + x] =
-                    static_cast<T>(color(2));
+                pixels[(height - y - 1) * width + x] = r;
+                pixels[width * height + (height - y - 1) * width + x] = g;
+                pixels[2 * width * height + (height - y - 1) * width + x] = b;
             }
         }
     }
@@ -431,8 +431,8 @@ void RayTracer::render_silhouette(T* pixels,
             auto u = static_cast<float>(x) / width;
             auto v = static_cast<float>(y) / height;
             auto rayhit = camera.gen_ray(u, v);
-            rtcIntersect1(_scene, &context, &rayhit);
-            if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID) {
+            rtcOccluded1(_scene, &context, &(rayhit.ray));
+            if (rayhit.ray.tfar <= 0.0f) {
                 pixels[(height - y - 1) * width + x] = static_cast<T>(255);
             }
         }
