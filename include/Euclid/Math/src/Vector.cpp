@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 
 #include <CGAL/Kernel/global_functions.h>
 #include <Euclid/Math/Numeric.h>
