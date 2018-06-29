@@ -25,15 +25,37 @@ TEST_CASE("Package: Analysis/ViewSelection", "[viewselection]")
     Mesh mesh;
     Euclid::make_mesh<3>(mesh, positions, indices);
 
+    SECTION("subdivision view sphere")
+    {
+        auto sphere = Euclid::ViewSphere<Mesh>::make_subdiv(mesh);
+        std::vector<float> spositions;
+        std::vector<float> sindices;
+        Euclid::extract_mesh<3>(sphere.mesh, spositions, sindices);
+        std::string fout(TMP_DIR);
+        fout.append("view_sphere_subdiv.off");
+        Euclid::write_off<3>(fout, spositions, sindices);
+    }
+
+    SECTION("random view sphere")
+    {
+        auto sphere = Euclid::ViewSphere<Mesh>::make_random(mesh, 3.0f, 5000);
+        std::vector<float> spositions;
+        std::vector<float> sindices;
+        Euclid::extract_mesh<3>(sphere.mesh, spositions, sindices);
+        std::string fout(TMP_DIR);
+        fout.append("view_sphere_uniform.off");
+        Euclid::write_off<3>(fout, spositions, sindices);
+    }
+
     SECTION("proxy view selection")
     {
-        Mesh view_sphere;
+        auto view_sphere = Euclid::ViewSphere<Mesh>::make_subdiv(mesh);
         std::vector<float> view_scores;
         Euclid::proxy_view_selection(mesh, view_sphere, view_scores);
 
         std::vector<float> vpositions;
         std::vector<unsigned> vindices;
-        Euclid::extract_mesh<3>(view_sphere, vpositions, vindices);
+        Euclid::extract_mesh<3>(view_sphere.mesh, vpositions, vindices);
         auto [smin, smax] =
             std::minmax_element(view_scores.begin(), view_scores.end());
         std::vector<unsigned char> colors;
@@ -48,7 +70,7 @@ TEST_CASE("Package: Analysis/ViewSelection", "[viewselection]")
             colors.push_back(128);
         }
         std::string mesh_out(TMP_DIR);
-        mesh_out.append("bunny_view_sphere.ply");
+        mesh_out.append("proxy_view_sphere.ply");
         Euclid::write_ply<3>(
             mesh_out, vpositions, nullptr, nullptr, &vindices, &colors);
     }

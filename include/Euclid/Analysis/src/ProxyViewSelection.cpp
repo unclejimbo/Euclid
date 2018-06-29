@@ -3,24 +3,87 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
+#include <CGAL/Min_sphere_of_spheres_d.h>
+#include <CGAL/point_generators_3.h>
+#include <CGAL/convex_hull_3.h>
 #include <Euclid/Analysis/OBB.h>
-#include <Euclid/Geometry/PrimitiveGenerator.h>
-#include <Euclid/Geometry/MeshProperties.h>
 #include <Euclid/Geometry/MeshHelpers.h>
+#include <Euclid/Geometry/MeshProperties.h>
+#include <Euclid/Geometry/PrimitiveGenerator.h>
 #include <Euclid/Math/Vector.h>
 #include <Euclid/Render/RayTracer.h>
 
 namespace Euclid
 {
 
-template<typename Mesh, typename FT>
+template<typename Mesh>
+ViewSphere<Mesh> ViewSphere<Mesh>::make_subdiv(const Mesh& mesh,
+                                               float scale,
+                                               int subdiv)
+{
+    using MSTraits = CGAL::Min_sphere_of_spheres_d_traits_3<Kernel, FT>;
+    using Min_sphere = CGAL::Min_sphere_of_spheres_d<MSTraits>;
+    using Sphere = typename Min_sphere::Sphere;
+
+    auto [vbeg, vend] = vertices(mesh);
+    auto mesh_vpmap = get(boost::vertex_point, mesh);
+    std::vector<Sphere> spheres;
+    spheres.reserve(num_vertices(mesh));
+    for (const auto& v : vertices(mesh)) {
+        spheres.emplace_back(mesh_vpmap[v], 0.0f);
+    }
+    Min_sphere ms(spheres.begin(), spheres.end());
+
+    ViewSphere<Mesh> result;
+    result.radius = ms.radius() * scale;
+    auto iter = ms.center_cartesian_begin();
+    result.center = Point_3(*iter, *(iter + 1), *(iter + 2));
+
+    Euclid::make_subdivision_sphere(
+        result.mesh, result.center, result.radius, subdiv);
+
+    return result;
+}
+
+template<typename Mesh>
+ViewSphere<Mesh> ViewSphere<Mesh>::make_random(const Mesh& mesh,
+                                               float scale,
+                                               int samples)
+{
+    using MSTraits = CGAL::Min_sphere_of_spheres_d_traits_3<Kernel, FT>;
+    using Min_sphere = CGAL::Min_sphere_of_spheres_d<MSTraits>;
+    using Sphere = typename Min_sphere::Sphere;
+
+    auto [vbeg, vend] = vertices(mesh);
+    auto mesh_vpmap = get(boost::vertex_point, mesh);
+    std::vector<Sphere> spheres;
+    spheres.reserve(num_vertices(mesh));
+    for (const auto& v : vertices(mesh)) {
+        spheres.emplace_back(mesh_vpmap[v], 0.0f);
+    }
+    Min_sphere ms(spheres.begin(), spheres.end());
+
+    ViewSphere<Mesh> result;
+    result.radius = ms.radius() * scale;
+    auto iter = ms.center_cartesian_begin();
+    result.center = Point_3(*iter, *(iter + 1), *(iter + 2));
+
+    auto generator = CGAL::Random_points_on_sphere_3<Point_3>(result.radius);
+    std::vector<Point_3> points(samples);
+    std::copy_n(generator, samples, points.begin());
+    for (auto& p : points) {
+        p = p + (result.center - CGAL::ORIGIN);
+    }
+    CGAL::convex_hull_3(points.begin(), points.end(), result.mesh);
+
+    return result;
+}
+
+template<typename Mesh, typename T>
 void proxy_view_selection(const Mesh& mesh,
-                          Mesh& view_sphere,
-                          std::vector<FT>& view_scores,
-                          int subdiv_level,
-                          float weight,
-                          float scale,
-                          const Eigen::Vector3f& up)
+                          const ViewSphere<Mesh>& view_sphere,
+                          std::vector<T>& view_scores,
+                          float weight)
 {
     using Point_3 = typename boost::property_traits<
         typename boost::property_map<Mesh,
@@ -37,13 +100,6 @@ void proxy_view_selection(const Mesh& mesh,
     auto mesh_vpmap = get(boost::vertex_point, mesh);
     OBB<Kernel> obb(vbeg, vend, mesh_vpmap);
 
-    // Generate sample sphere
-    auto a = obb.length(0) * 0.5f;
-    auto b = obb.length(1) * 0.5f;
-    auto c = obb.length(2) * 0.5f;
-    auto radius = std::sqrt(a * a + b * b + c * c) * scale;
-    make_subdivision_sphere(view_sphere, obb.center(), radius, subdiv_level);
-
     // Compute projected area
     std::vector<float> positions;
     std::vector<unsigned> indices;
@@ -55,12 +111,12 @@ void proxy_view_selection(const Mesh& mesh,
     std::vector<float> projected_areas(proxies);
     for (size_t i = 0; i < projected_areas.size(); ++i) {
         OrthogonalCamera cam;
-        auto view_dir = radius * obb.axis(i % 3);
+        auto view_dir = view_sphere.radius * obb.axis(i % 3);
         if (i >= 3) { view_dir = -view_dir; }
-        cam.lookat(cgal_to_eigen<float>(obb.center() + view_dir),
-                   cgal_to_eigen<float>(obb.center()),
-                   up);
-        cam.set_extent(radius, radius);
+        cam.lookat(cgal_to_eigen<float>(view_sphere.center + view_dir),
+                   cgal_to_eigen<float>(view_sphere.center),
+                   cgal_to_eigen<float>(obb.axis((i + 1) % 3)));
+        cam.set_extent(view_sphere.radius * 2.0f, view_sphere.radius * 2.0f);
 
         std::vector<unsigned char> pixels(width * height, 0);
         raytracer.render_silhouette(pixels.data(), cam, width, height);
@@ -101,10 +157,10 @@ void proxy_view_selection(const Mesh& mesh,
 
     // Compute final score
     view_scores.clear();
-    view_scores.resize(num_vertices(view_sphere), 0.0f);
-    auto sphere_vpmap = get(boost::vertex_point, view_sphere);
-    auto sphere_vimap = get(boost::vertex_index, view_sphere);
-    for (const auto& v : vertices(view_sphere)) {
+    view_scores.resize(num_vertices(view_sphere.mesh), 0.0f);
+    auto sphere_vpmap = get(boost::vertex_point, view_sphere.mesh);
+    auto sphere_vimap = get(boost::vertex_index, view_sphere.mesh);
+    for (const auto& v : vertices(view_sphere.mesh)) {
         auto view_dir = normalized(sphere_vpmap[v] - obb.center());
         auto i = sphere_vimap[v];
         view_scores[i] += (w1 * projected_areas[0] + w2 * visible_ratios[0]) *
