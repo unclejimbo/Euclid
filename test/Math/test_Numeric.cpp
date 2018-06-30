@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include <Euclid/Math/Numeric.h>
 #include <catch.hpp>
 #include <iostream>

@@ -46,18 +46,19 @@ find_package(CGAL REQUIRED)
 
 target_include_directories(run_test PRIVATE
     ${Libigl_INCLUDE_DIR}
+    ${EMBREE_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/include/
     ${CMAKE_SOURCE_DIR}/3rdparty/
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 target_link_libraries(run_test PRIVATE
-    stdc++fs
     Boost::boost
     Eigen3::Eigen
     CGAL::CGAL
     ${OpenCV_LIBS}
     ${EMBREE_LIBRARIES}
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:stdc++fs>
 )
 
 # Optional packages

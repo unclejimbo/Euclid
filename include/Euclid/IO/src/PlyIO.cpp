@@ -38,7 +38,8 @@ static inline bool sys_little_endian()
     {
         uint32_t value;
         uint8_t bytes[4];
-    } checker = { .value = 0x00000001 };
+    } checker;
+    checker.value = 0x00000001;
     return checker.bytes[0] == 1;
 }
 
@@ -214,7 +215,7 @@ inline std::unique_ptr<PlyProperty> make_property<unsigned char>(
 }
 
 /** Implementation of reading ply header.*/
-static PlyHeader _read_ply_header(std::ifstream& stream)
+static PlyHeader read_ply_header(std::ifstream& stream)
 {
     std::string line;
     std::getline(stream, line);
@@ -1162,7 +1163,7 @@ inline PlyHeader read_ply_header(const std::string& file_name)
     std::ifstream stream(file_name);
     _impl::check_fstream(stream, file_name);
 
-    return _impl::_read_ply_header(stream);
+    return _impl::read_ply_header(stream);
 }
 
 inline void read_ply(const std::string& file_name, PlyReader& reader)
@@ -1170,14 +1171,22 @@ inline void read_ply(const std::string& file_name, PlyReader& reader)
     std::ifstream stream(file_name);
     _impl::check_fstream(stream, file_name);
 
-    auto header = _impl::_read_ply_header(stream);
+    auto header = _impl::read_ply_header(stream);
     reader.on_read(header);
 
     if (header.format() != PlyFormat::ascii) {
-        auto pos = stream.tellg();
+        // TODO: tellg() gives wrong position on Windows,
+        // however reading through the header again is suboptimal
+        /*auto pos = stream.tellg();
         stream.close();
         stream.open(file_name, std::ios::binary);
-        stream.seekg(pos);
+        stream.seekg(pos);*/
+        stream.close();
+        stream.open(file_name, std::ios::binary);
+        do {
+            auto line = _impl::read_ply_header_line(stream);
+            if (line[0] == "end_header") break;
+        } while (true);
     }
 
     for (const auto& elem : header) {

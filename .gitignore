@@ -1,8 +1,10 @@
 # directories
 .vscode/
+.vs/
 build/
 x64/
 test/tmp/
 
 # files
 .clang-format
+CMakeSettings.json
