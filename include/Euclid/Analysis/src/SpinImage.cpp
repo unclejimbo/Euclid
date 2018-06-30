@@ -16,7 +16,7 @@ void spin_image(const Mesh& mesh,
                 const typename boost::graph_traits<Mesh>::vertex_descriptor& v,
                 std::vector<T>& spin_img,
                 float bin_size,
-                unsigned image_width,
+                int image_width,
                 float support_angle)
 {
     using VPMap =

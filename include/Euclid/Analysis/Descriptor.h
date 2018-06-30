@@ -40,7 +40,7 @@ void spin_image(const Mesh& mesh,
                 const typename boost::graph_traits<Mesh>::vertex_descriptor& v,
                 std::vector<T>& spin_img,
                 float bin_size = 1.0f,
-                unsigned image_width = 15,
+                int image_width = 15,
                 float support_angle = 60.0f);
 
 /** @}*/

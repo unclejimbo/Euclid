@@ -25,7 +25,6 @@ ViewSphere<Mesh> ViewSphere<Mesh>::make_subdiv(const Mesh& mesh,
     using Min_sphere = CGAL::Min_sphere_of_spheres_d<MSTraits>;
     using Sphere = typename Min_sphere::Sphere;
 
-    auto [vbeg, vend] = vertices(mesh);
     auto mesh_vpmap = get(boost::vertex_point, mesh);
     std::vector<Sphere> spheres;
     spheres.reserve(num_vertices(mesh));
@@ -54,7 +53,6 @@ ViewSphere<Mesh> ViewSphere<Mesh>::make_random(const Mesh& mesh,
     using Min_sphere = CGAL::Min_sphere_of_spheres_d<MSTraits>;
     using Sphere = typename Min_sphere::Sphere;
 
-    auto [vbeg, vend] = vertices(mesh);
     auto mesh_vpmap = get(boost::vertex_point, mesh);
     std::vector<Sphere> spheres;
     spheres.reserve(num_vertices(mesh));
