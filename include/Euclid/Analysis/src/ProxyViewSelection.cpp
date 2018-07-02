@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <array>
-#define _USE_MATH_DEFINES
 #include <cmath>
 
+#include <boost/math/constants/constants.hpp>
 #include <CGAL/Min_sphere_of_spheres_d.h>
 #include <CGAL/point_generators_3.h>
 #include <CGAL/convex_hull_3.h>
@@ -90,7 +90,8 @@ void proxy_view_selection(const Mesh& mesh,
     const int proxies = 6;
     const int width = 256;
     const int height = 256;
-    const float least_visible = std::cos(M_PI / 3.0f);
+    const float least_visible =
+        std::cos(boost::math::float_constants::pi / 3.0f);
     const float w1 = weight;    // weight for projected areas
     const float w2 = 1.0f - w1; // weight for visible ratios
 

@@ -1,8 +1,8 @@
+#include <cmath>
 #include <unordered_map>
 #include <vector>
-#define _USE_MATH_DEFINES
-#include <cmath>
 
+#include <boost/math/constants/constants.hpp>
 #include <Euclid/Math/Vector.h>
 #include <Euclid/Util/Assert.h>
 
@@ -389,7 +389,7 @@ gaussian_curvature(
                                                value_type>::Kernel::FT;
     auto vpmap = get(boost::vertex_point, mesh);
 
-    T angle_defect = 2.0 * M_PI;
+    T angle_defect = boost::math::constants::two_pi<T>();
     for (const auto& he : halfedges_around_target(v, mesh)) {
         auto vp = source(he, mesh);
         auto vq = target(next(he, mesh), mesh);
@@ -399,5 +399,3 @@ gaussian_curvature(
 }
 
 } // namespace Euclid
-
-#undef _USE_MATH_DEFINES

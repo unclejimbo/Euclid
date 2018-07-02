@@ -1,14 +1,14 @@
-#define _USE_MATH_DEFINES
 #include <Euclid/Math/Numeric.h>
 #include <catch.hpp>
 #include <iostream>
+#include <boost/math/constants/constants.hpp>
 
 TEST_CASE("Package: Math/Numeric", "[numeric]")
 {
     SECTION("Floating point equality check")
     {
         float zerof = 0.0f;
-        float almost_zerof = std::sin(M_PI);
+        float almost_zerof = std::sin(boost::math::double_constants::pi);
         float onef = 1.0f;
         float almost_onef = 0.0f;
         for (int i = 0; i < 10; ++i) {

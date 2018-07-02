@@ -2,6 +2,7 @@
 #include <string>
 #include <random>
 
+#include <boost/math/constants/constants.hpp>
 #include <Euclid/Util/Assert.h>
 
 namespace Euclid
@@ -34,7 +35,7 @@ inline PerspectiveCamera::PerspectiveCamera(const Eigen::Vector3f& position,
                                             float aspect)
     : Camera(position, focus, up)
 {
-    auto fov = vfov * M_PI / 180.0f;
+    auto fov = vfov * boost::math::float_constants::degree;
     film.height = 2.0f * std::tan(fov * 0.5f);
     film.width = aspect * film.height;
 }
@@ -47,7 +48,7 @@ inline void PerspectiveCamera::set_aspect(unsigned width, unsigned height)
 
 inline void PerspectiveCamera::set_fov(float vfov)
 {
-    auto fov = vfov * M_PI / 180.0f;
+    auto fov = vfov * boost::math::float_constants::degree;
     auto aspect = film.width / film.height;
     film.height = 2.0f * std::tan(fov * 0.5f);
     film.width = aspect * film.height;

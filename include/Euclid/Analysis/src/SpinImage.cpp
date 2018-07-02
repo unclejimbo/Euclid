@@ -1,8 +1,7 @@
+#include <cmath>
 #include <tuple>
 
-#define _USE_MATH_DEFINES
-#include <cmath>
-
+#include <boost/math/constants/constants.hpp>
 #include <Euclid/Geometry/MeshProperties.h>
 #include <Euclid/Math/Vector.h>
 #include <Euclid/Math/Transformation.h>
@@ -25,7 +24,6 @@ void spin_image(const Mesh& mesh,
     using Kernel = typename CGAL::Kernel_traits<Point_3>::Kernel;
     using FT = typename Kernel::FT;
     auto vpmap = get(boost::vertex_point, mesh);
-    const auto to_radian = M_PI / 180.0f;
 
     if (support_angle < 0.0f || support_angle > 180.0f) {
         throw std::invalid_argument(
@@ -52,7 +50,10 @@ void spin_image(const Mesh& mesh,
     // Find all vertices that lie in the support and compute the spin image
     spin_img.resize((image_width + 1) * (image_width + 1), 0.0);
     for (const auto& vj : vertices(mesh)) {
-        if (ni * vnmap[vj] <= std::cos(support_angle * to_radian)) { continue; }
+        if (ni * vnmap[vj] <=
+            std::cos(support_angle * boost::math::float_constants::degree)) {
+            continue;
+        }
 
         auto pj = transform(vpmap[vj]);
 
@@ -76,5 +77,3 @@ void spin_image(const Mesh& mesh,
 }
 
 } // namespace Euclid
-
-#undef _USE_MATH_DEFINES
