@@ -300,7 +300,7 @@ laplacian_matrix(const Mesh& mesh, const Laplacian& method)
             auto vj = source(he, mesh);
             int j = vimap[vj];
             if (method == Laplacian::uniform) {
-                values.emplace_back(i, j, 1.0);
+                values.emplace_back(i, j, static_cast<T>(1));
                 row_sum += 1.0;
             }
             else { // cotangent
@@ -308,7 +308,7 @@ laplacian_matrix(const Mesh& mesh, const Laplacian& method)
                 auto vb = target(next(opposite(he, mesh), mesh), mesh);
                 auto cota = cotangent(vpmap[vi], vpmap[va], vpmap[vj]);
                 auto cotb = cotangent(vpmap[vi], vpmap[vb], vpmap[vj]);
-                T value = (cota + cotb) * 0.5;
+                auto value = static_cast<T>((cota + cotb) * 0.5);
                 values.emplace_back(i, j, value);
                 row_sum += value;
             }
@@ -356,9 +356,9 @@ mass_matrix(const Mesh& mesh, const Mass& method)
                 auto a1 = face_area(face(he, mesh), mesh);
                 auto a2 = face_area(face(opposite(he, mesh), mesh), mesh);
                 area_sum += a1;
-                values.emplace_back(i, j, (a1 + a2) / 12.0);
+                values.emplace_back(i, j, (a1 + a2) / static_cast<T>(12));
             }
-            values.emplace_back(i, i, area_sum / 6.0);
+            values.emplace_back(i, i, area_sum / static_cast<T>(6));
         }
         else if (method == Mass::barycentric) {
             area = vertex_area(v, mesh, VertexArea::barycentric);

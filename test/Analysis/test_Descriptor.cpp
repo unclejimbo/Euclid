@@ -31,7 +31,7 @@ TEST_CASE("Package: Analysis/Descriptor", "[descriptor]")
     Euclid::make_mesh<3>(mesh, positions, indices);
     std::unordered_map<Vertex, Vector_3> vnmap;
     for (size_t i = 0; i < normals.size(); i += 3) {
-        vnmap[Vertex(i / 3)] =
+        vnmap[Vertex(static_cast<uint32_t>(i / 3))] =
             Vector_3(normals[i], normals[i + 1], normals[i + 2]);
     }
 

@@ -37,7 +37,7 @@ std::array<T, N> to_canonical(const std::array<T, N>& face)
 } // namespace _impl
 
 template<typename T>
-int remove_duplicate_vertices(std::vector<T>& positions)
+size_t remove_duplicate_vertices(std::vector<T>& positions)
 {
     if (positions.empty()) {
         EWARNING("positions is empty.");
@@ -74,8 +74,8 @@ int remove_duplicate_vertices(std::vector<T>& positions)
 }
 
 template<int N, typename T1, typename T2>
-int remove_duplicate_vertices(std::vector<T1>& positions,
-                              std::vector<T2>& indices)
+size_t remove_duplicate_vertices(std::vector<T1>& positions,
+                                 std::vector<T2>& indices)
 {
     static_assert(N >= 3);
     if (positions.empty()) {
@@ -162,7 +162,7 @@ int remove_duplicate_vertices(std::vector<T1>& positions,
 }
 
 template<int N, typename T>
-int remove_duplicate_faces(std::vector<T>& indices)
+size_t remove_duplicate_faces(std::vector<T>& indices)
 {
     static_assert(N >= 3);
     if (indices.empty()) {
@@ -177,7 +177,7 @@ int remove_duplicate_faces(std::vector<T>& indices)
     using Face = std::array<T, N>;
 
     std::unordered_set<Face, boost::hash<Face>> unique_faces;
-    std::vector<T> marks;
+    std::vector<size_t> marks;
     for (size_t i = 0; i < indices.size(); i += N) {
         Face f;
         for (size_t j = 0; j < N; ++j) {
@@ -202,8 +202,8 @@ int remove_duplicate_faces(std::vector<T>& indices)
 }
 
 template<int N, typename T1, typename T2>
-int remove_unreferenced_vertices(std::vector<T1>& positions,
-                                 std::vector<T2>& indices)
+size_t remove_unreferenced_vertices(std::vector<T1>& positions,
+                                    std::vector<T2>& indices)
 {
     static_assert(N >= 3);
     if (positions.empty()) {
@@ -245,13 +245,13 @@ int remove_unreferenced_vertices(std::vector<T1>& positions,
         }
     }
 
-    std::unordered_map<size_t, T2> index_map;
+    std::unordered_map<T2, size_t> index_map;
     for (size_t i = 0; i <= idx; ++i) {
         index_map[index_swap[i]] = i;
     }
 
     for (auto& i : indices) {
-        i = index_map[i];
+        i = static_cast<T2>(index_map[i]);
     }
 
     positions.erase(positions.begin() + (idx + 1) * 3, positions.end());
@@ -261,12 +261,12 @@ int remove_unreferenced_vertices(std::vector<T1>& positions,
 }
 
 template<int N, typename T1, typename T2>
-int remove_degenerate_faces(const std::vector<T1>& positions,
-                            std::vector<T2>& indices)
+size_t remove_degenerate_faces(const std::vector<T1>& positions,
+                               std::vector<T2>& indices)
 {
     static_assert(N >= 3);
     if (positions.empty()) {
-        EWARNING("position is empty.")
+        EWARNING("position is empty.");
         return 0;
     }
     if (indices.empty()) {
@@ -289,7 +289,7 @@ int remove_degenerate_faces(const std::vector<T1>& positions,
     using Kernel = CGAL::Simple_cartesian<T1>;
     using Point_3 = typename Kernel::Point_3;
 
-    std::vector<T2> marks;
+    std::vector<size_t> marks;
     for (size_t i = 0; i < indices.size(); i += N) {
         for (size_t j = 0; j < N - 1; ++j) {
             auto p0 = indices[i + j] * 3;

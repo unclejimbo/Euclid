@@ -137,12 +137,13 @@ void OBB<Kernel>::_build_obb(
     }
 
     // Record center point and direction vector
-    _center = CGAL::ORIGIN + 0.5 * (x_min + x_max) * _directions[0] +
-              0.5 * (y_max + y_min) * _directions[1] +
-              0.5 * (z_min + z_max) * _directions[2];
-    _directions[0] *= (x_max - x_min) * 0.5; // half of box edge length
-    _directions[1] *= (y_max - y_min) * 0.5;
-    _directions[2] *= (z_max - z_min) * 0.5;
+    constexpr const auto one_half = static_cast<FT>(0.5);
+    _center = CGAL::ORIGIN + one_half * (x_min + x_max) * _directions[0] +
+              one_half * (y_max + y_min) * _directions[1] +
+              one_half * (z_min + z_max) * _directions[2];
+    _directions[0] *= (x_max - x_min) * one_half; // half of box edge length
+    _directions[1] *= (y_max - y_min) * one_half;
+    _directions[2] *= (z_max - z_min) * one_half;
 
     // Store all corner points and their
 }

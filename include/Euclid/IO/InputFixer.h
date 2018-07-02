@@ -24,7 +24,7 @@ namespace Euclid
  *  use the other overload to fix indices.
  */
 template<typename T>
-int remove_duplicate_vertices(std::vector<T>& positions);
+size_t remove_duplicate_vertices(std::vector<T>& positions);
 
 /** Remove duplicate vertices and fix indices.
  *
@@ -33,7 +33,7 @@ int remove_duplicate_vertices(std::vector<T>& positions);
  *  @return Number of duplicate vertices.
  */
 template<int N, typename T1, typename T2>
-int remove_duplicate_vertices(std::vector<T1>& positions,
+size_t remove_duplicate_vertices(std::vector<T1>& positions,
                               std::vector<T2>& indices);
 
 /** Remove duplicate faces of a mesh.
@@ -42,7 +42,7 @@ int remove_duplicate_vertices(std::vector<T1>& positions,
  *  @return Number of duplicate faces.
  */
 template<int N, typename T>
-int remove_duplicate_faces(std::vector<T>& indices);
+size_t remove_duplicate_faces(std::vector<T>& indices);
 
 /** Remove unreferenced vertices and fix indices.
  *
@@ -51,7 +51,7 @@ int remove_duplicate_faces(std::vector<T>& indices);
  *  @return Number of unreferenced vertices.
  */
 template<int N, typename T1, typename T2>
-int remove_unreferenced_vertices(std::vector<T1>& positions,
+size_t remove_unreferenced_vertices(std::vector<T1>& positions,
                                  std::vector<T2>& indices);
 
 /** Remove degenerate faces of a mesh.
@@ -63,7 +63,7 @@ int remove_unreferenced_vertices(std::vector<T1>& positions,
  *  @return Number of degenerate faces.
  */
 template<int N, typename T1, typename T2>
-int remove_degenerate_faces(const std::vector<T1>& positions,
+size_t remove_degenerate_faces(const std::vector<T1>& positions,
                             std::vector<T2>& indices);
 
 /** @}*/

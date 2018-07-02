@@ -21,16 +21,6 @@ add_executable(run_test
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
-# TODO: msvc is not tested
-target_compile_features(run_test PRIVATE cxx_std_17)
-target_compile_options(run_test PRIVATE
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
-        -pipe -fstack-protector-strong -fno-plt -march=native
-        $<$<CONFIG:Debug>:-O0 -Wall -Wextra>>
-    $<$<CXX_COMPILER_ID:GNU>:-frounding-math>
-    $<$<CXX_COMPILER_ID:MSVC>:>
-)
-
 # Required pcakges
 find_package(Boost REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -43,6 +33,21 @@ set(CGAL_DONT_OVERRIDE_CMAKE_FLAGS TRUE CACHE BOOL
     "Force GGAL to maintain CMAKE_*_FLAGS"
 )
 find_package(CGAL REQUIRED)
+
+target_compile_features(run_test PRIVATE cxx_std_17)
+
+target_compile_options(run_test PRIVATE
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
+        -pipe -fstack-protector-strong -fno-plt -march=native
+        $<$<CONFIG:Debug>:-O0 -Wall -Wextra>>
+    $<$<CXX_COMPILER_ID:GNU>:-frounding-math>
+    $<$<CXX_COMPILER_ID:MSVC>:
+        $<$<CONFIG:Debug>:/Od /W3 /Zi>>
+)
+
+target_compile_definitions(run_test PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:_SILENCE_CXX17_NEGATORS_DEPRECATION_WARNING>
+)
 
 target_include_directories(run_test PRIVATE
     ${Libigl_INCLUDE_DIR}

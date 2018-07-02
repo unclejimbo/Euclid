@@ -976,7 +976,7 @@ PlyHeader CommonPlyWriter<VN, FloatType, IndexType, ColorType>::generate_header(
 {
     PlyHeader header(format);
 
-    PlyElement ve("vertex", _positions.size() / 3);
+    PlyElement ve("vertex", static_cast<unsigned>(_positions.size() / 3));
     ve.add_property(_impl::make_property<FloatType>("x", false));
     ve.add_property(_impl::make_property<FloatType>("y", false));
     ve.add_property(_impl::make_property<FloatType>("z", false));
@@ -1001,7 +1001,7 @@ PlyHeader CommonPlyWriter<VN, FloatType, IndexType, ColorType>::generate_header(
     header.add_element(std::move(ve));
 
     if (_indices != nullptr) {
-        PlyElement fe("face", _indices->size() / VN);
+        PlyElement fe("face", static_cast<unsigned>(_indices->size() / VN));
         fe.add_property(
             _impl::make_property<IndexType>("vertex_indices", true));
         header.add_element(std::move(fe));
@@ -1098,7 +1098,7 @@ void CommonPlyWriter<VN, FloatType, IndexType, ColorType>::_write_color(
     std::ofstream& stream,
     PlyFormat format)
 {
-    ColorType value = 0.0;
+    auto value = static_cast<ColorType>(0);
     if (property->name() == "red" || property->name() == "green" ||
         property->name() == "blue" || property->name() == "alpha") {
         EASSERT(_colors != nullptr);

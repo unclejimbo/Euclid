@@ -315,6 +315,7 @@ void RayTracer::render_shaded(T* pixels,
     std::random_device rd;
     std::minstd_rand rd_gen(rd());
     std::uniform_real_distribution<> rd_number(0.0f, 1.0f);
+    float rcpr_samples = 1.0f / samples;
 
 #pragma omp parallel for schedule(dynamic)
     for (int y = 0; y < height; ++y) {
@@ -343,7 +344,7 @@ void RayTracer::render_shaded(T* pixels,
                     color += ambient + diffuse;
                 }
             }
-            color /= samples;
+            color *= rcpr_samples;
             color(0) = std::min(color(0), 1.0f);
             color(1) = std::min(color(1), 1.0f);
             color(2) = std::min(color(2), 1.0f);

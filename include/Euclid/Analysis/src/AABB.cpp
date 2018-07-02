@@ -122,7 +122,7 @@ typename AABB<Kernel>::FT AABB<Kernel>::xmax() const
 template<typename Kernel>
 typename AABB<Kernel>::FT AABB<Kernel>::xlen() const
 {
-    return _xlen * 2.0;
+    return _xlen * static_cast<FT>(2);
 }
 
 template<typename Kernel>
@@ -140,7 +140,7 @@ typename AABB<Kernel>::FT AABB<Kernel>::ymax() const
 template<typename Kernel>
 typename AABB<Kernel>::FT AABB<Kernel>::ylen() const
 {
-    return _ylen * 2.0;
+    return _ylen * static_cast<FT>(2);
 }
 
 template<typename Kernel>
@@ -158,7 +158,7 @@ typename AABB<Kernel>::FT AABB<Kernel>::zmax() const
 template<typename Kernel>
 typename AABB<Kernel>::FT AABB<Kernel>::zlen() const
 {
-    return _zlen * 2.0;
+    return _zlen * static_cast<FT>(2);
 }
 
 template<typename Kernel>
@@ -185,9 +185,9 @@ void AABB<Kernel>::_build_aabb(FT xmin,
 {
     _center =
         Point_3((xmin + xmax) * 0.5, (ymin + ymax) * 0.5, (zmin + zmax) * 0.5);
-    _xlen = (xmax - xmin) * 0.5; // Half length
-    _ylen = (ymax - ymin) * 0.5;
-    _zlen = (zmax - zmin) * 0.5;
+    _xlen = (xmax - xmin) * static_cast<FT>(0.5); // Half length
+    _ylen = (ymax - ymin) * static_cast<FT>(0.5);
+    _zlen = (zmax - zmin) * static_cast<FT>(0.5);
 }
 
 } // namespace Euclid
