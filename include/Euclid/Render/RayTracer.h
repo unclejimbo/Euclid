@@ -252,6 +252,12 @@ public:
     /** Change the material of the model.*/
     void set_material(const Material& material);
 
+    /** Change the color of background.*/
+    void set_background(const Eigen::Array3f& color);
+
+    /** Change the color of background.*/
+    void set_background(float r, float g, float b);
+
     /** Render the mesh into a shaded image.
      *
      *  This function renders the mesh with simple lambertian shading and store
@@ -266,8 +272,7 @@ public:
      *  @param interleaved If true, pixels are stored like [RGBRGBRGB...],
      *  otherwise pixels are stored like [RRR...GGG...BBB...].
      */
-    template<typename T>
-    void render_shaded(T* pixels,
+    void render_shaded(uint8_t* pixels,
                        const Camera& camera,
                        int width,
                        int height,
@@ -276,19 +281,33 @@ public:
 
     /** Render the mesh into a depth image.
      *
+     *  The minimum depth value is mapped to 255 in image, and the maximum depth
+     *  value is mapped to 0.
+     *
      *  @param pixels Output pixels.
      *  @param camera Camera.
      *  @param width Image width.
      *  @param height Image height.
-     *  @param tone_mapped If true, depth values are mapped into range
-     *  [0, 255), otherwise they will not be modified.
      */
-    template<typename T>
-    void render_depth(T* pixels,
+    void render_depth(uint8_t* pixels,
                       const Camera& camera,
                       int width,
-                      int height,
-                      bool tone_mapped = true);
+                      int height);
+
+    /** Render the mesh into a depth image.
+     *
+     *  The depth values are returned as they are, while the depth of the
+     *  background is set to negative.
+     *
+     *  @param pixels Output depth values.
+     *  @param camera Camera.
+     *  @param width Image width.
+     *  @param height Image height.
+     */
+    void render_depth(float* values,
+                      const Camera& camera,
+                      int width,
+                      int height);
 
     /** Render the mesh into a silhouette image.
      *
@@ -297,11 +316,31 @@ public:
      *  @param width Image width.
      *  @param height Image height.
      */
-    template<typename T>
-    void render_silhouette(T* pixels,
+    void render_silhouette(uint8_t* pixels,
                            const Camera& camera,
                            int width,
                            int height);
+
+    /** Render the mesh based on face index.
+     *
+     *  face_index = r + g << 2 + b << 4 - 1;
+     *
+     *  The background is set to 0, and the primitive index starts from 1. Due
+     *  to bit width limitations, only 2^24 number of faces could be uniquely
+     *  colored.
+     *
+     *  @param pixels Output pixels.
+     *  @param camera Camera.
+     *  @param width Image width.
+     *  @param height Image height.
+     *  @param interleaved If true, pixels are stored like [RGBRGBRGB...],
+     *  otherwise pixels are stored like [RRR...GGG...BBB...].
+     */
+    void render_index(uint8_t* pixels,
+                      const Camera& camera,
+                      int width,
+                      int height,
+                      bool interleaved = true);
 
 private:
     RTCDevice _device;
@@ -309,6 +348,7 @@ private:
     RTCGeometry _geometry;
     int _geom_id = -1;
     Material _material;
+    Eigen::Array3f _background = Eigen::Array3f::Zero();
 };
 
 /** @}*/

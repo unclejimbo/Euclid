@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <limits>
 #include <string>
 #include <random>
 
@@ -175,7 +176,9 @@ void RayTracer::attach_geometry(const std::vector<FT>& positions,
     }
 
     // Release previously allocated geometry if presents
-    if (_geom_id != -1) { rtcDetachGeometry(_scene, _geom_id); }
+    if (_geom_id != -1) {
+        rtcDetachGeometry(_scene, _geom_id);
+    }
 
     _geometry = rtcNewGeometry(_device, type);
 
@@ -250,7 +253,9 @@ inline void RayTracer::attach_geometry_shared(
     }
 
     // Release previously allocated geometry if presents
-    if (_geom_id != -1) { rtcDetachGeometry(_scene, _geom_id); }
+    if (_geom_id != -1) {
+        rtcDetachGeometry(_scene, _geom_id);
+    }
 
     _geometry = rtcNewGeometry(_device, type);
 
@@ -303,20 +308,30 @@ inline void RayTracer::set_material(const Material& material)
     _material = material;
 }
 
-template<typename T>
-void RayTracer::render_shaded(T* pixels,
-                              const Camera& camera,
-                              int width,
-                              int height,
-                              int samples,
-                              bool interleaved)
+inline void RayTracer::set_background(const Eigen::Array3f& color)
+{
+    _background = color;
+}
+
+inline void RayTracer::set_background(float r, float g, float b)
+{
+    _background << r, g, b;
+}
+
+inline void RayTracer::render_shaded(uint8_t* pixels,
+                                     const Camera& camera,
+                                     int width,
+                                     int height,
+                                     int samples,
+                                     bool interleaved)
 {
     RTCIntersectContext context;
     rtcInitIntersectContext(&context);
     std::random_device rd;
     std::minstd_rand rd_gen(rd());
     std::uniform_real_distribution<> rd_number(0.0f, 1.0f);
-    float rcpr_samples = 1.0f / samples;
+    const float rcpr_samples = 1.0f / samples;
+    constexpr const float gamma = 1.0f / 2.2f;
 
 #pragma omp parallel for schedule(dynamic)
     for (int y = 0; y < height; ++y) {
@@ -344,17 +359,19 @@ void RayTracer::render_shaded(T* pixels,
                         _material.diffuse * std::abs(normal.dot(-lightdir));
                     color += ambient + diffuse;
                 }
+                else {
+                    color += _background;
+                }
             }
             color *= rcpr_samples;
             color(0) = std::min(color(0), 1.0f);
             color(1) = std::min(color(1), 1.0f);
             color(2) = std::min(color(2), 1.0f);
-            const float gamma = 1.0f / 2.2f;
             color = color.pow(gamma);
             color *= 255;
-            auto r = static_cast<T>(color(0));
-            auto g = static_cast<T>(color(1));
-            auto b = static_cast<T>(color(2));
+            auto r = static_cast<uint8_t>(color(0));
+            auto g = static_cast<uint8_t>(color(1));
+            auto b = static_cast<uint8_t>(color(2));
             if (interleaved) {
                 pixels[3 * ((height - y - 1) * width + x) + 0] = r;
                 pixels[3 * ((height - y - 1) * width + x) + 1] = g;
@@ -369,19 +386,16 @@ void RayTracer::render_shaded(T* pixels,
     }
 }
 
-template<typename T>
-void RayTracer::render_depth(T* pixels,
-                             const Camera& camera,
-                             int width,
-                             int height,
-                             bool tone_mapped)
+inline void RayTracer::render_depth(uint8_t* pixels,
+                                    const Camera& camera,
+                                    int width,
+                                    int height)
 {
+    std::vector<float> depths(width * height, -1.0f);
+    float min_depth = std::numeric_limits<float>::max();
+    float max_depth = -1.0f;
     RTCIntersectContext context;
     rtcInitIntersectContext(&context);
-    auto positions = reinterpret_cast<float*>(
-        rtcGetGeometryBufferData(_geometry, RTC_BUFFER_TYPE_VERTEX, 0));
-    auto indices = reinterpret_cast<unsigned*>(
-        rtcGetGeometryBufferData(_geometry, RTC_BUFFER_TYPE_INDEX, 0));
 #pragma omp parallel for schedule(dynamic)
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
@@ -390,40 +404,54 @@ void RayTracer::render_depth(T* pixels,
             auto rayhit = camera.gen_ray(u, v);
             rtcIntersect1(_scene, &context, &rayhit);
             if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID) {
-                auto v0 = indices[3 * rayhit.hit.primID];
-                auto v1 = indices[3 * rayhit.hit.primID + 1];
-                auto v2 = indices[3 * rayhit.hit.primID + 2];
-                Eigen::Vector3f p0(positions[3 * v0 + 0],
-                                   positions[3 * v0 + 1],
-                                   positions[3 * v0 + 2]);
-                Eigen::Vector3f p1(positions[3 * v1 + 0],
-                                   positions[3 * v1 + 1],
-                                   positions[3 * v1 + 2]);
-                Eigen::Vector3f p2(positions[3 * v2 + 0],
-                                   positions[3 * v2 + 1],
-                                   positions[3 * v2 + 2]);
-                Eigen::Vector3f p = p1 * rayhit.hit.u + p2 * rayhit.hit.v +
-                                    p0 * (1.0f - rayhit.hit.u - rayhit.hit.v);
-                auto depth = (p - camera.pos).norm();
-                if (tone_mapped) {
-                    auto value = depth / (depth + 1.0);
-                    pixels[(height - y - 1) * width + x] =
-                        static_cast<T>(value * 255);
-                }
-                else {
-                    pixels[(height - y - 1) * width + x] =
-                        static_cast<T>(depth);
-                }
+                auto depth = rayhit.ray.tfar * camera.dir.norm();
+                depths[(height - y - 1) * width + x] = depth;
+                if (depth < min_depth) min_depth = depth;
+                if (depth > max_depth) max_depth = depth;
+            }
+        }
+    }
+    float denom = 1.0f / (max_depth - min_depth);
+    for (size_t i = 0; i < depths.size(); ++i) {
+        if (depths[i] == -1.0f) {
+            pixels[i] = 0;
+        }
+        else {
+            pixels[i] =
+                static_cast<uint8_t>((max_depth - depths[i]) * denom * 255);
+        }
+    }
+}
+
+inline void RayTracer::render_depth(float* values,
+                                    const Camera& camera,
+                                    int width,
+                                    int height)
+{
+    RTCIntersectContext context;
+    rtcInitIntersectContext(&context);
+#pragma omp parallel for schedule(dynamic)
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            auto u = static_cast<float>(x) / width;
+            auto v = static_cast<float>(y) / height;
+            auto rayhit = camera.gen_ray(u, v);
+            rtcIntersect1(_scene, &context, &rayhit);
+            if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID) {
+                auto depth = rayhit.ray.tfar * camera.dir.norm();
+                values[(height - y - 1) * width + x] = depth;
+            }
+            else {
+                values[(height - y - 1) * width + x] = -1.0f;
             }
         }
     }
 }
 
-template<typename T>
-void RayTracer::render_silhouette(T* pixels,
-                                  const Camera& camera,
-                                  int width,
-                                  int height)
+inline void RayTracer::render_silhouette(uint8_t* pixels,
+                                         const Camera& camera,
+                                         int width,
+                                         int height)
 {
     RTCIntersectContext context;
     rtcInitIntersectContext(&context);
@@ -435,7 +463,49 @@ void RayTracer::render_silhouette(T* pixels,
             auto rayhit = camera.gen_ray(u, v);
             rtcOccluded1(_scene, &context, &(rayhit.ray));
             if (rayhit.ray.tfar <= 0.0f) {
-                pixels[(height - y - 1) * width + x] = static_cast<T>(255);
+                pixels[(height - y - 1) * width + x] = 255;
+            }
+            else {
+                pixels[(height - y - 1) * width + x] = 0;
+            }
+        }
+    }
+}
+
+inline void RayTracer::render_index(uint8_t* pixels,
+                                    const Camera& camera,
+                                    int width,
+                                    int height,
+                                    bool interleaved)
+{
+    RTCIntersectContext context;
+    rtcInitIntersectContext(&context);
+#pragma omp parallel for schedule(dynamic)
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            auto u = static_cast<float>(x) / width;
+            auto v = static_cast<float>(y) / height;
+            auto rayhit = camera.gen_ray(u, v);
+            rtcIntersect1(_scene, &context, &rayhit);
+            uint32_t index;
+            if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID) {
+                index = rayhit.hit.primID + 1;
+            }
+            else {
+                index = 0;
+            }
+            uint8_t r = index & 0x000000FF;
+            uint8_t g = (index & 0x0000FF00) >> 2;
+            uint8_t b = (index & 0x00FF0000) >> 4;
+            if (interleaved) {
+                pixels[3 * ((height - y - 1) * width + x) + 0] = r;
+                pixels[3 * ((height - y - 1) * width + x) + 1] = g;
+                pixels[3 * ((height - y - 1) * width + x) + 2] = b;
+            }
+            else {
+                pixels[(height - y - 1) * width + x] = r;
+                pixels[width * height + (height - y - 1) * width + x] = g;
+                pixels[2 * width * height + (height - y - 1) * width + x] = b;
             }
         }
     }

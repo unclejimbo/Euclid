@@ -39,7 +39,7 @@ TEST_CASE("Package: Render/RayTracer", "[raytracer]")
 
         const int width = 800;
         const int height = 600;
-        std::vector<char> pixels(3 * width * height);
+        std::vector<uint8_t> pixels(3 * width * height);
 
         SECTION("perspective camera")
         {
@@ -148,6 +148,19 @@ TEST_CASE("Package: Render/RayTracer", "[raytracer]")
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
 
+        SECTION("change background")
+        {
+            Euclid::PerspectiveCamera cam(
+                view, center, up, 60.0f, static_cast<float>(width) / height);
+            raytracer.set_background(0.0f, 0.3f, 0.4f);
+            raytracer.render_shaded(pixels.data(), cam, width, height, 8);
+
+            std::string outfile(TMP_DIR);
+            outfile.append("bunny_shaded7.png");
+            stbi_write_png(
+                outfile.c_str(), width, height, 3, pixels.data(), width * 3);
+        }
+
         SECTION("depth")
         {
             Euclid::PerspectiveCamera cam(
@@ -170,6 +183,19 @@ TEST_CASE("Package: Render/RayTracer", "[raytracer]")
             outfile.append("bunny_sillouette.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 1, pixels.data(), width);
+        }
+
+        SECTION("face index")
+        {
+
+            Euclid::PerspectiveCamera cam(
+                view, center, up, 60.0f, static_cast<float>(width) / height);
+            raytracer.render_index(pixels.data(), cam, width, height);
+
+            std::string outfile(TMP_DIR);
+            outfile.append("bunny_index.png");
+            stbi_write_png(
+                outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
     }
 }
