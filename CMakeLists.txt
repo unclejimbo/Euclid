@@ -7,6 +7,108 @@ project(EUCLID
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 
+# The library target
+add_library(Euclid INTERFACE)
+add_library(Euclid::Euclid ALIAS Euclid)
+
+find_package(Boost)
+find_package(Eigen3)
+find_package(Libigl)
+find_package(OpenCV COMPONENTS core imgproc)
+find_package(Embree 3.0)
+find_package(CGAL)
+find_package(BLAS)
+find_package(LAPACK)
+find_package(OpenMP)
+
+# CGAL tries to override CMAKE_*_FLAGS, do not let it
+set(CGAL_DONT_OVERRIDE_CMAKE_FLAGS TRUE CACHE BOOL
+    "Force GGAL to maintain CMAKE_*_FLAGS"
+)
+
+target_compile_features(Euclid INTERFACE cxx_std_17)
+
+message(STATUS "cv: ${OpenCV_INCLUDE_DIRS}")
+target_include_directories(Euclid INTERFACE
+    ${OpenCV_INCLUDE_DIRS}
+    ${Libigl_INCLUDE_DIR}
+    ${EMBREE_INCLUDE_DIRS}
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(Euclid INTERFACE
+    Boost::boost
+    Eigen3::Eigen
+    CGAL::CGAL
+    ${OpenCV_LIBS}
+    ${EMBREE_LIBRARIES}
+    $<$<BOOL:${BLAS_FOUND}>:${BLAS_LIBRARIES}>
+    $<$<BOOL:${LAPACK_FOUND}>:${LAPACK_LIBRARIES}>
+    $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>
+)
+
+target_compile_definitions(Euclid INTERFACE
+    $<$<BOOL:${BLAS_FOUND}>:"EIGEN_USE_BLAS">
+    $<$<BOOL:${LAPACK_FOUND}>:"EIGEN_USE_LAPACK">
+)
+
+include(GNUInstallDirs)
+
+install(TARGETS Euclid
+    EXPORT EuclidTargets
+    INCLUDES DESTINATION
+        ${OpenCV_INCLUDE_DIRS}
+        ${Libigl_INCLUDE_DIR}
+        ${EMBREE_INCLUDE_DIRS}
+)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/Euclid
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(EXPORT EuclidTargets
+    FILE EuclidTargets.cmake
+    NAMESPACE Euclid::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Euclid
+)
+
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+    ${CMAKE_BINARY_DIR}/cmake/EuclidConfigVersion.cmake
+    VERSION ${EUCLID_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+
+configure_package_config_file(
+    ${CMAKE_SOURCE_DIR}/cmake/EuclidConfig.cmake.in
+    ${CMAKE_BINARY_DIR}/cmake/EuclidConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Euclid
+)
+
+install(
+    FILES
+        ${CMAKE_SOURCE_DIR}/cmake/Modules/FindLibigl.cmake
+        ${CMAKE_BINARY_DIR}/cmake/EuclidConfig.cmake
+        ${CMAKE_BINARY_DIR}/cmake/EuclidConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Euclid
+)
+
+configure_file(
+    ${CMAKE_SOURCE_DIR}/cmake/Modules/FindLibigl.cmake
+    ${CMAKE_BINARY_DIR}/cmake/Modules/FindLibigl.cmake
+    COPYONLY
+)
+
+export(EXPORT EuclidTargets
+    FILE ${CMAKE_BINARY_DIR}/cmake/EuclidTargets.cmake
+    NAMESPACE Euclid::
+)
+
+export(PACKAGE Euclid)
+
+# Optional targets
 option(BUILD_DOC "Build documentation" ON)
 option(BUILD_TEST "Build testing" ON)
 
