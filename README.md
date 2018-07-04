@@ -15,7 +15,7 @@ The purpose of Euclid is not to replace any of the above packages, but to glue t
 
 ## IO
 
-- Mesh I/O, currently supporting .ply and .off file format.
+- Mesh I/O, currently supporting .ply, .obj and .off file format.
 - Mesh fixers, fixing degeneracies in input meshes.
 
 ## Geometry
@@ -45,20 +45,29 @@ The purpose of Euclid is not to replace any of the above packages, but to glue t
 Some simple third-party libraries has already been included along the distribution of Euclid.
 However, you'll need the following libraries when you use headers in Euclid that work with them, including
 
-- [CGAL](https://www.cgal.org/index.html) for its mesh data structures and tons of algorithms.
+- [Boost](https://www.boost.org/).
+- [CGAL](https://www.cgal.org/index.html) for tons of data structures and algorithms.
 - [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) for matrix manipulation as well as solving linear systems.
 - [Libigl](http://libigl.github.io/libigl/) yet another simple but powerful geometry processing library in C++.
-- [OpenCV](opencv.org) for algorithms which require operating on images.
-- [Embree](embree.github.io) for fast cpu ray tracing.
+- [OpenCV](http://opencv.org) for algorithms which require operating on images.
+- [Embree](http://embree.github.io) for fast cpu ray tracing.
 - [Doxygen](http://www.stack.nl/~dimitri/doxygen/) for generating documentations.
+- BLAS, LAPACK, and OpenMP for better performance.
 
-Also, Euclid uses features in the C++17 standard, so you'll need a C++17 enabled compiler.
+Different packages in Euclid may require a different set of dependencies, and some packages may not require any of the above libraries. Also, Euclid uses features in the C++17 standard, so you'll need a C++17 enabled compiler.
 
 # Installation
 
-Since it's a header only library, simply include the needed headers. Although be sure to configure dependencies properly.
+Since it's a header only library, simply include the needed headers. Although be sure to configure dependencies properly, as some of them are not header only.
 
-If you want to use Euclid with CMake in your own projects, there is a simple find module file in cmake/Modules/FindEuclid.cmake.
+If you want to use Euclid with CMake in your own projects, try configure the CMakeLists.txt in Euclid first. It will output an EuclidConfig.cmake file in the build tree for you to use. You can set the variable `Euclid_DIR` to the path containing this file and then in your own CMakeLists.txt you can do
+
+```cmake
+find_package(Euclid)
+target_link_libraries(your-target Euclid::Euclid)
+```
+
+and all dependencies and compile options will be handled transitively by CMake.
 
 # Getting Started
 
