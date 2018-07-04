@@ -3,9 +3,9 @@
 
 #include <config.h>
 
-TEST_CASE("Package: IO/OffIO", "[offio]")
+TEST_CASE("IO, OffIO", "[io][offio]")
 {
-    SECTION("Function: read_off and write_off")
+    SECTION("read_off and write_off")
     {
         std::string file(DATA_DIR);
         file.append("chair.off");

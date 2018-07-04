@@ -14,9 +14,9 @@
 using Kernel = CGAL::Simple_cartesian<float>;
 using Point_3 = typename Kernel::Point_3;
 
-TEST_CASE("Package: Geometry/PrimitiveGenerator", "[primgen]")
+TEST_CASE("Geometry, PrimitiveGenerator", "[geometry][primitivegenerator]")
 {
-    SECTION("Generate subdivision sphere")
+    SECTION("subdivision sphere")
     {
         using Mesh = CGAL::Surface_mesh<Point_3>;
         Mesh mesh;

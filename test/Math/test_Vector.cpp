@@ -5,7 +5,7 @@
 #include <CGAL/Simple_cartesian.h>
 #include <Eigen/Dense>
 
-TEST_CASE("Package: Math/Vector", "[vector]")
+TEST_CASE("Math, Vector", "[math][vector]")
 {
     using Kerneld = CGAL::Exact_predicates_inexact_constructions_kernel;
     using Vector_3d = typename Kerneld::Vector_3;
@@ -35,7 +35,7 @@ TEST_CASE("Package: Math/Vector", "[vector]")
     auto p7f = Point_3f(-1.0f, 1.0f, 0.0f);
     auto ezerod = Eigen::Vector3d(0.0, 0.0, 0.0);
 
-    SECTION("Function: length")
+    SECTION("length")
     {
         REQUIRE(Euclid::length(zerod) == 0.0);
         REQUIRE(Euclid::length(oned) == 1.0);
@@ -44,7 +44,7 @@ TEST_CASE("Package: Math/Vector", "[vector]")
         REQUIRE(Euclid::length(onef) == 1.0f);
     };
 
-    SECTION("Function: normalize")
+    SECTION("normalize")
     {
         Euclid::normalize(zerod);
         REQUIRE(Euclid::length(zerod) == 0.0);
@@ -57,7 +57,7 @@ TEST_CASE("Package: Math/Vector", "[vector]")
         REQUIRE(Euclid::length(onef) == 1.0f);
     }
 
-    SECTION("Function: normalized")
+    SECTION("normalized")
     {
         REQUIRE(zerod == Euclid::normalized(zerod));
         REQUIRE(oned == Euclid::normalized(oned));
@@ -66,7 +66,7 @@ TEST_CASE("Package: Math/Vector", "[vector]")
         REQUIRE(onef == Euclid::normalized(onef));
     }
 
-    SECTION("Function: area")
+    SECTION("area")
     {
         REQUIRE(Euclid::area(p1d, p1d, p1d) == 0.0);
         REQUIRE(Euclid::area(p1d, p2d, p3d) == 0.0);
@@ -77,7 +77,7 @@ TEST_CASE("Package: Math/Vector", "[vector]")
         REQUIRE(Euclid::area(p1f, p2f, p4f) == 1.0f);
     }
 
-    SECTION("Function: sine")
+    SECTION("sine")
     {
         REQUIRE(Euclid::sine(p1d, p1d, p1d) == 0.0);
         REQUIRE(Euclid::sine(p2d, p1d, p3d) == 0.0);
@@ -94,7 +94,7 @@ TEST_CASE("Package: Math/Vector", "[vector]")
         REQUIRE(Euclid::sine(p2f, p1f, p7f) == Approx(sqrt2_2));
     }
 
-    SECTION("Function: cosine")
+    SECTION("cosine")
     {
         REQUIRE(Euclid::cosine(p1d, p1d, p1d) == 1.0);
         REQUIRE(Euclid::cosine(p2d, p1d, p3d) == 1.0);
@@ -111,7 +111,7 @@ TEST_CASE("Package: Math/Vector", "[vector]")
         REQUIRE(Euclid::cosine(p2f, p1f, p7f) == Approx(-sqrt2_2));
     }
 
-    SECTION("Function: tangent")
+    SECTION("tangent")
     {
         REQUIRE(Euclid::tangent(p1d, p1d, p1d) == 0.0);
         REQUIRE(Euclid::tangent(p2d, p1d, p3d) == 0.0);
@@ -128,7 +128,7 @@ TEST_CASE("Package: Math/Vector", "[vector]")
         REQUIRE(Euclid::tangent(p2f, p1f, p7f) == Approx(-1.0));
     }
 
-    SECTION("Function: cotangent")
+    SECTION("cotangent")
     {
         REQUIRE(isnan(Euclid::cotangent(p1d, p1d, p1d)));
         REQUIRE(isnan(Euclid::cotangent(p2d, p1d, p3d)));
@@ -145,13 +145,13 @@ TEST_CASE("Package: Math/Vector", "[vector]")
         REQUIRE(Euclid::cotangent(p2f, p1f, p7f) == Approx(-1.0f));
     }
 
-    SECTION("Function: cgal_to_eigen")
+    SECTION("cgal_to_eigen")
     {
         auto vec = Euclid::cgal_to_eigen<double>(zerod);
         REQUIRE(vec == ezerod);
     }
 
-    SECTION("Function: eigen_to_cgal")
+    SECTION("eigen_to_cgal")
     {
         auto p = Euclid::eigen_to_cgal<Point_3d>(ezerod);
         auto v = Euclid::eigen_to_cgal<Vector_3d>(ezerod);

@@ -16,7 +16,7 @@ using Vector_3 = typename Kernel::Vector_3;
 using Surface_mesh = CGAL::Surface_mesh<Point_3>;
 using Point_set_3 = CGAL::Point_set_3<Point_3>;
 
-TEST_CASE("Pacakge: Analysis/AABB", "[aabb]")
+TEST_CASE("Analysis, AABB", "[analysis][aabb]")
 {
     const std::vector<float> positions{ 0.0f, 0.0f, 0.0f, 3.0f, 0.0f, 0.0f,
                                         3.0f, 2.0f, 0.0f, 0.0f, 2.0f, 0.0f,
@@ -26,7 +26,7 @@ TEST_CASE("Pacakge: Analysis/AABB", "[aabb]")
                                     1, 0, 4, 1, 4, 5, 3, 2, 6, 3, 6, 7,
                                     2, 1, 5, 2, 5, 6, 7, 6, 5, 7, 5, 4 };
 
-    SECTION("Build aabb from raw positions")
+    SECTION("raw positions")
     {
         auto aabb = Euclid::AABB<Kernel>(positions);
 
@@ -43,7 +43,7 @@ TEST_CASE("Pacakge: Analysis/AABB", "[aabb]")
         REQUIRE(aabb.point(0, 1, 0) == Point_3(0.0f, 2.0f, 0.0f));
     }
 
-    SECTION("Build obb from a vector of points")
+    SECTION("vector of points")
     {
         std::vector<Point_3> points;
         for (size_t i = 0; i < positions.size(); i += 3) {
@@ -65,7 +65,7 @@ TEST_CASE("Pacakge: Analysis/AABB", "[aabb]")
         REQUIRE(aabb.point(0, 1, 0) == Point_3(0.0f, 2.0f, 0.0f));
     }
 
-    SECTION("Build aabb from mesh")
+    SECTION("mesh")
     {
         Surface_mesh mesh;
         Euclid::make_mesh<3>(mesh, positions, indices);
@@ -85,7 +85,7 @@ TEST_CASE("Pacakge: Analysis/AABB", "[aabb]")
         REQUIRE(aabb.point(0, 1, 0) == Point_3(0.0f, 2.0f, 0.0f));
     }
 
-    SECTION("Build aabb from point_set")
+    SECTION("point_set")
     {
         Point_set_3 point_set;
         for (size_t i = 0; i < positions.size(); i += 3) {

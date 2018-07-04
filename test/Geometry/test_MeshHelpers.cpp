@@ -14,7 +14,7 @@
 using Kernel = CGAL::Simple_cartesian<double>;
 using Point_3 = typename Kernel::Point_3;
 
-TEST_CASE("Package: Geometry/MeshHelpers", "[meshhelpers]")
+TEST_CASE("Geometry, MeshHelpers", "[geometry][meshhelpers]")
 {
     std::vector<double> positions;
     std::vector<unsigned> indices;
@@ -27,7 +27,7 @@ TEST_CASE("Package: Geometry/MeshHelpers", "[meshhelpers]")
         points.emplace_back(positions[i], positions[i + 1], positions[i + 2]);
     }
 
-    SECTION("Make and extract CGAL::Surface_mesh with raw positions")
+    SECTION("CGAL::Surface_mesh with raw positions")
     {
         using Mesh = CGAL::Surface_mesh<Point_3>;
         Mesh mesh;
@@ -40,7 +40,7 @@ TEST_CASE("Package: Geometry/MeshHelpers", "[meshhelpers]")
         REQUIRE(new_indices == indices);
     }
 
-    SECTION("Make and extract CGAL::Surface_mesh with points")
+    SECTION("CGAL::Surface_mesh with points")
     {
         using Mesh = CGAL::Surface_mesh<Point_3>;
         Mesh mesh;
@@ -53,7 +53,7 @@ TEST_CASE("Package: Geometry/MeshHelpers", "[meshhelpers]")
         REQUIRE(new_indices == indices);
     }
 
-    SECTION("Make and extract a CGAL::Polyhedron_3 with raw positions")
+    SECTION("CGAL::Polyhedron_3 with raw positions")
     {
         using Mesh = CGAL::Polyhedron_3<Kernel>;
         Mesh mesh;
@@ -66,7 +66,7 @@ TEST_CASE("Package: Geometry/MeshHelpers", "[meshhelpers]")
         REQUIRE(new_indices == indices);
     }
 
-    SECTION("Make and extract a CGAL::Polyhedron_3 with points")
+    SECTION("CGAL::Polyhedron_3 with points")
     {
         using Mesh = CGAL::Polyhedron_3<Kernel>;
         Mesh mesh;
@@ -79,7 +79,7 @@ TEST_CASE("Package: Geometry/MeshHelpers", "[meshhelpers]")
         REQUIRE(new_indices == indices);
     }
 
-    SECTION("Make and extract a Eigen::Matrix")
+    SECTION("Eigen::Matrix")
     {
         Eigen::MatrixXd V;
         Eigen::MatrixXi F;

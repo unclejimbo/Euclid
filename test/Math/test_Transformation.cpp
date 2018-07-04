@@ -3,7 +3,7 @@
 
 #include <CGAL/Simple_cartesian.h>
 
-TEST_CASE("Package: Math/Transformation", "[transformation]")
+TEST_CASE("Math, Transformation", "[math][transformation]")
 {
     using Kernel = CGAL::Simple_cartesian<float>;
     using Point_3 = typename Kernel::Point_3;

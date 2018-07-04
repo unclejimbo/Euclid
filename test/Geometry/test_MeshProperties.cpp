@@ -21,7 +21,7 @@ using Point_3 = typename Kernel::Point_3;
 using Vector_3 = typename Kernel::Vector_3;
 using Mesh = CGAL::Polyhedron_3<Kernel>;
 
-TEST_CASE("Package: Geometry/MeshProperties", "[meshprop]")
+TEST_CASE("Geometry, MeshProperties", "[geometry][meshproperties]")
 {
     std::string fcube(DATA_DIR);
     fcube.append("cube_ascii.ply");

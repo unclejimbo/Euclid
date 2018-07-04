@@ -5,7 +5,7 @@
 
 #include <config.h>
 
-TEST_CASE("Package: IO/ObjIO", "[objio]")
+TEST_CASE("IO, ObjIO", "[io][objio]")
 {
     SECTION("vertex properties")
     {

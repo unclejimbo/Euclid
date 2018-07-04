@@ -6,9 +6,9 @@
 
 #include <config.h>
 
-TEST_CASE("Package: IO/PlyIO", "[plyio]")
+TEST_CASE("IO, PlyIO", "[io][plyio]")
 {
-    SECTION("Read and write ascii file")
+    SECTION("ascii file")
     {
         // Read header
         std::string file(DATA_DIR);
@@ -26,7 +26,7 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
         REQUIRE(header.element(1).n_props() == 1);
         REQUIRE(header.element(1).property(0)->name() == "vertex_indices");
 
-        SECTION("Positions only")
+        SECTION("positions only")
         {
             // Read body
             std::vector<float> positions;
@@ -48,7 +48,7 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
             REQUIRE(positions[0] == new_positions[0]);
         }
 
-        SECTION("Positions, normals and texcoords")
+        SECTION("positions, normals and texcoords")
         {
             // Read body
             std::vector<float> positions;
@@ -82,7 +82,7 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
             REQUIRE(texcoords[0] == new_texcoords[0]);
         }
 
-        SECTION("Positions and indices")
+        SECTION("positions and indices")
         {
             // Read body
             std::vector<float> positions;
@@ -112,7 +112,7 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
             REQUIRE(indices[0] == new_indices[0]);
         }
 
-        SECTION("Positions and colors")
+        SECTION("positions and colors")
         {
             // Read body
             std::vector<float> positions;
@@ -143,7 +143,7 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
         }
     }
 
-    SECTION("Read and write binary file")
+    SECTION("binary file")
     {
         // Read header
         std::string file(DATA_DIR);
@@ -161,7 +161,7 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
         REQUIRE(header.element(1).n_props() == 1);
         REQUIRE(header.element(1).property(0)->name() == "vertex_indices");
 
-        SECTION("Positions only")
+        SECTION("positions only")
         {
             // Read body
             std::vector<float> positions;
@@ -188,7 +188,7 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
             REQUIRE(positions[0] == new_positions[0]);
         }
 
-        SECTION("Positions, normals and texcoords")
+        SECTION("positions, normals and texcoords")
         {
             // Read body
             std::vector<float> positions;
@@ -227,7 +227,7 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
             REQUIRE(texcoords[0] == new_texcoords[0]);
         }
 
-        SECTION("Positions and indices")
+        SECTION("positions and indices")
         {
             // Read body
             std::vector<float> positions;
@@ -262,7 +262,7 @@ TEST_CASE("Package: IO/PlyIO", "[plyio]")
             REQUIRE(indices[0] == new_indices[0]);
         }
 
-        SECTION("Positions and colors")
+        SECTION("positions and colors")
         {
             // Read body
             std::vector<float> positions;

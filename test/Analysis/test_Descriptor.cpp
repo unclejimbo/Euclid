@@ -18,7 +18,7 @@ using Vector_3 = Kernel::Vector_3;
 using Mesh = CGAL::Surface_mesh<Kernel::Point_3>;
 using Vertex = Mesh::Vertex_index;
 
-TEST_CASE("Package: Analysis/Descriptor", "[descriptor]")
+TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
 {
     std::vector<float> positions;
     std::vector<float> normals;

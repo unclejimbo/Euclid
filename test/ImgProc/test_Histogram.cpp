@@ -1,7 +1,7 @@
 #include <Euclid/ImgProc/Histogram.h>
 #include <catch.hpp>
 
-TEST_CASE("Pckage: ImgProc/Histogram", "[histogram]")
+TEST_CASE("ImgProc, Histogram", "[imgproc][histogram]")
 {
     std::vector<float> hist1{1.0f, 1.0f, 1.0f, 1.0f};
     std::vector<float> hist2{0.0f, 0.0f, 0.0f, 0.0f};
@@ -10,7 +10,7 @@ TEST_CASE("Pckage: ImgProc/Histogram", "[histogram]")
     std::vector<cv::Mat> pyramid1{hist3};
     std::vector<cv::Mat> pyramid2{hist4};
 
-    SECTION("Function: diffusion_distance")
+    SECTION("diffusion_distance")
     {
         // Just to make sure everything compiles.
         Euclid::diffusion_distance(hist1, hist2);

@@ -3,9 +3,9 @@
 #include <iostream>
 #include <boost/math/constants/constants.hpp>
 
-TEST_CASE("Package: Math/Numeric", "[numeric]")
+TEST_CASE("Math, Numeric", "[math][numeric]")
 {
-    SECTION("Floating point equality check")
+    SECTION("equality check")
     {
         float zerof = 0.0f;
         float almost_zerof = std::sin(boost::math::double_constants::pi);
@@ -72,7 +72,7 @@ TEST_CASE("Package: Math/Numeric", "[numeric]")
         }
     }
 
-    SECTION("Floating point inequality check")
+    SECTION("inequality check")
     {
         float small = 0.1f;
         float large = 1000.0f;

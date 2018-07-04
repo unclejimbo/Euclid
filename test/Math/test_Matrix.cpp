@@ -1,7 +1,7 @@
 #include <Euclid/Math/Matrix.h>
 #include <catch.hpp>
 
-TEST_CASE("Package: Math/Matrix", "[matrix]")
+TEST_CASE("Math, Matrix", "[math][matrix]")
 {
     auto p1 = Eigen::Vector3f(1.0f, 1.0f, 1.0f);
     auto p2 = Eigen::Vector2d(0.0, 2.0);
@@ -15,7 +15,7 @@ TEST_CASE("Package: Math/Matrix", "[matrix]")
     auto m1 = Eigen::Matrix2d();
     m1 << 1.0, -1.0, -1.0, 1.0;
 
-    SECTION("Function: covariance_matrix")
+    SECTION("covariance_matrix")
     {
         REQUIRE_THROWS(Euclid::covariance_matrix(empty));
         REQUIRE(Euclid::covariance_matrix(one) == m0);
@@ -23,7 +23,7 @@ TEST_CASE("Package: Math/Matrix", "[matrix]")
         REQUIRE(Euclid::covariance_matrix(corelated) == m1);
     }
 
-    SECTION("Class: PCA")
+    SECTION("PCA")
     {
         Euclid::PCA<float, 3> pca1(identical);
         REQUIRE(pca1.eigen_value<0>() == 0.0f);

@@ -15,7 +15,7 @@
 
 using Kernel = CGAL::Simple_cartesian<float>;
 
-TEST_CASE("Package: Render/RayTracer", "[raytracer]")
+TEST_CASE("Render, RayTracer", "[render][raytracer]")
 {
     SECTION("triangle mesh")
     {

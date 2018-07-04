@@ -165,7 +165,7 @@ static bool _referred_eq(const std::vector<T1>& test_pos,
     return test_faces == expected_faces;
 }
 
-TEST_CASE("Package: IO/InputFixer", "[input_fixer]")
+TEST_CASE("IO, InputFixer", "[io][inputfixer]")
 {
     // one duplicate point, one unreferenced vertex
     std::vector<float> sick_tri_pos{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
@@ -179,7 +179,7 @@ TEST_CASE("Package: IO/InputFixer", "[input_fixer]")
     // one duplicate face, one degenerate face
     std::vector<int> sick_quad_idx{ 0, 1, 2, 3, 1, 2, 3, 4, 3, 4, 1, 2 };
 
-    SECTION("Fix vertex duplication")
+    SECTION("vertex duplication")
     {
         const std::vector<float> fixed_tri_pos{ 0.0f, 0.0f, 0.0f, 1.0f, 2.0f,
                                                 3.0f, 4.0f, 6.0f, 8.0f };
@@ -187,7 +187,7 @@ TEST_CASE("Package: IO/InputFixer", "[input_fixer]")
         REQUIRE(_pos_eq(sick_tri_pos, fixed_tri_pos));
     }
 
-    SECTION("Fix vertex duplication with indices")
+    SECTION("vertex duplication with indices")
     {
         const std::vector<float> fixed_tri_pos{ 0.0f, 0.0f, 0.0f, 1.0f, 2.0f,
                                                 3.0f, 4.0f, 6.0f, 8.0f };
@@ -200,7 +200,7 @@ TEST_CASE("Package: IO/InputFixer", "[input_fixer]")
             sick_tri_pos, sick_tri_idx, fixed_tri_pos, fixed_tri_idx));
     }
 
-    SECTION("Fix face duplication")
+    SECTION("face duplication")
     {
         const std::vector<unsigned> fixed_tri_idx{ 3, 1, 2, 3, 3, 3, 3, 2, 1 };
         REQUIRE(Euclid::remove_duplicate_faces<3>(sick_tri_idx) == 1);
@@ -211,7 +211,7 @@ TEST_CASE("Package: IO/InputFixer", "[input_fixer]")
         REQUIRE(_idx_eq<4>(sick_quad_idx, fixed_quad_idx));
     }
 
-    SECTION("Fix unreferenced vertices")
+    SECTION("unreferenced vertices")
     {
         const std::vector<float> fixed_tri_pos{ 0.0f, 0.0f, 0.0f, 1.0f, 2.0f,
                                                 3.0f, 4.0f, 6.0f, 8.0f };
@@ -233,7 +233,7 @@ TEST_CASE("Package: IO/InputFixer", "[input_fixer]")
             sick_quad_pos, sick_quad_idx, fixed_quad_pos, fixed_quad_idx));
     }
 
-    SECTION("Fix degenerate faces")
+    SECTION("degenerate faces")
     {
         const std::vector<unsigned> fixed_tri_idx{ 3, 1, 2, 3, 2, 1, 2, 3, 1 };
         REQUIRE(Euclid::remove_degenerate_faces<3>(sick_tri_pos,
@@ -246,7 +246,7 @@ TEST_CASE("Package: IO/InputFixer", "[input_fixer]")
         REQUIRE(sick_quad_idx == fixed_quad_idx);
     }
 
-    SECTION("Fix all deficiencies")
+    SECTION("all deficiencies")
     {
         const std::vector<float> fixed_tri_pos{ 0.0f, 0.0f, 0.0f, 4.0f, 6.0f,
                                                 8.0f, 1.0f, 2.0f, 3.0f };
@@ -272,7 +272,7 @@ TEST_CASE("Package: IO/InputFixer", "[input_fixer]")
         REQUIRE(_idx_eq<4>(sick_quad_idx, fixed_quad_idx));
     }
 
-    SECTION("Real-world examples")
+    SECTION("real world examples")
     {
         std::string file_name(DATA_DIR);
         file_name.append("chair.off");

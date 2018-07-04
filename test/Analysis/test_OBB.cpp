@@ -16,7 +16,7 @@ using Vector_3 = typename Kernel::Vector_3;
 using Surface_mesh = CGAL::Surface_mesh<Point_3>;
 using Point_set_3 = CGAL::Point_set_3<Point_3>;
 
-TEST_CASE("Package: Analysis/OBB", "[obb]")
+TEST_CASE("Analysis, OBB", "[analysis][obb]")
 {
     const std::vector<float> positions{ 0.0f, 0.0f, 0.0f, 3.0f, 0.0f, 0.0f,
                                         3.0f, 2.0f, 0.0f, 0.0f, 2.0f, 0.0f,
@@ -26,7 +26,7 @@ TEST_CASE("Package: Analysis/OBB", "[obb]")
                                     1, 0, 4, 1, 4, 5, 3, 2, 6, 3, 6, 7,
                                     2, 1, 5, 2, 5, 6, 7, 6, 5, 7, 5, 4 };
 
-    SECTION("Build obb from raw positions")
+    SECTION("raw positions")
     {
         auto obb = Euclid::OBB<Kernel>(positions);
 
@@ -39,7 +39,7 @@ TEST_CASE("Package: Analysis/OBB", "[obb]")
         REQUIRE(obb.length(2) == 1.0);
     }
 
-    SECTION("Build obb from vector of points")
+    SECTION("vector of points")
     {
         std::vector<Point_3> points;
         for (size_t i = 0; i < positions.size(); i += 3) {
@@ -57,7 +57,7 @@ TEST_CASE("Package: Analysis/OBB", "[obb]")
         REQUIRE(obb.length(2) == 1.0);
     }
 
-    SECTION("Build obb from mesh")
+    SECTION("mesh")
     {
         Surface_mesh mesh;
         Euclid::make_mesh<3>(mesh, positions, indices);
@@ -73,7 +73,7 @@ TEST_CASE("Package: Analysis/OBB", "[obb]")
         REQUIRE(obb.length(2) == 1.0);
     }
 
-    SECTION("Build obb from point_set")
+    SECTION("point_set")
     {
         Point_set_3 point_set;
         for (size_t i = 0; i < positions.size(); i += 3) {

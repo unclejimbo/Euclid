@@ -15,7 +15,7 @@ using Kernel = CGAL::Simple_cartesian<float>;
 using Point_3 = Kernel::Point_3;
 using Mesh = CGAL::Surface_mesh<Point_3>;
 
-TEST_CASE("Package: Analysis/ViewSelection", "[viewselection]")
+TEST_CASE("Analysis, ViewSelection", "[analysis][viewselection]")
 {
     std::string filename(DATA_DIR);
     filename.append("bunny.off");
