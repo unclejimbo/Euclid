@@ -147,83 +147,8 @@ inline RayTracer::~RayTracer()
     rtcReleaseDevice(_device);
 }
 
-template<typename FT, typename IT>
-void RayTracer::attach_geometry(const std::vector<FT>& positions,
-                                const std::vector<IT>& indices,
-                                RTCGeometryType type)
-{
-    if (positions.empty() || indices.empty()) {
-        EWARNING("Input geometry is empty.");
-        return;
-    }
-    if (positions.size() % 3 != 0) {
-        throw std::invalid_argument(
-            "Size of input positions is not divisible by 3.");
-    }
-    if (!(type == RTC_GEOMETRY_TYPE_TRIANGLE ||
-          type == RTC_GEOMETRY_TYPE_QUAD)) {
-        throw std::invalid_argument(
-            "Input type must be RTC_GEOMETRY_TYPE_TRIANGLE or "
-            "RTC_GEOMETRY_TYPE_QUAD.");
-    }
-    if (type == RTC_GEOMETRY_TYPE_TRIANGLE && indices.size() % 3 != 0) {
-        throw std::invalid_argument("Size of input indices is not divisible by "
-                                    "3, thus not a valid triangle mesh.");
-    }
-    if (type == RTC_GEOMETRY_TYPE_QUAD && indices.size() % 4 != 0) {
-        throw std::invalid_argument("Size of input indices is not divisible by "
-                                    "4, thus not a valid quad mesh.");
-    }
-
-    // Release previously allocated geometry if presents
-    if (_geom_id != -1) {
-        rtcDetachGeometry(_scene, _geom_id);
-    }
-
-    _geometry = rtcNewGeometry(_device, type);
-
-    auto vertices =
-        reinterpret_cast<float*>(rtcSetNewGeometryBuffer(_geometry,
-                                                         RTC_BUFFER_TYPE_VERTEX,
-                                                         0,
-                                                         RTC_FORMAT_FLOAT3,
-                                                         3 * sizeof(float),
-                                                         positions.size() / 3));
-    std::transform(positions.begin(), positions.end(), vertices, [](FT value) {
-        return static_cast<float>(value);
-    });
-
-    unsigned* faces = nullptr;
-    if (type == RTC_GEOMETRY_TYPE_TRIANGLE) {
-        faces = reinterpret_cast<unsigned*>(
-            rtcSetNewGeometryBuffer(_geometry,
-                                    RTC_BUFFER_TYPE_INDEX,
-                                    0,
-                                    RTC_FORMAT_UINT3,
-                                    3 * sizeof(unsigned),
-                                    indices.size() / 3));
-    }
-    else { // type == RTC_GEOMETRY_TYPE_QUAD
-        faces = reinterpret_cast<unsigned*>(
-            rtcSetNewGeometryBuffer(_geometry,
-                                    RTC_BUFFER_TYPE_INDEX,
-                                    0,
-                                    RTC_FORMAT_UINT4,
-                                    4 * sizeof(unsigned),
-                                    indices.size() / 4));
-    }
-    std::transform(indices.begin(), indices.end(), faces, [](IT value) {
-        return static_cast<unsigned>(value);
-    });
-
-    rtcCommitGeometry(_geometry);
-    _geom_id = rtcAttachGeometry(_scene, _geometry);
-    rtcReleaseGeometry(_geometry);
-    rtcCommitScene(_scene);
-}
-
 // TODO: add generic type support
-inline void RayTracer::attach_geometry_shared(
+inline void RayTracer::attach_geometry_buffers(
     const std::vector<float>& positions,
     const std::vector<unsigned>& indices,
     RTCGeometryType type)
@@ -295,7 +220,7 @@ inline void RayTracer::attach_geometry_shared(
     rtcCommitScene(_scene);
 }
 
-inline void RayTracer::release_geometry()
+inline void RayTracer::release_buffers()
 {
     if (_geom_id != -1) {
         rtcDetachGeometry(_scene, _geom_id);

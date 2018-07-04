@@ -34,7 +34,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
 
         Euclid::RayTracer raytracer;
         positions.push_back(0.0f);
-        raytracer.attach_geometry_shared(positions, indices);
+        raytracer.attach_geometry_buffers(positions, indices);
 
         const int width = 800;
         const int height = 600;

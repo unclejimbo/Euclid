@@ -210,7 +210,12 @@ public:
 
     ~RayTracer();
 
-    /** Attach geoemtry to the ray tracer.
+    /** Attach shared geoemtry buffers to the ray tracer.
+     *
+     *  Attach both the positions and indices buffer. These buffers are mapped
+     *  directly by the RayTracer so their lifetime should outlive the end of
+     *  rendering. The user is responsible of padding the positions buffer with
+     *  one more float for Embree's SSE instructions to work correctly.
      *
      *  @param positions The geometry's positions buffer.
      *  @param indices The geometry's indices buffer.
@@ -221,33 +226,13 @@ public:
      *  This class can only render one mesh at a time. Attach geometry once
      *  again will automatically release the previously attached geometry.
      */
-    template<typename FT, typename IT>
-    void attach_geometry(const std::vector<FT>& positions,
-                         const std::vector<IT>& indices,
-                         RTCGeometryType type = RTC_GEOMETRY_TYPE_TRIANGLE);
-
-    /** Attach geoemtry to the ray tracer.
-     *
-     *  When using a shared geometry buffer, the user is responsible of padding
-     *  the positions buffer with one more float for Embree's SSE instructions
-     *  to work correctly.
-     *
-     *  @param positions The geometry's positions buffer.
-     *  @param indices The geometry's indices buffer.
-     *  @param type The geometry's type, be either RTC_GEOMETRY_TYPE_TRIANGLE or
-     *  RTC_GEOMETRY_TYPE_QUAD.
-     *
-     *  #### Note
-     *  This class can only render one mesh at a time. Attach geometry once
-     *  again will automatically release the previously attached geometry.
-     */
-    void attach_geometry_shared(
+    void attach_geometry_buffers(
         const std::vector<float>& positions,
         const std::vector<unsigned>& indices,
         RTCGeometryType type = RTC_GEOMETRY_TYPE_TRIANGLE);
 
-    /** Release geometry.*/
-    void release_geometry();
+    /** Release all associated buffers.*/
+    void release_buffers();
 
     /** Change the material of the model.*/
     void set_material(const Material& material);
