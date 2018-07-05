@@ -456,4 +456,30 @@ inline void RayTracer::render_index(uint8_t* pixels,
     }
 }
 
+inline void RayTracer::render_index(uint32_t* indices,
+                                    const Camera& camera,
+                                    int width,
+                                    int height)
+{
+    RTCIntersectContext context;
+    rtcInitIntersectContext(&context);
+#pragma omp parallel for schedule(dynamic)
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            auto u = static_cast<float>(x) / width;
+            auto v = static_cast<float>(y) / height;
+            auto rayhit = camera.gen_ray(u, v);
+            rtcIntersect1(_scene, &context, &rayhit);
+            uint32_t index;
+            if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID) {
+                index = rayhit.hit.primID + 1;
+            }
+            else {
+                index = 0;
+            }
+            indices[(height - y - 1) * width + x] = index;
+        }
+    }
+}
+
 } // namespace Euclid

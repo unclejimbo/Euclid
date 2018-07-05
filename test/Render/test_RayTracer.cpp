@@ -227,7 +227,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                 outfile.c_str(), width, height, 1, pixels.data(), width);
         }
 
-        SECTION("face index")
+        SECTION("face index color")
         {
             std::vector<uint8_t> pixels(3 * width * height);
             Euclid::PerspectiveCamera cam(
@@ -236,6 +236,25 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
 
             std::string outfile(TMP_DIR);
             outfile.append("bunny_index1.png");
+            stbi_write_png(
+                outfile.c_str(), width, height, 3, pixels.data(), width * 3);
+        }
+
+        SECTION("face index")
+        {
+            std::vector<uint32_t> indices(width * height);
+            Euclid::PerspectiveCamera cam(
+                view, center, up, 60.0f, static_cast<float>(width) / height);
+            raytracer.render_index(indices.data(), cam, width, height);
+
+            std::vector<uint8_t> pixels(3 * width * height);
+            for (size_t i = 0; i < indices.size(); ++i) {
+                pixels[3 * i + 0] = indices[i] & 0xFF;
+                pixels[3 * i + 1] = (indices[i] >> 8) & 0xFF;
+                pixels[3 * i + 2] = (indices[i] >> 16) & 0xFF;
+            }
+            std::string outfile(TMP_DIR);
+            outfile.append("bunny_index2.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
@@ -264,7 +283,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             raytracer.render_shaded(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bunny_index2.png");
+            outfile.append("bunny_index3.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }

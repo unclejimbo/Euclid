@@ -314,7 +314,9 @@ public:
 
     /** Render the mesh based on face index.
      *
-     *  face_index = r + g << 2 + b << 4 - 1;
+     *  Color each face base on its index, following
+     *
+     *  face_index = r + g << 8 + b << 16 - 1;
      *
      *  The background is set to 0, and the primitive index starts from 1. Due
      *  to bit width limitations, only 2^24 number of faces could be uniquely
@@ -332,6 +334,22 @@ public:
                       int width,
                       int height,
                       bool interleaved = true);
+
+    /** Render the mesh based on face index.
+     *
+     *  Each index is stored as a uint32_t value. The background is set to 0,
+     *  and the primitive index starts from 1. Due to bit width limitations, the
+     *  maximum number of indices supported is 2^32.
+     *
+     *  @param indices The face indices of each pixel.
+     *  @param camera Camera.
+     *  @param width Image width.
+     *  @param height Image height.
+     */
+    void render_index(uint32_t* indices,
+                      const Camera& camera,
+                      int width,
+                      int height);
 
 private:
     RTCDevice _device;
