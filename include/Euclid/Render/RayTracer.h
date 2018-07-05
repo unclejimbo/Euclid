@@ -231,6 +231,9 @@ public:
         const std::vector<unsigned>& indices,
         RTCGeometryType type = RTC_GEOMETRY_TYPE_TRIANGLE);
 
+    /** Attach a shared face color buffer to the ray tracer.*/
+    void attach_face_color_buffer(const std::vector<float>& colors);
+
     /** Release all associated buffers.*/
     void release_buffers();
 
@@ -242,6 +245,9 @@ public:
 
     /** Change the color of background.*/
     void set_background(float r, float g, float b);
+
+    /** Enable or diable lighting.*/
+    void enable_light(bool on);
 
     /** Render the mesh into a shaded image.
      *
@@ -332,8 +338,10 @@ private:
     RTCScene _scene;
     RTCGeometry _geometry;
     int _geom_id = -1;
+    const float* _face_colors = nullptr;
     Material _material;
     Eigen::Array3f _background = Eigen::Array3f::Zero();
+    bool _lighting = true;
 };
 
 /** @}*/

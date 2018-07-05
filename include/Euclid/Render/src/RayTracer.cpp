@@ -220,11 +220,18 @@ inline void RayTracer::attach_geometry_buffers(
     rtcCommitScene(_scene);
 }
 
+inline void RayTracer::attach_face_color_buffer(
+    const std::vector<float>& colors)
+{
+    _face_colors = colors.data();
+}
+
 inline void RayTracer::release_buffers()
 {
     if (_geom_id != -1) {
         rtcDetachGeometry(_scene, _geom_id);
         _geom_id = -1;
+        _face_colors = nullptr;
     }
 }
 
@@ -243,6 +250,11 @@ inline void RayTracer::set_background(float r, float g, float b)
     _background << r, g, b;
 }
 
+inline void RayTracer::enable_light(bool on)
+{
+    _lighting = on;
+}
+
 inline void RayTracer::render_shaded(uint8_t* pixels,
                                      const Camera& camera,
                                      int width,
@@ -256,7 +268,6 @@ inline void RayTracer::render_shaded(uint8_t* pixels,
     std::minstd_rand rd_gen(rd());
     std::uniform_real_distribution<> rd_number(0.0f, 1.0f);
     const float rcpr_samples = 1.0f / samples;
-    constexpr const float gamma = 1.0f / 2.2f;
 
 #pragma omp parallel for schedule(dynamic)
     for (int y = 0; y < height; ++y) {
@@ -280,8 +291,18 @@ inline void RayTracer::render_shaded(uint8_t* pixels,
                                                    .normalized();
 
                     Eigen::Array3f ambient = _material.ambient;
-                    Eigen::Array3f diffuse =
-                        _material.diffuse * std::abs(normal.dot(-lightdir));
+                    Eigen::Array3f diffuse;
+                    if (_face_colors != nullptr) {
+                        diffuse << _face_colors[3 * rayhit.hit.primID],
+                            _face_colors[3 * rayhit.hit.primID + 1],
+                            _face_colors[3 * rayhit.hit.primID + 2];
+                    }
+                    else {
+                        diffuse = _material.diffuse;
+                    }
+                    if (_lighting) {
+                        diffuse *= std::abs(normal.dot(-lightdir));
+                    }
                     color += ambient + diffuse;
                 }
                 else {
@@ -292,7 +313,6 @@ inline void RayTracer::render_shaded(uint8_t* pixels,
             color(0) = std::min(color(0), 1.0f);
             color(1) = std::min(color(1), 1.0f);
             color(2) = std::min(color(2), 1.0f);
-            color = color.pow(gamma);
             color *= 255;
             auto r = static_cast<uint8_t>(color(0));
             auto g = static_cast<uint8_t>(color(1));
@@ -420,8 +440,8 @@ inline void RayTracer::render_index(uint8_t* pixels,
                 index = 0;
             }
             uint8_t r = index & 0x000000FF;
-            uint8_t g = (index & 0x0000FF00) >> 2;
-            uint8_t b = (index & 0x00FF0000) >> 4;
+            uint8_t g = (index >> 8) & 0x000000FF;
+            uint8_t b = (index >> 16) & 0x000000FF;
             if (interleaved) {
                 pixels[3 * ((height - y - 1) * width + x) + 0] = r;
                 pixels[3 * ((height - y - 1) * width + x) + 1] = g;

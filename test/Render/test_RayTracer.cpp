@@ -1,6 +1,7 @@
 #include <Euclid/Render/RayTracer.h>
 #include <catch.hpp>
 
+#include <random>
 #include <string>
 
 #include <CGAL/Simple_cartesian.h>
@@ -164,6 +165,42 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
 
+        SECTION("random face color")
+        {
+            std::random_device rd;
+            std::minstd_rand rd_gen(rd());
+            std::uniform_real_distribution rd_number(0.0, 1.0);
+            std::vector<float> rd_colors(indices.size());
+            for (auto& color : rd_colors) {
+                color = rd_number(rd_gen);
+            }
+            raytracer.attach_face_color_buffer(rd_colors);
+
+            std::vector<uint8_t> pixels(3 * width * height);
+            Euclid::PerspectiveCamera cam(
+                view, center, up, 60.0f, static_cast<float>(width) / height);
+            raytracer.render_shaded(pixels.data(), cam, width, height, 8);
+
+            std::string outfile(TMP_DIR);
+            outfile.append("bunny_shaded8.png");
+            stbi_write_png(
+                outfile.c_str(), width, height, 3, pixels.data(), width * 3);
+        }
+
+        SECTION("light off")
+        {
+            std::vector<uint8_t> pixels(3 * width * height);
+            Euclid::PerspectiveCamera cam(
+                view, center, up, 60.0f, static_cast<float>(width) / height);
+            raytracer.enable_light(false);
+            raytracer.render_shaded(pixels.data(), cam, width, height, 8);
+
+            std::string outfile(TMP_DIR);
+            outfile.append("bunny_shaded9.png");
+            stbi_write_png(
+                outfile.c_str(), width, height, 3, pixels.data(), width * 3);
+        }
+
         SECTION("depth")
         {
             std::vector<uint8_t> pixels(width * height);
@@ -198,7 +235,36 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             raytracer.render_index(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bunny_index.png");
+            outfile.append("bunny_index1.png");
+            stbi_write_png(
+                outfile.c_str(), width, height, 3, pixels.data(), width * 3);
+        }
+
+        SECTION("face index using face color")
+        {
+            std::vector<float> colors(indices.size());
+            for (unsigned i = 0; i < indices.size() / 3; ++i) {
+                uint8_t r = (i + 1) & 0x000000FF;
+                uint8_t g = ((i + 1) >> 8) & 0x000000FF;
+                uint8_t b = ((i + 1) >> 16) & 0x000000FF;
+                colors[3 * i + 0] = r / 255.0f;
+                colors[3 * i + 1] = g / 255.0f;
+                colors[3 * i + 2] = b / 255.0f;
+            }
+            raytracer.attach_face_color_buffer(colors);
+            Euclid::Material material;
+            material.ambient << 0.0f, 0.0f, 0.0f;
+            material.diffuse << 0.0f, 0.0f, 0.0f;
+            raytracer.set_material(material);
+            raytracer.enable_light(false);
+
+            std::vector<uint8_t> pixels(3 * width * height);
+            Euclid::PerspectiveCamera cam(
+                view, center, up, 60.0f, static_cast<float>(width) / height);
+            raytracer.render_shaded(pixels.data(), cam, width, height);
+
+            std::string outfile(TMP_DIR);
+            outfile.append("bunny_index2.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
