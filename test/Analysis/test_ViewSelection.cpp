@@ -47,6 +47,34 @@ TEST_CASE("Analysis, ViewSelection", "[analysis][viewselection]")
         Euclid::write_off<3>(fout, spositions, sindices);
     }
 
+    SECTION("view entropy")
+    {
+        auto view_sphere = Euclid::ViewSphere<Mesh>::make_subdiv(mesh);
+        std::vector<float> view_scores;
+        Euclid::vs_view_entropy(mesh, view_sphere, view_scores);
+
+        std::vector<float> vpositions;
+        std::vector<unsigned> vindices;
+        Euclid::extract_mesh<3>(view_sphere.mesh, vpositions, vindices);
+        auto[smin, smax] =
+            std::minmax_element(view_scores.begin(), view_scores.end());
+        std::vector<unsigned char> colors;
+        colors.reserve(view_scores.size() * 4);
+        for (const auto& s : view_scores) {
+            auto score = (s - *smin) / (*smax - *smin);
+            float r, g, b;
+            igl::colormap(igl::COLOR_MAP_TYPE_JET, score, r, g, b);
+            colors.push_back(static_cast<unsigned char>(r * 255));
+            colors.push_back(static_cast<unsigned char>(g * 255));
+            colors.push_back(static_cast<unsigned char>(b * 255));
+            colors.push_back(128);
+        }
+        std::string mesh_out(TMP_DIR);
+        mesh_out.append("view_entropy_sphere.ply");
+        Euclid::write_ply<3>(
+            mesh_out, vpositions, nullptr, nullptr, &vindices, &colors);
+    }
+
     SECTION("proxy view selection")
     {
         auto view_sphere = Euclid::ViewSphere<Mesh>::make_subdiv(mesh);
@@ -56,7 +84,7 @@ TEST_CASE("Analysis, ViewSelection", "[analysis][viewselection]")
         std::vector<float> vpositions;
         std::vector<unsigned> vindices;
         Euclid::extract_mesh<3>(view_sphere.mesh, vpositions, vindices);
-        auto [smin, smax] =
+        auto[smin, smax] =
             std::minmax_element(view_scores.begin(), view_scores.end());
         std::vector<unsigned char> colors;
         colors.reserve(view_scores.size() * 4);
