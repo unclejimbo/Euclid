@@ -290,7 +290,7 @@ public:
      *  The depth values are returned as they are, while the depth of the
      *  background is set to negative.
      *
-     *  @param pixels Output depth values.
+     *  @param values Output depth values.
      *  @param camera Camera.
      *  @param width Image width.
      *  @param height Image height.
