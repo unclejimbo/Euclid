@@ -113,5 +113,6 @@ void proxy_view_selection(const Mesh& mesh,
 /** @}*/
 } // namespace Euclid
 
+#include "src/ViewSphere.cpp"
 #include "src/ViewEntropy.cpp"
 #include "src/ProxyViewSelection.cpp"
