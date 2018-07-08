@@ -1,5 +1,5 @@
 #include <catch.hpp>
-#include <Euclid/Geometry/MeshProperties.h>
+#include <Euclid/Geometry/TriMeshGeometry.h>
 
 #include <vector>
 #include <string>
@@ -21,7 +21,7 @@ using Point_3 = typename Kernel::Point_3;
 using Vector_3 = typename Kernel::Vector_3;
 using Mesh = CGAL::Polyhedron_3<Kernel>;
 
-TEST_CASE("Geometry, MeshProperties", "[geometry][meshproperties]")
+TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
 {
     std::string fcube(DATA_DIR);
     fcube.append("cube_ascii.ply");
@@ -146,7 +146,8 @@ TEST_CASE("Geometry, MeshProperties", "[geometry][meshproperties]")
     {
         std::vector<float> vertex_areas;
         for (const auto& v : vertices(bumpy)) {
-            auto va = Euclid::vertex_area(v, bumpy, Euclid::VertexArea::mixed);
+            auto va = Euclid::vertex_area(
+                v, bumpy, Euclid::VertexArea::mixed_voronoi);
             vertex_areas.push_back(va);
             vertex_areas.push_back(0.0f);
             vertex_areas.push_back(0.0f);

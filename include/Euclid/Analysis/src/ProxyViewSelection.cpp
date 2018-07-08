@@ -5,7 +5,7 @@
 #include <boost/math/constants/constants.hpp>
 #include <Euclid/Analysis/OBB.h>
 #include <Euclid/Geometry/MeshHelpers.h>
-#include <Euclid/Geometry/MeshProperties.h>
+#include <Euclid/Geometry/TriMeshGeometry.h>
 #include <Euclid/Math/Vector.h>
 #include <Euclid/Render/RayTracer.h>
 
@@ -30,7 +30,7 @@ void proxy_view_selection(const Mesh& mesh,
     const float w1 = weight;    // weight for projected areas
     const float w2 = 1.0f - w1; // weight for visible ratios
 
-    auto[vbeg, vend] = vertices(mesh);
+    auto [vbeg, vend] = vertices(mesh);
     auto mesh_vpmap = get(boost::vertex_point, mesh);
     OBB<Kernel> obb(vbeg, vend, mesh_vpmap);
 
@@ -46,9 +46,7 @@ void proxy_view_selection(const Mesh& mesh,
     for (size_t i = 0; i < projected_areas.size(); ++i) {
         OrthogonalCamera cam;
         auto view_dir = view_sphere.radius * obb.axis(i % 3);
-        if (i >= 3) {
-            view_dir = -view_dir;
-        }
+        if (i >= 3) { view_dir = -view_dir; }
         cam.lookat(cgal_to_eigen<float>(view_sphere.center + view_dir),
                    cgal_to_eigen<float>(view_sphere.center),
                    cgal_to_eigen<float>(obb.axis((i + 1) % 3)));
@@ -58,9 +56,7 @@ void proxy_view_selection(const Mesh& mesh,
         raytracer.render_silhouette(pixels.data(), cam, width, height);
         auto proj = 0;
         for (size_t j = 0; j < pixels.size(); ++j) {
-            if (pixels[j] != 0) {
-                ++proj;
-            }
+            if (pixels[j] != 0) { ++proj; }
         }
         projected_areas[i] = static_cast<float>(proj) / pixels.size();
     }
@@ -75,24 +71,12 @@ void proxy_view_selection(const Mesh& mesh,
     std::vector<int> n_visible_facets(proxies, 0);
     for (const auto& f : faces(mesh)) {
         auto normal = face_normal(f, mesh);
-        if (normal * obb.axis(0) > least_visible) {
-            ++n_visible_facets[0];
-        }
-        if (normal * obb.axis(1) > least_visible) {
-            ++n_visible_facets[1];
-        }
-        if (normal * obb.axis(2) > least_visible) {
-            ++n_visible_facets[2];
-        }
-        if (-normal * obb.axis(0) > least_visible) {
-            ++n_visible_facets[3];
-        }
-        if (-normal * obb.axis(1) > least_visible) {
-            ++n_visible_facets[4];
-        }
-        if (-normal * obb.axis(2) > least_visible) {
-            ++n_visible_facets[5];
-        }
+        if (normal * obb.axis(0) > least_visible) { ++n_visible_facets[0]; }
+        if (normal * obb.axis(1) > least_visible) { ++n_visible_facets[1]; }
+        if (normal * obb.axis(2) > least_visible) { ++n_visible_facets[2]; }
+        if (-normal * obb.axis(0) > least_visible) { ++n_visible_facets[3]; }
+        if (-normal * obb.axis(1) > least_visible) { ++n_visible_facets[4]; }
+        if (-normal * obb.axis(2) > least_visible) { ++n_visible_facets[5]; }
     }
     float inv_nf = 1.0f / num_faces(mesh);
     std::transform(n_visible_facets.begin(),

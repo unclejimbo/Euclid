@@ -81,7 +81,7 @@ Here's an example which reads a mesh file, converts it to a CGAL::Surface_mesh d
 #include <Euclid/IO/OffIO.h>
 #include <Euclid/IO/PlyIO.h>
 #include <Euclid/Geometry/MeshHelpers.h>
-#include <Euclid/Geometry/MeshProperties.h>
+#include <Euclid/Geometry/TriMeshGeometry.h>
 #include <igl/colormap.h>
 
 using Kernel = CGAL::Simple_cartesian<float>;

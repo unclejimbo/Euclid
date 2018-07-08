@@ -96,9 +96,9 @@ vertex_area(
         typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
                                                 value_type>::Kernel::FT;
     auto vpmap = get(boost::vertex_point, mesh);
-    const FT one_third = 1.0 / 3.0;
     FT va = 0.0;
     if (method == VertexArea::barycentric) {
+        const auto one_third = boost::math::constants::third<FT>();
         for (const auto& he : halfedges_around_target(v, mesh)) {
             auto p1 = vpmap[source(he, mesh)];
             auto p2 = vpmap[target(he, mesh)];
@@ -126,7 +126,7 @@ vertex_area(
             }
         }
     }
-    else { // mixed
+    else { // method == VertexArea::mixed_voronoi
         for (auto he : halfedges_around_target(v, mesh)) {
             auto p1 = vpmap[source(he, mesh)];
             auto p2 = vpmap[target(he, mesh)];
@@ -147,6 +147,32 @@ vertex_area(
         }
     }
     return va;
+}
+
+template<typename Mesh>
+Eigen::SparseMatrix<
+    typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                     value_type>::Kernel::FT>
+mass_matrix(const Mesh& mesh, const VertexArea& method)
+{
+    using FT = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                value_type>::Kernel::FT;
+    const auto nv = num_vertices(mesh);
+    Eigen::SparseMatrix<FT> mass(nv, nv);
+    std::vector<Eigen::Triplet<FT>> values;
+
+    int i = 0;
+    for (const auto& v : vertices(mesh)) {
+        auto area = vertex_area(v, mesh, method);
+        values.emplace_back(i, i, area);
+        ++i;
+    }
+
+    mass.setFromTriplets(values.begin(), values.end());
+    mass.makeCompressed();
+    return mass;
 }
 
 template<typename Mesh>
@@ -244,31 +270,6 @@ face_area(const typename boost::graph_traits<const Mesh>::face_descriptor& f,
     return area(p1, p2, p3);
 }
 
-// template<typename Mesh, typename VertexValueMap>
-// CGAL::Vector_3<typename CGAL::Kernel_traits<typename boost::property_traits<
-//     typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-//                                                 value_type>::Kernel>
-// gradient(const typename boost::graph_traits<const Mesh>::face_descriptor& f,
-//          const Mesh& mesh,
-//          const VertexValueMap& vvmap)
-// {
-//     using Vector_3 = CGAL::Vector_3<
-//         typename CGAL::Kernel_traits<typename boost::property_traits<
-//             typename boost::property_map<Mesh,
-//             boost::vertex_point_t>::type>::
-//                                          value_type>::Kernel>;
-//     auto vpmap = get(boost::vertex_point, mesh);
-//     auto normal = face_normal(f, mesh);
-//     Vector_3 grad(0.0, 0.0, 0.0);
-//     for (const auto& he : halfedges_around_face(halfedge(f, mesh), mesh)) {
-//         auto v = source(he, mesh);
-//         auto e = vpmap[target(next(he, mesh), mesh)] - vpmap[target(he,
-//         mesh)]; grad += vvmap[v] * CGAL::cross_product(normal, e);
-//     }
-//     grad *= 0.5 / face_area(f, mesh);
-//     return grad;
-// }
-
 template<typename Mesh>
 Eigen::SparseMatrix<
     typename CGAL::Kernel_traits<typename boost::property_traits<
@@ -285,7 +286,6 @@ laplacian_matrix(const Mesh& mesh, const Laplacian& method)
     const auto nv = num_vertices(mesh);
     Eigen::SparseMatrix<T> mat(nv, nv);
     std::vector<Eigen::Triplet<T>> values;
-    values.reserve(nv * 7);
 
     std::unordered_map<vertex_descriptor, int> vimap;
     int cnt = 0;
@@ -319,61 +319,6 @@ laplacian_matrix(const Mesh& mesh, const Laplacian& method)
     mat.setFromTriplets(values.begin(), values.end());
     mat.makeCompressed();
     return mat;
-}
-
-template<typename Mesh>
-Eigen::SparseMatrix<
-    typename CGAL::Kernel_traits<typename boost::property_traits<
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                     value_type>::Kernel::FT>
-mass_matrix(const Mesh& mesh, const Mass& method)
-{
-    using T = typename CGAL::Kernel_traits<typename boost::property_traits<
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                               value_type>::Kernel::FT;
-    using vertex_descriptor =
-        typename boost::graph_traits<Mesh>::vertex_descriptor;
-    const auto nv = num_vertices(mesh);
-    Eigen::SparseMatrix<T> mass(nv, nv);
-    std::vector<Eigen::Triplet<T>> values;
-
-    std::unordered_map<vertex_descriptor, int> vimap;
-    if (method == Mass::fem) {
-        int cnt = 0;
-        for (const auto& v : vertices(mesh)) {
-            vimap.insert({ v, cnt++ });
-        }
-    }
-
-    int i = 0;
-    for (const auto& v : vertices(mesh)) {
-        T area = 0.0;
-        if (method == Mass::fem) {
-            T area_sum = 0.0;
-            for (const auto& he : halfedges_around_target(v, mesh)) {
-                auto vj = source(he, mesh);
-                auto j = vimap[vj];
-                auto a1 = face_area(face(he, mesh), mesh);
-                auto a2 = face_area(face(opposite(he, mesh), mesh), mesh);
-                area_sum += a1;
-                values.emplace_back(i, j, (a1 + a2) / static_cast<T>(12));
-            }
-            values.emplace_back(i, i, area_sum / static_cast<T>(6));
-        }
-        else if (method == Mass::barycentric) {
-            area = vertex_area(v, mesh, VertexArea::barycentric);
-            values.emplace_back(i, i, area);
-        }
-        else { // voronoi
-            area = vertex_area(v, mesh, VertexArea::voronoi);
-            values.emplace_back(i, i, area);
-        }
-        ++i;
-    }
-
-    mass.setFromTriplets(values.begin(), values.end());
-    mass.makeCompressed();
-    return mass;
 }
 
 template<typename Mesh>

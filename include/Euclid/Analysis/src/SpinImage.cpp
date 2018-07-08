@@ -2,7 +2,7 @@
 #include <tuple>
 
 #include <boost/math/constants/constants.hpp>
-#include <Euclid/Geometry/MeshProperties.h>
+#include <Euclid/Geometry/TriMeshGeometry.h>
 #include <Euclid/Math/Vector.h>
 #include <Euclid/Math/Transformation.h>
 

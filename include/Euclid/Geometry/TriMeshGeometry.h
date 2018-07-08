@@ -1,29 +1,32 @@
-/** Geometric and differential properties of a mesh.
+/** Discrete (differential) geometry on a triangle mesh.
  *
- *  This package contains functions to compute geometric and differential
- *  properties of a triangle mesh.
+ *  This package contains functions to compute geometric properties and
+ *  differential operators on a triangle mesh.
  *
- *  #### References
+ *  **References**
  *
  *  [1] Botsch M, Kobbelt L, Pauly M, et al.
- *  Polygon mesh processing.
+ *  Polygon Mesh Processing.
  *  CRC press, 2010.
  *
  *  [2] Crane K.
- *  Discrete differential geometry: an applied introduction.
+ *  Discrete Differential Geometry: an Applied Introduction.
  *
- *  [3] Zhang H, Van Kaick O, Dyer R.
- *  Spectral mesh processing.
- *  Computer graphics forum, 2010.
+ *  [3] Meyer M, Schroder P, Barrr A H.
+ *  Discrete Differential-Geometry Operators for Triangulated 2-Manifolds.
+ *  Visualization and Mathematics III, 2003.
  *
- *  @defgroup PkgMeshProperties Mesh Properties
+ *  [4] Zhang H, Van Kaick O, Dyer R.
+ *  Spectral Mesh Processing.
+ *  Computer Graphics Forum, 2010.
+ *
+ *  @defgroup PkgTriMeshGeometry TriMeshGeometry
  *  @ingroup PkgGeometry
  */
 #pragma once
 
 #include <Eigen/SparseCore>
 #include <CGAL/boost/graph/properties.h>
-#include <CGAL/Point_3.h>
 #include <CGAL/Vector_3.h>
 
 namespace Euclid
@@ -56,11 +59,11 @@ enum class VertexNormal
  *  Compute vertex normal from the incident face normals.
  *  Choose a weighting strategy of face normals from VertexNormal.
  *
- *  #### Note
+ *  **Note**
+ *
  *  This function will compute face normals for all the incident triangles
- *  of vertex v. If you wish to compute all vertex normals of a mesh,
- *  please pre-compute all face normals and use the other overload of this
- *  function.
+ *  of vertex v. To avoid wasting computation, provide face normals using the
+ *  other overload method.
  *
  *  @sa VertexNormal
  */
@@ -114,7 +117,7 @@ enum class VertexArea
      *  midpoints of the opposite edges of the obtuse vertices. The signed area
      *  is guaranteed to be positive, but not as smooth as pure voronoi cells.
      */
-    mixed
+    mixed_voronoi
 };
 
 /** Area of a vertex on the mesh.
@@ -123,7 +126,7 @@ enum class VertexArea
  *  integral of the differential area dA.
  *  In the discrete settings, this involves constructing a small cell
  *  around the vertex and use its area as the local averaging region.
- *  Choose one region as specified in VertexArea.
+ *  Choose one type of region as specified in VertexArea.
  *  Only 1-ring neighborhood is considered in this function.
  *
  *  @sa VertexArea
@@ -135,7 +138,23 @@ typename CGAL::Kernel_traits<typename boost::property_traits<
 vertex_area(
     const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
     const Mesh& mesh,
-    const VertexArea& method = VertexArea::mixed);
+    const VertexArea& method = VertexArea::mixed_voronoi);
+
+/** Mass matrix of the mesh.
+ *
+ *  The mass matrix is simply the vertex areas of all the vertices of a mesh
+ *  written in a diagonal matrix, which serves as the local averaging region
+ *  commonly used in discrete differential geometry.
+ *
+ *  @sa VertexArea, vertex_area(), laplacian_matrix()
+ */
+template<typename Mesh>
+Eigen::SparseMatrix<
+    typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                     value_type>::Kernel::FT>
+mass_matrix(const Mesh& mesh,
+            const VertexArea& method = VertexArea::mixed_voronoi);
 
 /** Edge length.
  *
@@ -200,7 +219,7 @@ typename CGAL::Kernel_traits<typename boost::property_traits<
 face_area(const typename boost::graph_traits<const Mesh>::face_descriptor& f,
           const Mesh& mesh);
 
-/** Strategy to compute Laplacian.
+/** Strategies to compute Laplacian.
  *
  *  @sa laplacian_matrix()
  */
@@ -210,20 +229,20 @@ enum class Laplacian
     cotangent /**< Cotangent formula.*/
 };
 
-/** Laplacian matrix of the mesh.
+/** Laplacian operator on a mesh.
  *
  *  The Laplacian matrix forms the basis for all kinds of geometry
- * processing algorithms, you name it. There are many discretizations for
- * the Laplace-Beltrami operator, and you need to choose between graph
- * Laplacian and geometric Laplacian as specified in Laplacian.
+ *  processing algorithms, you name it. There exist many discretizations for
+ *  the Laplace-Beltrami operator, and here you can choose between graph
+ *  Laplacian and geometric Laplacian which are specified in Laplacian.
  *
  *  Other than that, you can further choose to multiply the pure Laplacian
- *  matrix with the mass matrix, which serves as a local average. Now use
- * $L$ for the Laplacian matrix, and $M$ for the mass matrix.
+ *  matrix with the mass matrix, which serves as a local average. Now suppose we
+ *  use $L$ for the Laplacian matrix, and $M$ for the mass matrix.
  *
- *  - $L$ alone is symmetric but not invariant under meshing
+ *  - $L$ alone is symmetric but not invariant under meshing.
  *  - $M^{-1}L$ is robust to meshing quality but breaks the symmetric
- * property.
+ *  property.
  *  - $M^{-1/2}LM^{-1/2}$ is both symmetric and robust.
  *
  *  @sa Laplacian, mass_matrix()
@@ -235,34 +254,6 @@ Eigen::SparseMatrix<
                                      value_type>::Kernel::FT>
 laplacian_matrix(const Mesh& mesh,
                  const Laplacian& method = Laplacian::cotangent);
-
-/** Strategies to compute the mass matrix.
- *
- *  The mass is local vertex area.
- *
- *  @sa mass_matrix()
- */
-enum class Mass
-{
-    fem,         /**< Full mass matrix discretized using FEM.*/
-    barycentric, /**< Lumped barycentric cell.*/
-    voronoi      /**< Voronoi cell.*/
-};
-
-/** Mass matrix of the mesh.
- *
- *  The mass matrix serves a local average for a quadratic form.
- *  Choose one of the method to compute the mass matrix as specified
- *  in Mass.
- *
- *  @sa Mass, laplacian_matrix()
- */
-template<typename Mesh>
-Eigen::SparseMatrix<
-    typename CGAL::Kernel_traits<typename boost::property_traits<
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                     value_type>::Kernel::FT>
-mass_matrix(const Mesh& mesh, const Mass& method = Mass::barycentric);
 
 /** Gaussian curvature of a vertex on the mesh.
  *
@@ -279,4 +270,4 @@ gaussian_curvature(
 /** @}*/
 } // namespace Euclid
 
-#include "src/MeshProperties.cpp"
+#include "src/TriMeshGeometry.cpp"
