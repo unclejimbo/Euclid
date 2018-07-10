@@ -12,9 +12,21 @@ find_dependency(Libigl)
 find_dependency(OpenCV COMPONENTS core imgproc)
 find_dependency(Embree 3.0)
 find_dependency(CGAL)
-find_dependency(BLAS)
-find_dependency(LAPACK)
-find_dependency(OpenMP)
+
+option(USE_BLAS OFF)
+if(USE_BLAS)
+    find_dependency(BLAS)
+endif()
+
+option(USE_LAPACK OFF)
+if(USE_LAPACK)
+    find_dependency(LAPACK)
+endif()
+
+option(USE_OPENMP OFF)
+if(USE_OPENMP)
+    find_dependency(OpenMP)
+endif()
 
 # CGAL tries to override CMAKE_*_FLAGS, do not let it
 set(CGAL_DONT_OVERRIDE_CMAKE_FLAGS TRUE CACHE BOOL

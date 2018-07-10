@@ -17,9 +17,21 @@ find_package(Libigl)
 find_package(OpenCV COMPONENTS core imgproc)
 find_package(Embree 3.0)
 find_package(CGAL)
-find_package(BLAS)
-find_package(LAPACK)
-find_package(OpenMP)
+
+option(USE_BLAS OFF)
+if(USE_BLAS)
+    find_package(BLAS)
+endif()
+
+option(USE_LAPACK OFF)
+if(USE_LAPACK)
+    find_package(LAPACK)
+endif()
+
+option(USE_OPENMP OFF)
+if(USE_OPENMP)
+    find_package(OpenMP)
+endif()
 
 # CGAL tries to override CMAKE_*_FLAGS, do not let it
 set(CGAL_DONT_OVERRIDE_CMAKE_FLAGS TRUE CACHE BOOL
@@ -43,14 +55,14 @@ target_link_libraries(Euclid INTERFACE
     CGAL::CGAL
     ${OpenCV_LIBS}
     ${EMBREE_LIBRARIES}
-    $<$<BOOL:${BLAS_FOUND}>:${BLAS_LIBRARIES}>
-    $<$<BOOL:${LAPACK_FOUND}>:${LAPACK_LIBRARIES}>
-    $<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>
+    $<$<AND:$<BOOL:${USE_BLAS}>,$<BOOL:${BLAS_FOUND}>>:${BLAS_LIBRARIES}>
+    $<$<AND:$<BOOL:${USE_LAPACK}>,$<BOOL:${LAPACK_FOUND}>>:${LAPACK_LIBRARIES}>
+    $<$<AND:$<BOOL:${USE_OPENMP}>,$<BOOL:${OpenMP_FOUND}>>:OpenMP::OpenMP_CXX>
 )
 
 target_compile_definitions(Euclid INTERFACE
-    $<$<BOOL:${BLAS_FOUND}>:"EIGEN_USE_BLAS">
-    $<$<BOOL:${LAPACK_FOUND}>:"EIGEN_USE_LAPACK">
+    $<$<AND:$<BOOL:${USE_BLAS}>,$<BOOL:${BLAS_FOUND}>>:"EIGEN_USE_BLAS" ${BLAS_DEFINITIONS}>
+    $<$<AND:$<BOOL:${USE_LAPACK}>,$<BOOL:${LAPACK_FOUND}>>:"EIGEN_USE_LAPACK" ${LAPACK_DEFINITIONS}>
 )
 
 include(GNUInstallDirs)
