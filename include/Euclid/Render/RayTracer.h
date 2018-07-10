@@ -231,8 +231,26 @@ public:
         const std::vector<unsigned>& indices,
         RTCGeometryType type = RTC_GEOMETRY_TYPE_TRIANGLE);
 
-    /** Attach a shared face color buffer to the ray tracer.*/
-    void attach_face_color_buffer(const std::vector<float>& colors);
+    /** Attach a shared face color buffer to the ray tracer.
+     *
+     *  @param colors The size of the array pointed by colors should be equal to
+     *  3 times the number of faces of the attached geometry, storing
+     *  [r,g,b,r,g,b...] values of each face. The values range in [0 1]. Set
+     *  colors to nullptr to disable face coloring and fall back to the
+     *  material.
+     */
+    void attach_face_color_buffer(const float* colors);
+
+    /** Attach a face maks buffer to the ray tracer.
+     *
+     *  This mask is used to filter out specified faces.
+     *
+     *  @param mask The size of the array pointed by mask should be equal to the
+     *  number of faces of the attached geometry. Set (*mask)[i] to 1 to enable
+     *  face i in intersection, otherwise it will be ignored. Set mask to
+     *  nullptr to disable masking.
+     */
+    void attach_face_mask_buffer(const uint8_t* mask);
 
     /** Release all associated buffers.*/
     void release_buffers();
@@ -259,6 +277,25 @@ public:
      *  @param camera Camera.
      *  @param width Image width.
      *  @param height Image height.
+     *  @param interleaved If true, pixels are stored like [RGBRGBRGB...],
+     *  otherwise pixels are stored like [RRR...GGG...BBB...].
+     */
+    void render_shaded(uint8_t* pixels,
+                       const Camera& camera,
+                       int width,
+                       int height,
+                       bool interleaved = true);
+
+    /** Render the mesh into a shaded image.
+     *
+     *  This function renders the mesh with simple lambertian shading and store
+     *  the pixel values to an array, using a point light located at the camera
+     *  position. Random multisampling is enabled.
+     *
+     *  @param pixels Output pixels
+     *  @param camera Camera.
+     *  @param width Image width.
+     *  @param height Image height.
      *  @param samples Number of samples per pixel.
      *  @param interleaved If true, pixels are stored like [RGBRGBRGB...],
      *  otherwise pixels are stored like [RRR...GGG...BBB...].
@@ -267,7 +304,7 @@ public:
                        const Camera& camera,
                        int width,
                        int height,
-                       int samples = 1,
+                       int samples,
                        bool interleaved = true);
 
     /** Render the mesh into a depth image.
@@ -357,6 +394,7 @@ private:
     RTCGeometry _geometry;
     int _geom_id = -1;
     const float* _face_colors = nullptr;
+    const uint8_t* _face_mask = nullptr;
     Material _material;
     Eigen::Array3f _background = Eigen::Array3f::Zero();
     bool _lighting = true;

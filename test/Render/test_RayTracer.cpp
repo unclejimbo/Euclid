@@ -51,7 +51,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                                               60.0f,
                                               static_cast<float>(width) /
                                                   height);
-                raytracer.render_shaded(pixels.data(), cam, width, height, 1);
+                raytracer.render_shaded(pixels.data(), cam, width, height);
 
                 std::string outfile(TMP_DIR);
                 outfile.append("bunny_shaded1.png");
@@ -69,7 +69,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                 cam.lookat(view, center, up);
                 cam.set_fov(60.0f);
                 cam.set_aspect(width, height);
-                raytracer.render_shaded(pixels.data(), cam, width, height, 1);
+                raytracer.render_shaded(pixels.data(), cam, width, height);
 
                 std::string outfile(TMP_DIR);
                 outfile.append("bunny_shaded2.png");
@@ -91,7 +91,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             {
                 Euclid::OrthogonalCamera cam(
                     view, center, up, xextent, yextent);
-                raytracer.render_shaded(pixels.data(), cam, width, height, 1);
+                raytracer.render_shaded(pixels.data(), cam, width, height);
 
                 std::string outfile(TMP_DIR);
                 outfile.append("bunny_shaded3.png");
@@ -108,7 +108,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                 Euclid::OrthogonalCamera cam;
                 cam.lookat(view, center, up);
                 cam.set_extent(xextent, yextent);
-                raytracer.render_shaded(pixels.data(), cam, width, height, 1);
+                raytracer.render_shaded(pixels.data(), cam, width, height);
 
                 std::string outfile(TMP_DIR);
                 outfile.append("bunny_shaded4.png");
@@ -143,7 +143,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             material.ambient << 0.2f, 0.0f, 0.0f;
             material.diffuse << 0.7f, 0.0f, 0.0f;
             raytracer.set_material(material);
-            raytracer.render_shaded(pixels.data(), cam, width, height, 8);
+            raytracer.render_shaded(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
             outfile.append("bunny_shaded6.png");
@@ -157,7 +157,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             Euclid::PerspectiveCamera cam(
                 view, center, up, 60.0f, static_cast<float>(width) / height);
             raytracer.set_background(0.0f, 0.3f, 0.4f);
-            raytracer.render_shaded(pixels.data(), cam, width, height, 8);
+            raytracer.render_shaded(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
             outfile.append("bunny_shaded7.png");
@@ -174,12 +174,12 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             for (auto& color : rd_colors) {
                 color = rd_number(rd_gen);
             }
-            raytracer.attach_face_color_buffer(rd_colors);
+            raytracer.attach_face_color_buffer(rd_colors.data());
 
             std::vector<uint8_t> pixels(3 * width * height);
             Euclid::PerspectiveCamera cam(
                 view, center, up, 60.0f, static_cast<float>(width) / height);
-            raytracer.render_shaded(pixels.data(), cam, width, height, 8);
+            raytracer.render_shaded(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
             outfile.append("bunny_shaded8.png");
@@ -193,7 +193,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             Euclid::PerspectiveCamera cam(
                 view, center, up, 60.0f, static_cast<float>(width) / height);
             raytracer.enable_light(false);
-            raytracer.render_shaded(pixels.data(), cam, width, height, 8);
+            raytracer.render_shaded(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
             outfile.append("bunny_shaded9.png");
@@ -270,7 +270,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                 colors[3 * i + 1] = g / 255.0f;
                 colors[3 * i + 2] = b / 255.0f;
             }
-            raytracer.attach_face_color_buffer(colors);
+            raytracer.attach_face_color_buffer(colors.data());
             Euclid::Material material;
             material.ambient << 0.0f, 0.0f, 0.0f;
             material.diffuse << 0.0f, 0.0f, 0.0f;
@@ -284,6 +284,48 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
 
             std::string outfile(TMP_DIR);
             outfile.append("bunny_index3.png");
+            stbi_write_png(
+                outfile.c_str(), width, height, 3, pixels.data(), width * 3);
+        }
+
+        SECTION("face mask")
+        {
+            std::vector<uint8_t> mask(indices.size() / 3);
+            for (size_t i = 0; i < indices.size(); i += 3) {
+                auto y0 = positions[3 * indices[i + 0] + 1];
+                auto y1 = positions[3 * indices[i + 1] + 1];
+                auto y2 = positions[3 * indices[i + 2] + 1];
+                if (y0 < center[1] && y1 < center[1] && y2 < center[1]) {
+                    mask[i / 3] = 0;
+                }
+                else {
+                    mask[i / 3] = 1;
+                }
+            }
+            raytracer.attach_face_mask_buffer(mask.data());
+
+            std::vector<uint8_t> pixels(3 * width * height);
+            Euclid::PerspectiveCamera cam(
+                view, center, up, 60.0f, static_cast<float>(width) / height);
+            raytracer.render_shaded(pixels.data(), cam, width, height);
+
+            std::string outfile(TMP_DIR);
+            outfile.append("bunny_shaded10.png");
+            stbi_write_png(
+                outfile.c_str(), width, height, 3, pixels.data(), width * 3);
+        }
+
+        SECTION("change geometry")
+        {
+            raytracer.attach_geometry_buffers(positions, indices);
+
+            std::vector<uint8_t> pixels(3 * width * height);
+            Euclid::PerspectiveCamera cam(
+                view, center, up, 60.0f, static_cast<float>(width) / height);
+            raytracer.render_shaded(pixels.data(), cam, width, height);
+
+            std::string outfile(TMP_DIR);
+            outfile.append("bunny_shaded12.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }

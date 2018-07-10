@@ -9,6 +9,21 @@
 namespace Euclid
 {
 
+namespace _impl
+{
+
+inline void mask_filter(const RTCFilterFunctionNArguments* args)
+{
+    EASSERT(args->N == 1);
+    auto mask = reinterpret_cast<uint8_t*>(args->geometryUserPtr);
+    EASSERT(mask != nullptr);
+
+    auto primid = RTCHitN_primID(args->hit, 1, 0);
+    if (mask[primid] != 1) { args->valid[0] = 0; }
+}
+
+} // namespace _impl
+
 inline Camera::Camera(const Eigen::Vector3f& position,
                       const Eigen::Vector3f& focus,
                       const Eigen::Vector3f& up)
@@ -143,6 +158,7 @@ inline RayTracer::RayTracer(int threads)
 
 inline RayTracer::~RayTracer()
 {
+    release_buffers();
     rtcReleaseScene(_scene);
     rtcReleaseDevice(_device);
 }
@@ -177,10 +193,7 @@ inline void RayTracer::attach_geometry_buffers(
                                     "4, thus not a valid quad mesh.");
     }
 
-    // Release previously allocated geometry if presents
-    if (_geom_id != -1) {
-        rtcDetachGeometry(_scene, _geom_id);
-    }
+    release_buffers();
 
     _geometry = rtcNewGeometry(_device, type);
 
@@ -216,14 +229,25 @@ inline void RayTracer::attach_geometry_buffers(
 
     rtcCommitGeometry(_geometry);
     _geom_id = rtcAttachGeometry(_scene, _geometry);
-    rtcReleaseGeometry(_geometry);
     rtcCommitScene(_scene);
 }
 
-inline void RayTracer::attach_face_color_buffer(
-    const std::vector<float>& colors)
+inline void RayTracer::attach_face_color_buffer(const float* colors)
 {
-    _face_colors = colors.data();
+    _face_colors = colors;
+}
+
+inline void RayTracer::attach_face_mask_buffer(const uint8_t* mask)
+{
+    if (mask != nullptr && _face_mask == nullptr) {
+        rtcSetGeometryIntersectFilterFunction(_geometry, _impl::mask_filter);
+    }
+    if (mask == nullptr && _face_mask != nullptr) {
+        rtcSetGeometryIntersectFilterFunction(_geometry, nullptr);
+    }
+    rtcSetGeometryUserData(_geometry, const_cast<uint8_t*>(mask));
+    rtcCommitGeometry(_geometry);
+    _face_mask = mask;
 }
 
 inline void RayTracer::release_buffers()
@@ -232,6 +256,8 @@ inline void RayTracer::release_buffers()
         rtcDetachGeometry(_scene, _geom_id);
         _geom_id = -1;
         _face_colors = nullptr;
+        _face_mask = nullptr;
+        rtcReleaseGeometry(_geometry);
     }
 }
 
@@ -253,6 +279,72 @@ inline void RayTracer::set_background(float r, float g, float b)
 inline void RayTracer::enable_light(bool on)
 {
     _lighting = on;
+}
+
+inline void RayTracer::render_shaded(uint8_t* pixels,
+                                     const Camera& camera,
+                                     int width,
+                                     int height,
+                                     bool interleaved)
+{
+    RTCIntersectContext context;
+    rtcInitIntersectContext(&context);
+
+#pragma omp parallel for schedule(dynamic)
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            Eigen::Array3f color(0.0f, 0.0f, 0.0f);
+            auto u = static_cast<float>(x) / width;
+            auto v = static_cast<float>(y) / height;
+            auto rayhit = camera.gen_ray(u, v);
+            rtcIntersect1(_scene, &context, &rayhit);
+
+            if (rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID) {
+                Eigen::Vector3f normal = Eigen::Vector3f(rayhit.hit.Ng_x,
+                                                         rayhit.hit.Ng_y,
+                                                         rayhit.hit.Ng_z)
+                                             .normalized();
+                // Point light at the view position
+                Eigen::Vector3f lightdir = Eigen::Vector3f(rayhit.ray.dir_x,
+                                                           rayhit.ray.dir_y,
+                                                           rayhit.ray.dir_z)
+                                               .normalized();
+
+                Eigen::Array3f ambient = _material.ambient;
+                Eigen::Array3f diffuse;
+                if (_face_colors != nullptr) {
+                    diffuse << _face_colors[3 * rayhit.hit.primID],
+                        _face_colors[3 * rayhit.hit.primID + 1],
+                        _face_colors[3 * rayhit.hit.primID + 2];
+                }
+                else {
+                    diffuse = _material.diffuse;
+                }
+                if (_lighting) { diffuse *= std::abs(normal.dot(-lightdir)); }
+                color += ambient + diffuse;
+            }
+            else {
+                color += _background;
+            }
+            color(0) = std::min(color(0), 1.0f);
+            color(1) = std::min(color(1), 1.0f);
+            color(2) = std::min(color(2), 1.0f);
+            color *= 255;
+            auto r = static_cast<uint8_t>(color(0));
+            auto g = static_cast<uint8_t>(color(1));
+            auto b = static_cast<uint8_t>(color(2));
+            if (interleaved) {
+                pixels[3 * ((height - y - 1) * width + x) + 0] = r;
+                pixels[3 * ((height - y - 1) * width + x) + 1] = g;
+                pixels[3 * ((height - y - 1) * width + x) + 2] = b;
+            }
+            else {
+                pixels[(height - y - 1) * width + x] = r;
+                pixels[width * height + (height - y - 1) * width + x] = g;
+                pixels[2 * width * height + (height - y - 1) * width + x] = b;
+            }
+        }
+    }
 }
 
 inline void RayTracer::render_shaded(uint8_t* pixels,
@@ -358,9 +450,7 @@ inline void RayTracer::render_depth(uint8_t* pixels,
     }
     float denom = 1.0f / (max_depth - min_depth);
     for (size_t i = 0; i < depths.size(); ++i) {
-        if (depths[i] == -1.0f) {
-            pixels[i] = 0;
-        }
+        if (depths[i] == -1.0f) { pixels[i] = 0; }
         else {
             pixels[i] =
                 static_cast<uint8_t>((max_depth - depths[i]) * denom * 255);
