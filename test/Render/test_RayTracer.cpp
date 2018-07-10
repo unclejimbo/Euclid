@@ -317,6 +317,21 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
 
         SECTION("change geometry")
         {
+            std::string filename(DATA_DIR);
+            filename.append("kitten.off");
+            std::vector<float> positions;
+            std::vector<unsigned> indices;
+            Euclid::read_off<3>(filename, positions, indices);
+
+            Euclid::AABB<Kernel> aabb(positions);
+            Eigen::Vector3f center =
+                Euclid::cgal_to_eigen<float>(aabb.center());
+            Eigen::Vector3f view =
+                center +
+                Eigen::Vector3f(0.0f, 0.5f * aabb.ylen(), 2.0f * aabb.zlen());
+            Eigen::Vector3f up = Eigen::Vector3f(0.0f, 1.0f, 0.0f);
+
+            positions.push_back(0.0f);
             raytracer.attach_geometry_buffers(positions, indices);
 
             std::vector<uint8_t> pixels(3 * width * height);
@@ -325,7 +340,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             raytracer.render_shaded(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bunny_shaded12.png");
+            outfile.append("kitten.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }

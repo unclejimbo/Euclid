@@ -77,7 +77,7 @@ inline RTCRayHit PerspectiveCamera::gen_ray(float s,
 {
     RTCRayHit rayhit;
     Eigen::Vector3f view =
-        -dir + (s - 0.5f) * film.width * u + (t - 0.5f) * film.height * v - pos;
+        -dir + (s - 0.5f) * film.width * u + (t - 0.5f) * film.height * v;
     EASSERT(view.dot(dir) < 0.0f);
 
     rayhit.ray.org_x = pos(0);
