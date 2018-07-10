@@ -101,10 +101,13 @@ configure_package_config_file(
 
 install(
     FILES
-        ${CMAKE_SOURCE_DIR}/cmake/Modules/FindLibigl.cmake
         ${CMAKE_BINARY_DIR}/cmake/EuclidConfig.cmake
         ${CMAKE_BINARY_DIR}/cmake/EuclidConfigVersion.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Euclid
+)
+install(
+    FILES ${CMAKE_SOURCE_DIR}/cmake/Modules/FindLibigl.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Euclid/Modules
 )
 
 configure_file(
