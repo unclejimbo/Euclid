@@ -19,7 +19,6 @@ void vs_view_entropy(const Mesh& mesh,
         typename boost::property_map<Mesh, boost::vertex_point_t>::type;
     using Point_3 = typename boost::property_traits<VPMap>::value_type;
     using Kernel = typename CGAL::Kernel_traits<Point_3>::Kernel;
-    using FT = typename Kernel::FT;
 
     constexpr const int width = 256;
     constexpr const int height = 256;
