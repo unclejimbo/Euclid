@@ -11,7 +11,7 @@ namespace Euclid
 
 template<typename Mesh>
 ViewSphere<Mesh> ViewSphere<Mesh>::make_subdiv(const Mesh& mesh,
-                                               float scale,
+                                               FT scale,
                                                int subdiv)
 {
     using MSTraits = CGAL::Min_sphere_of_spheres_d_traits_3<Kernel, FT>;
@@ -27,19 +27,19 @@ ViewSphere<Mesh> ViewSphere<Mesh>::make_subdiv(const Mesh& mesh,
     Min_sphere ms(spheres.begin(), spheres.end());
 
     ViewSphere<Mesh> result;
+    result.scale = scale;
     result.radius = ms.radius() * scale;
     auto iter = ms.center_cartesian_begin();
     result.center = Point_3(*iter, *(iter + 1), *(iter + 2));
 
-    make_subdivision_sphere(
-        result.mesh, result.center, result.radius, subdiv);
+    make_subdivision_sphere(result.mesh, result.center, result.radius, subdiv);
 
     return result;
 }
 
 template<typename Mesh>
 ViewSphere<Mesh> ViewSphere<Mesh>::make_random(const Mesh& mesh,
-                                               float scale,
+                                               FT scale,
                                                int samples)
 {
     using MSTraits = CGAL::Min_sphere_of_spheres_d_traits_3<Kernel, FT>;
@@ -55,6 +55,7 @@ ViewSphere<Mesh> ViewSphere<Mesh>::make_random(const Mesh& mesh,
     Min_sphere ms(spheres.begin(), spheres.end());
 
     ViewSphere<Mesh> result;
+    result.scale = scale;
     result.radius = ms.radius() * scale;
     auto iter = ms.center_cartesian_begin();
     result.center = Point_3(*iter, *(iter + 1), *(iter + 2));

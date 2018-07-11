@@ -43,7 +43,7 @@ public:
      *  @param subdiv The iterations of subdivision.
      */
     static ViewSphere<Mesh> make_subdiv(const Mesh& mesh,
-                                        float scale = 3.0f,
+                                        FT scale = 3.0,
                                         int subdiv = 4);
 
     /** Build a view sphere using uniform distributed random points.
@@ -58,13 +58,14 @@ public:
      *  @param samples The number of random sample points.
      */
     static ViewSphere<Mesh> make_random(const Mesh& mesh,
-                                        float scale = 3.0f,
+                                        FT scale = 3.0,
                                         int samples = 1000);
 
 public:
     Mesh mesh;
     Point_3 center;
     FT radius;
+    FT scale;
 };
 
 /** View selection using view entropy.
