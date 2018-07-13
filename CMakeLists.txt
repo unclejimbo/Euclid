@@ -18,17 +18,17 @@ find_package(OpenCV COMPONENTS core imgproc)
 find_package(Embree 3.0)
 find_package(CGAL)
 
-option(USE_BLAS OFF)
+option(USE_BLAS "Use BLAS" OFF)
 if(USE_BLAS)
     find_package(BLAS)
 endif()
 
-option(USE_LAPACK OFF)
+option(USE_LAPACK "Use LAPACK" OFF)
 if(USE_LAPACK)
     find_package(LAPACK)
 endif()
 
-option(USE_OPENMP OFF)
+option(USE_OPENMP "Use OPENMP" OFF)
 if(USE_OPENMP)
     find_package(OpenMP)
 endif()
@@ -40,7 +40,6 @@ set(CGAL_DONT_OVERRIDE_CMAKE_FLAGS TRUE CACHE BOOL
 
 target_compile_features(Euclid INTERFACE cxx_std_17)
 
-message(STATUS "cv: ${OpenCV_INCLUDE_DIRS}")
 target_include_directories(Euclid INTERFACE
     ${OpenCV_INCLUDE_DIRS}
     ${Libigl_INCLUDE_DIR}
