@@ -56,6 +56,25 @@ inline PerspectiveCamera::PerspectiveCamera(const Eigen::Vector3f& position,
     film.width = aspect * film.height;
 }
 
+inline PerspectiveCamera::PerspectiveCamera(const Eigen::Vector3f& position,
+                                            const Eigen::Vector3f& focus,
+                                            const Eigen::Vector3f& up,
+                                            float vfov,
+                                            unsigned width,
+                                            unsigned height)
+    : Camera(position, focus, up)
+{
+    auto fov = vfov * boost::math::float_constants::degree;
+    auto aspect = static_cast<float>(width) / height;
+    film.height = 2.0f * std::tan(fov * 0.5f);
+    film.width = aspect * film.height;
+}
+
+inline void PerspectiveCamera::set_aspect(float aspect)
+{
+    film.width = aspect * film.height;
+}
+
 inline void PerspectiveCamera::set_aspect(unsigned width, unsigned height)
 {
     auto aspect = static_cast<float>(width) / height;

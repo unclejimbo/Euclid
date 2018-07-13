@@ -122,6 +122,31 @@ public:
                       float vfov = 90.0f,
                       float aspect = 1.0f);
 
+    /** Create a PerspectiveCamera.
+     *
+     *  In addition to camera position and orientation, a perspective camera
+     *  uses field of view and apsect ratio to determine the extent of the
+     *  film plane.
+     *
+     *  @param position Position.
+     *  @param focus Focus.
+     *  @param up Rough up direction.
+     *  @param vfov Vertical field of view in degrees.
+     *  @param width Width of the image.
+     *  @param height Height of the image.
+     */
+    PerspectiveCamera(const Eigen::Vector3f& position,
+                      const Eigen::Vector3f& focus = Eigen::Vector3f::Zero(),
+                      const Eigen::Vector3f& up = Eigen::Vector3f(0.0f,
+                                                                  1.0f,
+                                                                  0.0f),
+                      float vfov = 90.0f,
+                      unsigned width = 256,
+                      unsigned height = 256);
+
+    /** Set aspect ratio.*/
+    void set_aspect(float aspect);
+
     /** Set aspect ratio.*/
     void set_aspect(unsigned width, unsigned height);
 
@@ -159,16 +184,16 @@ public:
      *  @param position Position.
      *  @param focus Focus.
      *  @param up Rough up direction.
-     *  @param width Width of the film plane in world space.
-     *  @param height Height of the film plane in world space.
+     *  @param xextent Width of the film plane in world space.
+     *  @param yextent Height of the film plane in world space.
      */
     OrthogonalCamera(const Eigen::Vector3f& position,
                      const Eigen::Vector3f& focus = Eigen::Vector3f::Zero(),
                      const Eigen::Vector3f& up = Eigen::Vector3f(0.0f,
                                                                  1.0f,
                                                                  0.0f),
-                     float width = 256,
-                     float height = 256);
+                     float xextent = 256.0f,
+                     float yextent = 256.0f);
 
     /** Set the extent of the film plane.*/
     void set_extent(float width, float height);
