@@ -63,9 +63,9 @@ public:
 
     /** Compute geodesics distance from a vertex.
      *
-     *  @param vertex_descriptor The vertex descriptor.
-     *  @param gedesics The output geodesics distances from all the mesh
-     *  vertices to the target vertex.
+     *  @param v The vertex descriptor.
+     *  @param geodesics The output geodesics distances from all the mesh
+     *  vertices to the target vertex v.
      */
     template<typename T>
     bool compute(

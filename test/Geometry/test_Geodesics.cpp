@@ -14,8 +14,6 @@
 
 #include <config.h>
 
-#include <fstream>
-
 using Kernel = CGAL::Simple_cartesian<double>;
 using Point_3 = Kernel::Point_3;
 using Mesh = CGAL::Surface_mesh<Point_3>;
