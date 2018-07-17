@@ -1,0 +1,72 @@
+#include <catch.hpp>
+
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <CGAL/Simple_cartesian.h>
+#include <CGAL/Surface_mesh.h>
+#include <Euclid/Geometry/Geodesics.h>
+#include <Euclid/Geometry/MeshHelpers.h>
+#include <Euclid/Math/Numeric.h>
+#include <Euclid/IO/OffIO.h>
+#include <Euclid/IO/PlyIO.h>
+#include <igl/colormap.h>
+
+#include <config.h>
+
+#include <fstream>
+
+using Kernel = CGAL::Simple_cartesian<double>;
+using Point_3 = Kernel::Point_3;
+using Mesh = CGAL::Surface_mesh<Point_3>;
+
+TEST_CASE("Geometry, Geodesics", "[geometry][geodesics]")
+{
+    SECTION("geodesics in heat")
+    {
+        // Read triangle mesh into buffers
+        std::vector<float> positions;
+        std::vector<unsigned> indices;
+        std::string fin(DATA_DIR);
+        fin.append("kitten.off");
+        Euclid::read_off<3>(fin, positions, indices);
+
+        // Generate a CGAL::Surface_mesh
+        Mesh mesh;
+        Euclid::make_mesh<3>(mesh, positions, indices);
+
+        // Construct the method
+        Euclid::GeodesicsInHeat<Mesh> heat_method(mesh, 4.0f);
+
+        // Compute geodesics
+        std::vector<double> geodesics;
+        REQUIRE(heat_method.compute(Mesh::Vertex_index(0), geodesics));
+        REQUIRE(geodesics[0] == 0.0);
+        auto gmax1 = *std::max_element(geodesics.begin(), geodesics.end());
+
+        // Change the scale
+        heat_method.scale(5.0f);
+        REQUIRE(heat_method.compute(Mesh::Vertex_index(0), geodesics));
+        auto gmax2 = *std::max_element(geodesics.begin(), geodesics.end());
+        REQUIRE(Euclid::eq_abs_err(gmax1, gmax2, 1.0));
+
+        // Turn geodesic distances into colors and output to a file
+        auto [gmin, gmax] =
+            std::minmax_element(geodesics.begin(), geodesics.end());
+        auto denom = 1.0f / (*gmax - *gmin);
+        std::vector<unsigned char> colors;
+        for (auto d : geodesics) {
+            auto dist = (*gmax - d) * denom;
+            decltype(dist) r, g, b;
+            igl::colormap(igl::COLOR_MAP_TYPE_PARULA, dist, r, g, b);
+            colors.push_back(static_cast<unsigned char>(r * 255));
+            colors.push_back(static_cast<unsigned char>(g * 255));
+            colors.push_back(static_cast<unsigned char>(b * 255));
+        }
+
+        std::string fout(TMP_DIR);
+        fout.append("kitten_geodesics_heat.ply");
+        Euclid::write_ply<3>(
+            fout, positions, nullptr, nullptr, &indices, &colors);
+    }
+}

@@ -1,109 +1,148 @@
-#include <Euclid/Geometry/MeshProperties.h>
+#include <Eigen/Dense>
+#include <Euclid/Geometry/TriMeshGeometry.h>
 #include <Euclid/Math/Vector.h>
 #include <Euclid/Util/Assert.h>
-#include <Eigen/Dense>
-#include <Eigen/SparseCholesky>
-#include <unordered_map>
-#include <iostream>
 
 namespace Euclid
 {
 
 template<typename Mesh>
-bool heat_method(
-	const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
-	const Mesh& mesh,
-	std::vector<typename CGAL::Kernel_traits<typename boost::property_traits<
-		typename boost::property_map<Mesh, boost::vertex_point_t>::type>
-		::value_type>::Kernel::FT>& geodesics)
+GeodesicsInHeat<Mesh>::GeodesicsInHeat(const Mesh& mesh, float scale)
 {
-	using FT = typename CGAL::Kernel_traits<typename boost::property_traits<
-		typename boost::property_map<Mesh, boost::vertex_point_t>::type>::value_type>::Kernel::FT;
-	using SpMat = Eigen::SparseMatrix<FT>;
-	using VVMap = std::unordered_map<boost::graph_traits<Mesh>::vertex_descriptor, FT>;
-	auto vpmap = get(boost::vertex_point, mesh);
-	auto vimap = get(boost::vertex_index, mesh);
-	auto fimap = get(boost::face_index, mesh);
-	geodesics.resize(num_vertices(mesh));
+    build(mesh, scale);
+}
 
-	// Construct the heat equation
-	FT time_interval = 0.0;
-	for (const auto& e : edges(mesh)) {
-		time_interval += edge_length(e, mesh);
-	}
-	time_interval /= num_edges(mesh);
-	SpMat cot_mat = cotangent_matrix(mesh);
-	SpMat mass_mat = mass_matrix(mesh);
-	SpMat heat_mat = mass_mat - time_interval * cot_mat;
-	Eigen::Matrix<FT, Eigen::Dynamic, 1> delta =
-		Eigen::Matrix<FT, Eigen::Dynamic, 1>::Zero(num_vertices(mesh));
-	delta(vimap[v], 0) = vertex_area(v, mesh);
+template<typename Mesh>
+bool GeodesicsInHeat<Mesh>::build(const Mesh& mesh, float scale)
+{
+    const auto zero = static_cast<FT>(0.0);
+    _mesh = &mesh;
 
-	// Solve the heat flow
-	Eigen::SimplicialLDLT<SpMat> heat_solver;
-	heat_solver.compute(heat_mat);
-	if (heat_solver.info() != Eigen::Success) {
-		std::cerr << "Unable to solve the heat flow" << std::endl;
-		return false;
-	}
-	Eigen::Matrix<FT, Eigen::Dynamic, 1> heat = heat_solver.solve(delta);
-	if (heat_solver.info() != Eigen::Success) {
-		std::cerr << "Unable to solve the heat flow" << std::endl;
-		return false;
-	}
+    // Construct the equations
+    _avg_spacing = zero;
+    for (const auto& e : edges(mesh)) {
+        _avg_spacing += edge_length(e, mesh);
+    }
+    _avg_spacing /= num_edges(mesh);
+    FT diffuse_time = _avg_spacing * _avg_spacing * static_cast<FT>(scale);
+    _cot_mat = laplacian_matrix(mesh);
+    _mass_mat = mass_matrix(mesh);
+    SpMat heat_mat = _mass_mat - diffuse_time * _cot_mat;
 
-	// Evaluate the gradient field
-	VVMap vertex_values;
-	int idx = 0;
-	FT max_heat = 0.0;
-	for (const auto& v : vertices(mesh)) {
-		EASSERT(heat(idx) <= 1.0 && heat(idx) >= 0.0);
-		max_heat = std::max(max_heat, heat(idx));
-		vertex_values.emplace(v, heat(idx++));
-	}
-	EASSERT(max_heat == heat(vimap[v]));
-	auto gradients = gradient_field(mesh, boost::const_associative_property_map<VVMap>(vertex_values));
-	for (auto& g : gradients) {
-		normalize(g);
-		g = -g;
-	}
+    // Factorize the heat matrix
+    _heat_solver.compute(heat_mat);
+    if (_heat_solver.info() != Eigen::Success) {
+        std::cerr << "Unable to solve the heat flow" << std::endl;
+        return false;
+    }
 
-	// Construct the poisson equation
-	Eigen::Matrix<FT, Eigen::Dynamic, 1> divs(num_vertices(mesh));
-	for (const auto& v : vertices(mesh)) {
-		FT divergence = 0.0;
-		auto p = vpmap[v];
-		for (const auto& he : halfedges_around_target(v, mesh)) {
-			auto f = face(he, mesh);
-			auto g = gradients[fimap[f]];
-			auto vi = source(he, mesh);
-			auto vj = target(next(he, mesh), mesh);
-			auto pi = vpmap[vi];
-			auto pj = vpmap[vj];
-			divergence += cotangent(p, pi, pj) * ((pj - p) * g) +
-				cotangent(p, pj, pi) * ((pi - p) * g);
-		}
-		divs(vimap[v], 0) = divergence * 0.5;
-	}
+    // Factorize the laplacian matrix
+    _poisson_solver.compute(_cot_mat);
+    if (_poisson_solver.info() != Eigen::Success) {
+        std::cerr << "Unable to solve the poisson equation" << std::endl;
+        return false;
+    }
 
-	// Solve the poisson equation
-	Eigen::SimplicialLDLT<SpMat> poisson_solver;
-	poisson_solver.compute(cot_mat);
-	if (poisson_solver.info() != Eigen::Success) {
-		std::cerr << "Unable to solve the poisson equation" << std::endl;
-		return false;
-	}
-	Eigen::Matrix<FT, Eigen::Dynamic, 1> geod = poisson_solver.solve(divs);
-	if (poisson_solver.info() != Eigen::Success) {
-		std::cerr << "Unable to solve the poisson equation" << std::endl;
-		return false;
-	}
+    return true;
+}
 
-	for (size_t i = 0; i < num_vertices(mesh); ++i) {
-		geodesics[i] = geod(i, 0) - geod(vimap[v], 0);
-		EASSERT(geodesics[i] >= 0.0);
-	}
-	return true;
+template<typename Mesh>
+bool GeodesicsInHeat<Mesh>::scale(float scale)
+{
+    FT diffuse_time = _avg_spacing * _avg_spacing * scale;
+    SpMat heat_mat = _mass_mat - diffuse_time * _cot_mat;
+
+    // Factorize the heat matrix
+    _heat_solver.compute(heat_mat);
+    if (_heat_solver.info() != Eigen::Success) {
+        std::cerr << "Unable to solve the heat flow" << std::endl;
+        return false;
+    }
+
+    // Factorize the laplacian matrix
+    _poisson_solver.compute(_cot_mat);
+    if (_poisson_solver.info() != Eigen::Success) {
+        std::cerr << "Unable to solve the poisson equation" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+template<typename Mesh>
+template<typename T>
+bool GeodesicsInHeat<Mesh>::compute(
+    const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+    std::vector<T>& geodesics)
+{
+    auto vpmap = get(boost::vertex_point, *_mesh);
+    auto vimap = get(boost::vertex_index, *_mesh);
+    auto fimap = get(boost::face_index, *_mesh);
+    const auto zero = static_cast<FT>(0.0);
+    const auto half = static_cast<FT>(0.5);
+    const auto one = static_cast<FT>(1.0);
+    using Mat = Eigen::Matrix<FT, Eigen::Dynamic, 1>;
+
+    // Solve the heat equation
+    Mat delta = Mat::Zero(num_vertices(*_mesh));
+    delta(vimap[v], 0) = 1.0f;
+    Mat heat = _heat_solver.solve(delta);
+    if (_heat_solver.info() != Eigen::Success) {
+        std::cerr << "Unable to solve the heat flow" << std::endl;
+        return false;
+    }
+
+    // Evaluate the normalized gradient field of the diffusion
+    size_t fidx = 0;
+    std::vector<Vector_3> gradients(num_faces(*_mesh));
+    for (const auto& f : faces(*_mesh)) {
+        auto fn = face_normal(f, *_mesh);
+        auto fa = face_area(f, *_mesh);
+        auto he = halfedge(f, *_mesh);
+        auto v0 = source(he, *_mesh);
+        auto v1 = target(he, *_mesh);
+        auto v2 = target(next(he, *_mesh), *_mesh);
+        auto e0 = vpmap[v2] - vpmap[v1];
+        auto e1 = vpmap[v0] - vpmap[v2];
+        auto e2 = vpmap[v1] - vpmap[v0];
+        auto g = half / fa *
+                 (heat[vimap[v0]] * CGAL::cross_product(fn, e0) +
+                  heat[vimap[v1]] * CGAL::cross_product(fn, e1) +
+                  heat[vimap[v2]] * CGAL::cross_product(fn, e2));
+        gradients[fidx++] = -normalized(g);
+    }
+
+    // Compute the integrated divergence of gradients
+    Mat divs(num_vertices(*_mesh));
+    for (const auto& v : vertices(*_mesh)) {
+        FT divergence = zero;
+        auto p = vpmap[v];
+        for (const auto& he : halfedges_around_target(v, *_mesh)) {
+            auto f = face(he, *_mesh);
+            auto g = gradients[fimap[f]];
+            auto vi = source(he, *_mesh);
+            auto vj = target(next(he, *_mesh), *_mesh);
+            auto pi = vpmap[vi];
+            auto pj = vpmap[vj];
+            divergence += cotangent(p, pi, pj) * ((pj - p) * g) +
+                          cotangent(p, pj, pi) * ((pi - p) * g);
+        }
+        divs(vimap[v], 0) = divergence * half;
+    }
+
+    // Solve the poisson equation
+    Mat geod = _poisson_solver.solve(divs);
+    if (_poisson_solver.info() != Eigen::Success) {
+        std::cerr << "Unable to solve the poisson equation" << std::endl;
+        return false;
+    }
+
+    geodesics.resize(num_vertices(*_mesh));
+    for (size_t i = 0; i < num_vertices(*_mesh); ++i) {
+        geodesics[i] = static_cast<T>(geod(i, 0) - geod(vimap[v], 0));
+        EASSERT(geodesics[i] >= 0.0);
+    }
+    return true;
 }
 
 } // namespace Euclid
