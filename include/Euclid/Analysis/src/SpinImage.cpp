@@ -1,5 +1,6 @@
 #include <cmath>
 #include <tuple>
+#include <unordered_map>
 
 #include <boost/math/constants/constants.hpp>
 #include <Euclid/Geometry/TriMeshGeometry.h>
@@ -9,39 +10,73 @@
 namespace Euclid
 {
 
-template<typename Mesh, typename VertexNormalMap, typename T>
-void spin_image(const Mesh& mesh,
-                const VertexNormalMap& vnmap,
-                const typename boost::graph_traits<Mesh>::vertex_descriptor& v,
-                std::vector<T>& spin_img,
-                float bin_size,
-                int image_width,
-                float support_angle)
+template<typename Mesh>
+SpinImage<Mesh>::SpinImage(const Mesh& mesh,
+                           FT resolution,
+                           const std::vector<Vector_3>* vnormals)
 {
-    using VPMap =
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type;
-    using Point_3 = typename boost::property_traits<VPMap>::value_type;
-    using Kernel = typename CGAL::Kernel_traits<Point_3>::Kernel;
-    using FT = typename Kernel::FT;
-    auto vpmap = get(boost::vertex_point, mesh);
+    _mesh = &mesh;
 
-    if (support_angle < 0.0f || support_angle > 180.0f) {
-        throw std::invalid_argument(
-            "Support angle should be in range [0, 180]");
+    if (resolution != 0.0) {
+        _resolution = resolution;
+    }
+    else {
+        _resolution = 0.0;
+        for (const auto& e : edges(mesh)) {
+            _resolution += edge_length(e, mesh);
+        }
+        _resolution /= static_cast<FT>(num_edges(mesh));
     }
 
-    // Calculate the resolution of mesh
-    FT median = 0.0;
-    for (const auto& e : edges(mesh)) {
-        median += edge_length(e, mesh);
+    if (vnormals != nullptr) {
+        _vnormals = vnormals;
+        _is_shared = true;
     }
-    median /= static_cast<FT>(num_edges(mesh));
-    auto bin_width = median * static_cast<FT>(bin_size);
+    else {
+        using Face = boost::graph_traits<Mesh>::face_descriptor;
+        using FNMap = std::unordered_map<Face, Vector_3>;
+        FNMap fnmap;
+        fnmap.reserve(num_faces(mesh));
+        for (const auto& f : faces(mesh)) {
+            fnmap.insert({ f, Euclid::face_normal(f, mesh) });
+        }
+        auto fn_map = boost::make_assoc_property_map(fnmap);
+
+        std::vector<Vector_3>* vertex_normals = new std::vector<Vector_3>;
+        vertex_normals->reserve(num_vertices(mesh));
+        for (const auto& v : vertices(mesh)) {
+            vertex_normals->push_back(Euclid::vertex_normal(v, mesh, fn_map));
+        }
+        _vnormals = vertex_normals;
+        _is_shared = false;
+    }
+}
+
+template<typename Mesh>
+SpinImage<Mesh>::~SpinImage()
+{
+    if (!_is_shared) {
+        delete _vnormals;
+    }
+}
+
+template<typename Mesh>
+template<typename T>
+void SpinImage<Mesh>::compute(const Vertex& v,
+                              std::vector<T>& spin_img,
+                              float bin_size,
+                              int image_width,
+                              float support_angle)
+{
+    auto vpmap = get(boost::vertex_point, *_mesh);
+    auto vimap = get(boost::vertex_index, *_mesh);
+
+    auto bin_width = _resolution * static_cast<FT>(bin_size);
 
     // Transform the coordinate system so that vi is at origin and the vertex
     // normal points in the y axis, while the x and z axes are arbitrary
-    const auto& pi = vpmap[v];
-    const auto& ni = vnmap[v];
+    auto pi = vpmap[v];
+    auto ni = (*_vnormals)[vimap[v]];
     CGAL::Plane_3<Kernel> plane(pi, ni);
     auto tangent = normalized(plane.base1());
     auto transform =
@@ -49,8 +84,8 @@ void spin_image(const Mesh& mesh,
 
     // Find all vertices that lie in the support and compute the spin image
     spin_img.resize((image_width + 1) * (image_width + 1), 0.0);
-    for (const auto& vj : vertices(mesh)) {
-        if (ni * vnmap[vj] <=
+    for (const auto& vj : vertices(*_mesh)) {
+        if (ni * (*_vnormals)[vimap[vj]] <=
             std::cos(support_angle * boost::math::float_constants::degree)) {
             continue;
         }
@@ -59,13 +94,17 @@ void spin_image(const Mesh& mesh,
 
         auto alpha = std::sqrt(pj.x() * pj.x() + pj.z() * pj.z()) / bin_width;
         auto col = static_cast<int>(std::floor(alpha));
-        if (col >= image_width) { continue; }
+        if (col >= image_width) {
+            continue;
+        }
         alpha -= col;
 
         auto beta = pj.y() / bin_width;
         auto beta_max = image_width * 0.5f;
         auto row = static_cast<int>(std::floor(beta_max - beta));
-        if (row >= image_width || row < 0) { continue; }
+        if (row >= image_width || row < 0) {
+            continue;
+        }
         beta = beta_max - beta - row;
 
         // Bilinear interpolation
