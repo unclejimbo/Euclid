@@ -1,7 +1,10 @@
 #include <cmath>
+#include <functional>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
+#include <boost/functional/hash.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <Euclid/Math/Vector.h>
 #include <Euclid/Util/Assert.h>
@@ -282,16 +285,27 @@ laplacian_matrix(const Mesh& mesh, const Laplacian& method)
                                                value_type>::Kernel::FT;
     using vertex_descriptor =
         typename boost::graph_traits<Mesh>::vertex_descriptor;
+    using Triplet = Eigen::Triplet<T>;
     auto vpmap = get(boost::vertex_point, mesh);
     const auto nv = num_vertices(mesh);
-    Eigen::SparseMatrix<T> mat(nv, nv);
-    std::vector<Eigen::Triplet<T>> values;
 
     std::unordered_map<vertex_descriptor, int> vimap;
     int cnt = 0;
     for (const auto& v : vertices(mesh)) {
         vimap.insert({ v, cnt++ });
     }
+
+    auto hash_fcn = [](const Triplet& t) {
+        size_t seed = 0;
+        boost::hash_combine(seed, t.col());
+        boost::hash_combine(seed, t.row());
+        return seed;
+    };
+    auto eq_fcn = [](const Triplet& t1, const Triplet& t2) {
+        return (t1.col() == t2.col()) && (t1.row() == t2.row());
+    };
+    std::unordered_set<Triplet, decltype(hash_fcn), decltype(eq_fcn)> values(
+        nv, hash_fcn, eq_fcn);
 
     for (const auto& vi : vertices(mesh)) {
         int i = vimap[vi];
@@ -300,22 +314,30 @@ laplacian_matrix(const Mesh& mesh, const Laplacian& method)
             auto vj = source(he, mesh);
             int j = vimap[vj];
             if (method == Laplacian::uniform) {
-                values.emplace_back(i, j, static_cast<T>(1));
+                values.emplace(i, j, static_cast<T>(1));
                 row_sum += 1.0;
             }
             else { // cotangent
-                auto va = target(next(he, mesh), mesh);
-                auto vb = target(next(opposite(he, mesh), mesh), mesh);
-                auto cota = cotangent(vpmap[vi], vpmap[va], vpmap[vj]);
-                auto cotb = cotangent(vpmap[vi], vpmap[vb], vpmap[vj]);
-                auto value = static_cast<T>((cota + cotb) * 0.5);
-                values.emplace_back(i, j, value);
-                row_sum += value;
+                auto existing = values.find(Triplet(j, i, 0.0));
+                if (existing != values.end()) {
+                    values.emplace(i, j, existing->value());
+                    row_sum += existing->value();
+                }
+                else {
+                    auto va = target(next(he, mesh), mesh);
+                    auto vb = target(next(opposite(he, mesh), mesh), mesh);
+                    auto cota = cotangent(vpmap[vi], vpmap[va], vpmap[vj]);
+                    auto cotb = cotangent(vpmap[vi], vpmap[vb], vpmap[vj]);
+                    auto value = static_cast<T>((cota + cotb) * 0.5);
+                    values.emplace(i, j, value);
+                    row_sum += value;
+                }
             }
         }
-        values.emplace_back(i, i, -row_sum);
+        values.emplace(i, i, -row_sum);
     }
 
+    Eigen::SparseMatrix<T> mat(nv, nv);
     mat.setFromTriplets(values.begin(), values.end());
     mat.makeCompressed();
     return mat;
