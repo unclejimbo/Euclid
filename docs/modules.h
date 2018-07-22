@@ -21,3 +21,7 @@
 /** Mesh renderer.
  *  @defgroup PkgRender Render
  */
+
+/** Other utilities.
+ * @defgroup PkgUtil Util
+ */

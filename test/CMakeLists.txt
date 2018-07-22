@@ -18,6 +18,7 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Transformation.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Vector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Render/test_RayTracer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Util/test_Timer.cpp
 )
 
 configure_file(
