@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <Eigen/Dense>
+#include <Eigen/SparseCore>
 
 namespace Euclid
 {
@@ -20,6 +21,28 @@ namespace Euclid
 template<typename FT, int RowSize>
 Eigen::Matrix<FT, RowSize, RowSize> covariance_matrix(
     const std::vector<Eigen::Matrix<FT, RowSize, 1>>& points);
+
+/** Apply a function for each non-zero element in a sparse matrix.
+ *
+ */
+template<typename Scalar,
+         int Options,
+         typename StorageIndex,
+         typename UnaryFunction>
+void for_each(Eigen::SparseMatrix<Scalar, Options, StorageIndex>& mat,
+              UnaryFunction f);
+
+/** Apply a function for each non-zero element in a sparse matrix and
+ *  store the result to another.
+ *
+ */
+template<typename Scalar,
+         int Options,
+         typename StorageIndex,
+         typename UnaryFunction>
+void transform(const Eigen::SparseMatrix<Scalar, Options, StorageIndex>& mat_in,
+               Eigen::SparseMatrix<Scalar, Options, StorageIndex>& mat_out,
+               UnaryFunction f);
 
 /** Principle component analysis.
  *
