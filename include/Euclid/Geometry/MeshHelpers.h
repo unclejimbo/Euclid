@@ -77,6 +77,15 @@ void extract_mesh(const Eigen::MatrixBase<DerivedV>& V,
                   std::vector<FT>& positions,
                   std::vector<IT>& indices);
 
+/** Extract positions from position matrix.
+ *
+ *  This function is helpful when the mesh positions are changed but topology
+ *  remains the same.
+ */
+template<typename DerivedV, typename FT>
+void extract_mesh(const Eigen::MatrixBase<DerivedV>& V,
+                  std::vector<FT>& positions);
+
 /** @}*/
 } // namespace Euclid
 

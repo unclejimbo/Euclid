@@ -84,11 +84,15 @@ TEST_CASE("Geometry, MeshHelpers", "[geometry][meshhelpers]")
         Eigen::MatrixXd V;
         Eigen::MatrixXi F;
         Euclid::make_mesh<3>(V, F, positions, indices);
+
         std::vector<double> new_positions;
         std::vector<unsigned> new_indices;
         Euclid::extract_mesh<3>(V, F, new_positions, new_indices);
-
         REQUIRE(new_positions == positions);
         REQUIRE(new_indices == indices);
+
+        std::vector<double> only_positions;
+        Euclid::extract_mesh(V, only_positions);
+        REQUIRE(only_positions == positions);
     }
 }

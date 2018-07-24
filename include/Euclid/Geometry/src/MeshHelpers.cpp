@@ -240,4 +240,18 @@ void extract_mesh(const Eigen::MatrixBase<DerivedV>& V,
     }
 }
 
+template<typename DerivedV, typename FT>
+void extract_mesh(const Eigen::MatrixBase<DerivedV>& V,
+                  std::vector<FT>& positions)
+{
+    positions.clear();
+    positions.reserve(V.rows() * 3);
+
+    for (auto i = 0; i < V.rows(); ++i) {
+        positions.push_back(V(i, 0));
+        positions.push_back(V(i, 1));
+        positions.push_back(V(i, 2));
+    }
+}
+
 } // namespace Euclid
