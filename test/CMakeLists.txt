@@ -44,6 +44,7 @@ target_compile_options(run_test PRIVATE
 )
 
 target_compile_definitions(run_test PRIVATE
+    EUCLID_NO_WARNING
     $<$<CXX_COMPILER_ID:MSVC>:_SILENCE_CXX17_NEGATORS_DEPRECATION_WARNING>
 )
 
