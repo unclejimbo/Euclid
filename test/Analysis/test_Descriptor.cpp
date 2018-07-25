@@ -13,13 +13,13 @@
 
 #include <config.h>
 
-using Kernel = CGAL::Simple_cartesian<float>;
+using Kernel = CGAL::Simple_cartesian<double>;
 using Vector_3 = Kernel::Vector_3;
 using Mesh = CGAL::Surface_mesh<Kernel::Point_3>;
 using Vertex = Mesh::Vertex_index;
 
-inline float l2_distance(const std::vector<float>& d1,
-                         const std::vector<float>& d2)
+inline float l2_distance(const std::vector<double>& d1,
+                         const std::vector<double>& d2)
 {
     float dist = 0.0f;
     for (size_t i = 0; i < d1.size(); ++i) {
@@ -31,8 +31,8 @@ inline float l2_distance(const std::vector<float>& d1,
 
 TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
 {
-    std::vector<float> positions;
-    std::vector<float> normals;
+    std::vector<double> positions;
+    std::vector<double> normals;
     std::vector<unsigned> indices;
     std::string filename(DATA_DIR);
     filename.append("bunny_vn.ply");
@@ -46,27 +46,28 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
         vnormals.emplace_back(normals[i], normals[i + 1], normals[i + 2]);
     }
 
+    auto v1 = Vertex(7505); // vertex on ear
+    auto v2 = Vertex(695);  // vertex next by
+    auto v3 = Vertex(3915); // vertex on the other ear
+    auto v4 = Vertex(0);    // vertex far away
+
     SECTION("spin images")
     {
         const unsigned width = 256;
 
         Euclid::SpinImage si(mesh);
 
-        // vertex on ear
-        std::vector<float> si1;
-        si.compute(Vertex(7505), si1, 1.0f, width, 60.0f);
+        std::vector<double> si1;
+        si.compute(v1, si1, 1.0f, width, 60.0f);
 
-        // vertex next by
-        std::vector<float> si2;
-        si.compute(Vertex(695), si2, 1.0f, width, 60.0f);
+        std::vector<double> si2;
+        si.compute(v2, si2, 1.0f, width, 60.0f);
 
-        // vertex on the other ear
-        std::vector<float> si3;
-        si.compute(Vertex(3915), si3, 1.0f, width, 60.0f);
+        std::vector<double> si3;
+        si.compute(v3, si3, 1.0f, width, 60.0f);
 
-        // vertex far awary
-        std::vector<float> si4;
-        si.compute(Vertex(0), si4, 1.0f, width, 60.0f);
+        std::vector<double> si4;
+        si.compute(v4, si4, 1.0f, width, 60.0f);
 
         auto d12 = l2_distance(si1, si2);
         auto d13 = l2_distance(si1, si3);
@@ -86,7 +87,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
                            width,
                            1,
                            si1.data(),
-                           width * sizeof(float));
+                           width * sizeof(double));
         }
 
         {
@@ -101,7 +102,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
                            width,
                            1,
                            si2.data(),
-                           width * sizeof(float));
+                           width * sizeof(double));
         }
 
         {
@@ -116,7 +117,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
                            width,
                            1,
                            si3.data(),
-                           width * sizeof(float));
+                           width * sizeof(double));
         }
 
         {
@@ -131,7 +132,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
                            width,
                            1,
                            si4.data(),
-                           width * sizeof(float));
+                           width * sizeof(double));
         }
     }
 
@@ -139,7 +140,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
     {
         const unsigned width = 256;
 
-        std::vector<float> spin_image;
+        std::vector<double> spin_image;
         Euclid::SpinImage si(mesh, 0.0f, &vnormals);
         si.compute(Vertex(0), spin_image, 1.0f, width, 60.0f);
 
@@ -154,6 +155,29 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
                        width,
                        1,
                        spin_image.data(),
-                       width * sizeof(float));
+                       width * sizeof(double));
+    }
+
+    SECTION("heat kernel signature")
+    {
+        Euclid::HKS<Mesh> hks(mesh, 100);
+
+        std::vector<double> hks1;
+        hks.compute(v1, hks1);
+
+        std::vector<double> hks2;
+        hks.compute(v2, hks2);
+
+        std::vector<double> hks3;
+        hks.compute(v3, hks3);
+
+        std::vector<double> hks4;
+        hks.compute(v4, hks4);
+
+        auto d12 = l2_distance(hks1, hks2);
+        auto d13 = l2_distance(hks1, hks3);
+        auto d14 = l2_distance(hks1, hks4);
+        REQUIRE(d12 < d13);
+        REQUIRE(d13 < d14);
     }
 }

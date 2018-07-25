@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <CGAL/boost/graph/properties.h>
+#include <Eigen/Dense>
 
 namespace Euclid
 {
@@ -27,7 +28,6 @@ namespace Euclid
  *  IEEE Transactions on pattern analysis and machine intelligence,
  *  1999, 21(5): 433-449.
  */
-
 template<typename Mesh>
 class SpinImage
 {
@@ -80,7 +80,79 @@ private:
     bool _is_shared;
 };
 
+/** Heat kernel signature.
+ *
+ *  HKS is a intrinsic, multiscale, local shape descriptor.
+ *
+ *  **Reference**
+ *
+ *  Sun J., Ovsjanikov M., Guibas L..
+ *  A concise and provably informative multi-scale signature based on heat
+ *  diffusion.
+ *  Proceedings of the Symposium on Geometry Processing, 2009.
+ */
+template<typename Mesh>
+class HKS
+{
+public:
+    using VPMap =
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type;
+    using Point_3 = typename boost::property_traits<VPMap>::value_type;
+    using Kernel = typename CGAL::Kernel_traits<Point_3>::Kernel;
+    using Vector_3 = typename Kernel::Vector_3;
+    using FT = typename Kernel::FT;
+    using Vertex = typename boost::graph_traits<Mesh>::vertex_descriptor;
+    using Vec = Eigen::Matrix<FT, Eigen::Dynamic, 1>;
+    using Mat = Eigen::Matrix<FT, Eigen::Dynamic, Eigen::Dynamic>;
+
+public:
+    /** Constructor.
+     *
+     *  Compute eigen decomposition of the mesh Laplacian.
+     *
+     *  @param mesh Input mesh.
+     *  @param k Number of eigenvalues/eigenvectors to use.
+     */
+    HKS(const Mesh& mesh, unsigned k = 300);
+
+    /** Compute hks for a single vertex.
+     *
+     *  @param v Vertex descriptor.
+     *  @param hks Output heat kernel signature.
+     *  @param tscales Number of time scales to use.
+     *  @param tmin The minimum time value, default to -1 which will use the
+     *  parameter setting described in the paper.
+     *  @param tmax The maximum time value, default to -1 which will use the
+     *  parameter setting described in the paper.
+     */
+    template<typename T>
+    void compute(const Vertex& v,
+                 std::vector<T>& hks,
+                 unsigned tscales = 100,
+                 float tmin = -1.0f,
+                 float tmax = -1.0f);
+
+public:
+    /** The mesh being processed. */
+    const Mesh* mesh;
+
+    /** The number of eigenvalues/eigenvectors.
+     *
+     *  Note that this value might be smaller than what is requested in the
+     *  constructor because of numerical issues and some eigenvalues may not
+     *  converge.
+     */
+    unsigned k;
+
+    /** The eigenvalues. */
+    Vec eigenvalues;
+
+    /** The eigenfunctions. */
+    Mat eigenfunctions;
+};
+
 /** @}*/
 } // namespace Euclid
 
 #include "src/SpinImage.cpp"
+#include "src/HKS.cpp"

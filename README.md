@@ -48,6 +48,7 @@ However, you'll need the following libraries when you use headers in Euclid that
 - [Boost](https://www.boost.org/).
 - [CGAL](https://www.cgal.org/index.html) for tons of data structures and algorithms.
 - [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) for matrix manipulation as well as solving linear systems.
+- [Spectra](https://spectralib.org/) for solving large scale eigen value problems.
 - [Libigl](http://libigl.github.io/libigl/) yet another simple but powerful geometry processing library in C++.
 - [OpenCV](http://opencv.org) for algorithms which require operating on images.
 - [Embree](http://embree.github.io) for fast cpu ray tracing.
