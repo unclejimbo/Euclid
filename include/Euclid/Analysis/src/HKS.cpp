@@ -68,7 +68,7 @@ HKS<Mesh>::HKS(const Mesh& mesh, unsigned k)
 template<typename Mesh>
 template<typename T>
 void HKS<Mesh>::compute(const Vertex& v,
-                        std::vector<T>& hks,
+                        Eigen::Array<T, Eigen::Dynamic, 1>& hks,
                         unsigned tscales,
                         float tmin,
                         float tmax)
@@ -87,7 +87,6 @@ void HKS<Mesh>::compute(const Vertex& v,
     auto log_tmax = std::log(tmax);
     auto log_tstep = (log_tmax - log_tmin) / tscales;
     auto vimap = get(boost::vertex_index, *this->mesh);
-    hks.clear();
     hks.resize(tscales);
 
     for (size_t i = 0; i < tscales; ++i) {
@@ -102,7 +101,7 @@ void HKS<Mesh>::compute(const Vertex& v,
             hks_t += e * phi * phi;
         }
         hks_t /= denom;
-        hks[i] = hks_t;
+        hks(i) = hks_t;
     }
 }
 

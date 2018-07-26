@@ -59,11 +59,12 @@ SpinImage<Mesh>::~SpinImage()
 template<typename Mesh>
 template<typename T>
 void SpinImage<Mesh>::compute(const Vertex& v,
-                              std::vector<T>& spin_img,
+                              Eigen::Array<T, Eigen::Dynamic, 1>& spin_img,
                               float bin_size,
                               int image_width,
                               float support_angle)
 {
+    using Array = Eigen::Array<T, Eigen::Dynamic, 1>;
     auto vpmap = get(boost::vertex_point, *_mesh);
     auto vimap = get(boost::vertex_index, *_mesh);
 
@@ -79,7 +80,7 @@ void SpinImage<Mesh>::compute(const Vertex& v,
         transform_from_world_coord<Kernel>(pi, pi + tangent, pi + ni);
 
     // Find all vertices that lie in the support and compute the spin image
-    spin_img.resize((image_width + 1) * (image_width + 1), 0.0);
+    spin_img = Array::Zero((image_width + 1) * (image_width + 1));
     for (const auto& vj : vertices(*_mesh)) {
         if (ni * (*_vnormals)[get(vimap, vj)] <=
             std::cos(support_angle * boost::math::float_constants::degree)) {
@@ -100,10 +101,10 @@ void SpinImage<Mesh>::compute(const Vertex& v,
         beta = beta_max - beta - row;
 
         // Bilinear interpolation
-        spin_img[row * image_width + col] += (1.0f - alpha) * (1.0f - beta);
-        spin_img[row * image_width + col + 1] += alpha * (1.0f - beta);
-        spin_img[(row + 1) * image_width + col] += (1.0f - alpha) * beta;
-        spin_img[(row + 1) * image_width + col + 1] += alpha * beta;
+        spin_img(row * image_width + col) += (1.0f - alpha) * (1.0f - beta);
+        spin_img(row * image_width + col + 1) += alpha * (1.0f - beta);
+        spin_img((row + 1) * image_width + col) += (1.0f - alpha) * beta;
+        spin_img((row + 1) * image_width + col + 1) += alpha * beta;
     }
 }
 

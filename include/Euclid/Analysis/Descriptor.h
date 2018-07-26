@@ -68,7 +68,7 @@ public:
      */
     template<typename T>
     void compute(const Vertex& v,
-                 std::vector<T>& spin_img,
+                 Eigen::Array<T, Eigen::Dynamic, 1>& spin_img,
                  float bin_size = 1.0f,
                  int image_width = 15,
                  float support_angle = 60.0f);
@@ -127,7 +127,7 @@ public:
      */
     template<typename T>
     void compute(const Vertex& v,
-                 std::vector<T>& hks,
+                 Eigen::Array<T, Eigen::Dynamic, 1>& hks,
                  unsigned tscales = 100,
                  float tmin = -1.0f,
                  float tmax = -1.0f);
