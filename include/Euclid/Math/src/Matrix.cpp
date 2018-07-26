@@ -2,6 +2,8 @@
 #include <exception>
 #include <utility>
 
+#include <Eigen/Eigenvalues>
+
 namespace Euclid
 {
 

@@ -3,7 +3,6 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Simple_cartesian.h>
-#include <Eigen/Dense>
 
 TEST_CASE("Math, Vector", "[math][vector]")
 {

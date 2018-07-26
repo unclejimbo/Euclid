@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <Eigen/SparseCore>
 
 namespace Euclid

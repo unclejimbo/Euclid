@@ -12,7 +12,7 @@
 #include <limits>
 #include <vector>
 
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <embree3/rtcore.h>
 
 namespace Euclid

@@ -1,4 +1,4 @@
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <Euclid/Geometry/TriMeshGeometry.h>
 #include <Euclid/Math/Vector.h>
 #include <Euclid/Util/Assert.h>

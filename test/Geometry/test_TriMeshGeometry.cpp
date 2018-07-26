@@ -6,7 +6,7 @@
 
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <Eigen/SparseCore>
 #include <Eigen/SparseCholesky>
 #include <Euclid/IO/OffIO.h>

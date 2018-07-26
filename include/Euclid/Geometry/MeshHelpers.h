@@ -17,7 +17,7 @@
 #include <type_traits>
 #include <vector>
 
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 namespace Euclid
 {

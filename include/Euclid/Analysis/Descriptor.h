@@ -8,7 +8,7 @@
 
 #include <vector>
 #include <CGAL/boost/graph/properties.h>
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 namespace Euclid
 {
