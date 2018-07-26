@@ -70,21 +70,23 @@ AABB<Kernel>::AABB(const std::vector<Point_3>& points)
 }
 
 template<typename Kernel>
-template<typename ForwardIterator, typename PPMap>
-AABB<Kernel>::AABB(ForwardIterator first, ForwardIterator beyond, PPMap ppmap)
+template<typename ForwardIterator, typename VPMap>
+AABB<Kernel>::AABB(ForwardIterator first, ForwardIterator beyond, VPMap vpmap)
 {
     if (first == beyond) { throw std::invalid_argument("Input is empty"); }
 
-    auto xmin = ppmap[*first].x();
+    auto p0 = get(vpmap, *first);
+    auto xmin = p0.x();
     auto xmax = xmin;
-    auto ymin = ppmap[*first].y();
+    auto ymin = p0.y();
     auto ymax = ymin;
-    auto zmin = ppmap[*first].z();
+    auto zmin = p0.z();
     auto zmax = zmin;
     while (++first != beyond) {
-        auto x = ppmap[*first].x();
-        auto y = ppmap[*first].y();
-        auto z = ppmap[*first].z();
+        auto p = get(vpmap, *first);
+        auto x = p.x();
+        auto y = p.y();
+        auto z = p.z();
         if (x < xmin)
             xmin = x;
         else if (x > xmax)

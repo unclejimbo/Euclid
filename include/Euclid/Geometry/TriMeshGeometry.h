@@ -69,7 +69,7 @@ enum class VertexNormal
  */
 template<typename Mesh>
 typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, CGAL::vertex_point_t>::type>::
+    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
                                  value_type>::Kernel::Vector_3
 vertex_normal(
     const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,

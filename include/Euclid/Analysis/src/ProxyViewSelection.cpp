@@ -95,8 +95,8 @@ void proxy_view_selection(const Mesh& mesh,
     auto sphere_vpmap = get(boost::vertex_point, view_sphere.mesh);
     auto sphere_vimap = get(boost::vertex_index, view_sphere.mesh);
     for (const auto& v : vertices(view_sphere.mesh)) {
-        auto view_dir = normalized(sphere_vpmap[v] - obb.center());
-        auto i = sphere_vimap[v];
+        auto view_dir = normalized(get(sphere_vpmap, v) - obb.center());
+        auto i = get(sphere_vimap, v);
         view_scores[i] += (w1 * projected_areas[0] + w2 * visible_ratios[0]) *
                           std::max(view_dir * obb.axis(0), 0.0f);
         view_scores[i] += (w1 * projected_areas[1] + w2 * visible_ratios[1]) *

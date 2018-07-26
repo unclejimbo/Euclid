@@ -6,7 +6,6 @@
 
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
-#include <CGAL/Polyhedron_3.h>
 #include <Eigen/Dense>
 #include <Eigen/SparseCore>
 #include <Eigen/SparseCholesky>
@@ -21,7 +20,7 @@
 using Kernel = CGAL::Simple_cartesian<float>;
 using Point_3 = typename Kernel::Point_3;
 using Vector_3 = typename Kernel::Vector_3;
-using Mesh = CGAL::Polyhedron_3<Kernel>;
+using Mesh = CGAL::Surface_mesh<Point_3>;
 
 TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
 {
@@ -192,7 +191,7 @@ TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
 
     SECTION("vertex normal using pre-computed face normals")
     {
-        using FNMap = std::unordered_map<Mesh::Facet_handle, Vector_3>;
+        using FNMap = std::unordered_map<Mesh::Face_index, Vector_3>;
         FNMap fnmap;
         for (const auto& f : faces(bumpy)) {
             fnmap.insert({ f, Euclid::face_normal(f, bumpy) });

@@ -2,7 +2,6 @@
 #include <string>
 #include <unordered_map>
 
-#include <CGAL/boost/graph/properties.h>
 #include <CGAL/boost/graph/Euler_operations.h>
 #include <Euclid/Util/Assert.h>
 
@@ -33,7 +32,7 @@ std::enable_if_t<std::is_arithmetic_v<FT>, void> make_mesh(
         throw std::runtime_error(err_str);
     }
     using VPMap =
-        typename boost::property_map<Mesh, CGAL::vertex_point_t>::type;
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type;
     using Point_3 = typename boost::property_traits<VPMap>::value_type;
     using vertex_descriptor =
         typename boost::graph_traits<Mesh>::vertex_descriptor;
@@ -43,7 +42,7 @@ std::enable_if_t<std::is_arithmetic_v<FT>, void> make_mesh(
         v = add_vertex(mesh);
     }
 
-    auto vpmap = get(CGAL::vertex_point, mesh);
+    auto vpmap = get(boost::vertex_point, mesh);
     for (size_t i = 0; i < positions.size(); i += 3) {
         put(vpmap,
             vds[i / 3],
@@ -87,7 +86,7 @@ std::enable_if_t<!std::is_arithmetic_v<Point_3>, void> make_mesh(
         v = add_vertex(mesh);
     }
 
-    auto vpmap = get(CGAL::vertex_point, mesh);
+    auto vpmap = get(boost::vertex_point, mesh);
     for (size_t i = 0; i < points.size(); ++i) {
         put(vpmap, vds[i], points[i]);
     }
@@ -154,16 +153,15 @@ std::enable_if_t<std::is_arithmetic_v<FT>, void> extract_mesh(
     using vertex_descriptor =
         typename boost::graph_traits<Mesh>::vertex_descriptor;
 
-    auto vpmap = get(CGAL::vertex_point, mesh);
-    std::unordered_map<vertex_descriptor, int> vimap;
-    int idx = 0;
+    auto vpmap = get(boost::vertex_point, mesh);
     for (auto [beg, end] = vertices(mesh); beg != end; ++beg) {
-        positions.push_back(vpmap[*beg].x());
-        positions.push_back(vpmap[*beg].y());
-        positions.push_back(vpmap[*beg].z());
-        vimap[*beg] = idx++;
+        auto p = get(vpmap, *beg);
+        positions.push_back(p.x());
+        positions.push_back(p.y());
+        positions.push_back(p.z());
     }
 
+    auto vimap = get(boost::vertex_index, mesh);
     for (auto [fb, fe] = faces(mesh); fb != fe; ++fb) {
         int i = 0;
         for (auto [vb, ve] = vertices_around_face(halfedge(*fb, mesh), mesh);
@@ -175,7 +173,7 @@ std::enable_if_t<std::is_arithmetic_v<FT>, void> extract_mesh(
                 err_str.append("-mesh");
                 throw std::runtime_error(err_str);
             }
-            indices.push_back(vimap[*vb]);
+            indices.push_back(get(vimap, *vb));
         }
     }
 }
@@ -193,14 +191,12 @@ std::enable_if_t<!std::is_arithmetic_v<Point_3>, void> extract_mesh(
     using vertex_descriptor =
         typename boost::graph_traits<Mesh>::vertex_descriptor;
 
-    auto vpmap = get(CGAL::vertex_point, mesh);
-    std::unordered_map<vertex_descriptor, int> vimap;
-    int idx = 0;
+    auto vpmap = get(boost::vertex_point, mesh);
     for (auto [beg, end] = vertices(mesh); beg != end; ++beg) {
-        points.push_back(vpmap[*beg]);
-        vimap[*beg] = idx++;
+        points.push_back(get(vpmap, *beg));
     }
 
+    auto vimap = get(boost::vertex_index, mesh);
     for (auto [fb, fe] = faces(mesh); fb != fe; ++fb) {
         int i = 0;
         for (auto [vb, ve] = vertices_around_face(halfedge(*fb, mesh), mesh);
@@ -212,7 +208,7 @@ std::enable_if_t<!std::is_arithmetic_v<Point_3>, void> extract_mesh(
                 err_str.append("-mesh");
                 throw std::runtime_error(err_str);
             }
-            indices.push_back(vimap[*vb]);
+            indices.push_back(get(vimap, *vb));
         }
     }
 }

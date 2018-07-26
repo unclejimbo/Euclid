@@ -38,8 +38,8 @@ public:
     /** Build AABB for a range of points.
      *
      */
-    template<typename ForwardIterator, typename PPMAP>
-    AABB(ForwardIterator first, ForwardIterator beyond, PPMAP point_pmap);
+    template<typename ForwardIterator, typename VPMap>
+    AABB(ForwardIterator first, ForwardIterator beyond, VPMap vpmap);
 
     /** Return the center of the box.
      *

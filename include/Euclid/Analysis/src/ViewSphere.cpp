@@ -22,7 +22,7 @@ ViewSphere<Mesh> ViewSphere<Mesh>::make_subdiv(const Mesh& mesh,
     std::vector<Sphere> spheres;
     spheres.reserve(num_vertices(mesh));
     for (const auto& v : vertices(mesh)) {
-        spheres.emplace_back(mesh_vpmap[v], 0.0f);
+        spheres.emplace_back(get(mesh_vpmap, v), 0.0f);
     }
     Min_sphere ms(spheres.begin(), spheres.end());
 
@@ -50,7 +50,7 @@ ViewSphere<Mesh> ViewSphere<Mesh>::make_random(const Mesh& mesh,
     std::vector<Sphere> spheres;
     spheres.reserve(num_vertices(mesh));
     for (const auto& v : vertices(mesh)) {
-        spheres.emplace_back(mesh_vpmap[v], 0.0f);
+        spheres.emplace_back(get(mesh_vpmap, v), 0.0f);
     }
     Min_sphere ms(spheres.begin(), spheres.end());
 

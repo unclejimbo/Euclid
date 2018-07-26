@@ -31,14 +31,14 @@ void _to_eigen(const std::vector<Point_3>& points,
     }
 }
 
-template<typename ForwardIterator, typename PPMap, typename FT>
+template<typename ForwardIterator, typename VPMap, typename FT>
 void _to_eigen(ForwardIterator first,
                ForwardIterator beyond,
-               PPMap ppmap,
+               VPMap vpmap,
                std::vector<Eigen::Matrix<FT, 3, 1>>& epoints)
 {
     while (first != beyond) {
-        auto p = ppmap[*first++];
+        auto p = get(vpmap, *first++);
         epoints.emplace_back(p.x(), p.y(), p.z());
     }
 }
@@ -69,13 +69,13 @@ OBB<Kernel>::OBB(const std::vector<Point_3>& points)
 }
 
 template<typename Kernel>
-template<typename ForwardIterator, typename PPMap>
-OBB<Kernel>::OBB(ForwardIterator first, ForwardIterator beyond, PPMap ppmap)
+template<typename ForwardIterator, typename VPMap>
+OBB<Kernel>::OBB(ForwardIterator first, ForwardIterator beyond, VPMap vpmap)
 {
     if (first == beyond) { throw std::invalid_argument("Input is empty"); }
 
     std::vector<EigenVec> epoints;
-    _impl::_to_eigen(first, beyond, ppmap, epoints);
+    _impl::_to_eigen(first, beyond, vpmap, epoints);
     _build_obb(epoints);
 }
 

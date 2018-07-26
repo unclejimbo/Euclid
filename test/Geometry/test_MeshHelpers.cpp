@@ -7,6 +7,7 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/Polyhedron_3.h>
+#include <CGAL/Polyhedron_items_with_id_3.h>
 #include <Euclid/IO/OffIO.h>
 
 #include <config.h>
@@ -55,9 +56,11 @@ TEST_CASE("Geometry, MeshHelpers", "[geometry][meshhelpers]")
 
     SECTION("CGAL::Polyhedron_3 with raw positions")
     {
-        using Mesh = CGAL::Polyhedron_3<Kernel>;
+        using Mesh =
+            CGAL::Polyhedron_3<Kernel, CGAL::Polyhedron_items_with_id_3>;
         Mesh mesh;
         Euclid::make_mesh<3>(mesh, positions, indices);
+        CGAL::set_halfedgeds_items_id(mesh);
         std::vector<double> new_positions;
         std::vector<unsigned> new_indices;
         Euclid::extract_mesh<3>(mesh, new_positions, new_indices);
@@ -68,9 +71,11 @@ TEST_CASE("Geometry, MeshHelpers", "[geometry][meshhelpers]")
 
     SECTION("CGAL::Polyhedron_3 with points")
     {
-        using Mesh = CGAL::Polyhedron_3<Kernel>;
+        using Mesh =
+            CGAL::Polyhedron_3<Kernel, CGAL::Polyhedron_items_with_id_3>;
         Mesh mesh;
         Euclid::make_mesh<3>(mesh, points, indices);
+        CGAL::set_halfedgeds_items_id(mesh);
         std::vector<Point_3> new_points;
         std::vector<unsigned> new_indices;
         Euclid::extract_mesh<3>(mesh, new_points, new_indices);

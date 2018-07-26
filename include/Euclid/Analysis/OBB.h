@@ -41,8 +41,8 @@ public:
     /** Build OBB for a range of points.
      *
      */
-    template<typename ForwardIterator, typename PPMap>
-    OBB(ForwardIterator first, ForwardIterator beyond, PPMap ppmap);
+    template<typename ForwardIterator, typename VPMap>
+    OBB(ForwardIterator first, ForwardIterator beyond, VPMap vpmap);
 
     /** Return the center of the box.
      *

@@ -37,9 +37,9 @@ void vs_view_entropy(const Mesh& mesh,
 
     for (const auto& v : vertices(view_sphere.mesh)) {
         std::vector<uint32_t> findices(size);
-        Eigen::Vector3f view = cgal_to_eigen<float>(vs_vpmap[v]);
-        CGAL::Plane_3<Kernel> tangent_plane(vs_vpmap[v],
-                                            vs_vpmap[v] - view_sphere.center);
+        Eigen::Vector3f view = cgal_to_eigen<float>(get(vs_vpmap, v));
+        CGAL::Plane_3<Kernel> tangent_plane(
+            get(vs_vpmap, v), get(vs_vpmap, v) - view_sphere.center);
         Eigen::Vector3f up = cgal_to_eigen<float>(tangent_plane.base1());
         // this algorithm only works with orthogonal projection
         OrthogonalCamera camera(view, center, up, extent, extent);

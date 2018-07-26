@@ -17,9 +17,7 @@ SpinImage<Mesh>::SpinImage(const Mesh& mesh,
 {
     _mesh = &mesh;
 
-    if (resolution != 0.0) {
-        _resolution = resolution;
-    }
+    if (resolution != 0.0) { _resolution = resolution; }
     else {
         _resolution = 0.0;
         for (const auto& e : edges(mesh)) {
@@ -55,9 +53,7 @@ SpinImage<Mesh>::SpinImage(const Mesh& mesh,
 template<typename Mesh>
 SpinImage<Mesh>::~SpinImage()
 {
-    if (!_is_shared) {
-        delete _vnormals;
-    }
+    if (!_is_shared) { delete _vnormals; }
 }
 
 template<typename Mesh>
@@ -75,8 +71,8 @@ void SpinImage<Mesh>::compute(const Vertex& v,
 
     // Transform the coordinate system so that vi is at origin and the vertex
     // normal points in the y axis, while the x and z axes are arbitrary
-    auto pi = vpmap[v];
-    auto ni = (*_vnormals)[vimap[v]];
+    auto pi = get(vpmap, v);
+    auto ni = (*_vnormals)[get(vimap, v)];
     CGAL::Plane_3<Kernel> plane(pi, ni);
     auto tangent = normalized(plane.base1());
     auto transform =
@@ -85,26 +81,22 @@ void SpinImage<Mesh>::compute(const Vertex& v,
     // Find all vertices that lie in the support and compute the spin image
     spin_img.resize((image_width + 1) * (image_width + 1), 0.0);
     for (const auto& vj : vertices(*_mesh)) {
-        if (ni * (*_vnormals)[vimap[vj]] <=
+        if (ni * (*_vnormals)[get(vimap, vj)] <=
             std::cos(support_angle * boost::math::float_constants::degree)) {
             continue;
         }
 
-        auto pj = transform(vpmap[vj]);
+        auto pj = transform(get(vpmap, vj));
 
         auto alpha = std::sqrt(pj.x() * pj.x() + pj.z() * pj.z()) / bin_width;
         auto col = static_cast<int>(std::floor(alpha));
-        if (col >= image_width) {
-            continue;
-        }
+        if (col >= image_width) { continue; }
         alpha -= col;
 
         auto beta = pj.y() / bin_width;
         auto beta_max = image_width * 0.5f;
         auto row = static_cast<int>(std::floor(beta_max - beta));
-        if (row >= image_width || row < 0) {
-            continue;
-        }
+        if (row >= image_width || row < 0) { continue; }
         beta = beta_max - beta - row;
 
         // Bilinear interpolation

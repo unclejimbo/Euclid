@@ -14,7 +14,7 @@ namespace Euclid
 
 template<typename Mesh>
 typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, CGAL::vertex_point_t>::type>::
+    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
                                  value_type>::Kernel::Vector_3
 vertex_normal(
     const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
@@ -24,7 +24,7 @@ vertex_normal(
     using face_descriptor =
         typename boost::graph_traits<const Mesh>::face_descriptor;
     using VPMap =
-        typename boost::property_map<Mesh, CGAL::vertex_point_t>::type;
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type;
     using Point_3 = typename boost::property_traits<VPMap>::value_type;
     using Vector_3 = typename CGAL::Kernel_traits<Point_3>::Kernel::Vector_3;
     using FNMap = std::unordered_map<face_descriptor, Vector_3>;
@@ -39,8 +39,8 @@ vertex_normal(
         auto v1 = target(he0, mesh);
         auto v2 = target(he1, mesh);
         auto f = face(he0, mesh);
-        auto e0 = vpmap[v1] - vpmap[v0];
-        auto e1 = vpmap[v2] - vpmap[v1];
+        auto e0 = get(vpmap, v1) - get(vpmap, v0);
+        auto e1 = get(vpmap, v2) - get(vpmap, v1);
         auto n = normalized(CGAL::cross_product(e0, e1));
         fnmap.insert({ f, n });
     }
@@ -62,7 +62,7 @@ typename boost::property_traits<FaceNormalMap>::value_type vertex_normal(
     Vector_3 normal(0.0, 0.0, 0.0);
     for (const auto& he : halfedges_around_source(v, mesh)) {
         auto f = face(he, mesh);
-        auto fn = fnmap[f];
+        auto fn = get(fnmap, f);
 
         if (weight == VertexNormal::uniform) { normal += fn; }
         else if (weight == VertexNormal::face_area) {
@@ -74,9 +74,9 @@ typename boost::property_traits<FaceNormalMap>::value_type vertex_normal(
             auto t = target(he, mesh);
             auto s1 = source(he, mesh);
             auto s2 = target(he_next, mesh);
-            auto pt = vpmap[t];
-            auto ps1 = vpmap[s1];
-            auto ps2 = vpmap[s2];
+            auto pt = get(vpmap, t);
+            auto ps1 = get(vpmap, s1);
+            auto ps2 = get(vpmap, s2);
             auto vec1 = normalized(ps1 - pt);
             auto vec2 = normalized(ps2 - pt);
             auto angle = std::acos(vec1 * vec2);
@@ -103,18 +103,18 @@ vertex_area(
     if (method == VertexArea::barycentric) {
         const auto one_third = boost::math::constants::third<FT>();
         for (const auto& he : halfedges_around_target(v, mesh)) {
-            auto p1 = vpmap[source(he, mesh)];
-            auto p2 = vpmap[target(he, mesh)];
-            auto p3 = vpmap[target(next(he, mesh), mesh)];
+            auto p1 = get(vpmap, source(he, mesh));
+            auto p2 = get(vpmap, target(he, mesh));
+            auto p3 = get(vpmap, target(next(he, mesh), mesh));
             va += area(p1, p2, p3);
         }
         va *= one_third;
     }
     else if (method == VertexArea::voronoi) {
         for (auto he : halfedges_around_target(v, mesh)) {
-            auto p1 = vpmap[source(he, mesh)];
-            auto p2 = vpmap[target(he, mesh)];
-            auto p3 = vpmap[target(next(he, mesh), mesh)];
+            auto p1 = get(vpmap, source(he, mesh));
+            auto p2 = get(vpmap, target(he, mesh));
+            auto p3 = get(vpmap, target(next(he, mesh), mesh));
             auto mid1 = CGAL::midpoint(p2, p1);
             auto mid2 = CGAL::midpoint(p2, p3);
             auto center = CGAL::circumcenter(p1, p2, p3);
@@ -131,9 +131,9 @@ vertex_area(
     }
     else { // method == VertexArea::mixed_voronoi
         for (auto he : halfedges_around_target(v, mesh)) {
-            auto p1 = vpmap[source(he, mesh)];
-            auto p2 = vpmap[target(he, mesh)];
-            auto p3 = vpmap[target(next(he, mesh), mesh)];
+            auto p1 = get(vpmap, source(he, mesh));
+            auto p2 = get(vpmap, target(he, mesh));
+            auto p3 = get(vpmap, target(next(he, mesh), mesh));
             if (CGAL::angle(p1, p2, p3) == CGAL::OBTUSE) {
                 va += area(p1, p2, p3) * 0.5;
             }
@@ -187,8 +187,8 @@ edge_length(
     const Mesh& mesh)
 {
     auto vpmap = get(boost::vertex_point, mesh);
-    auto p1 = vpmap[source(he, mesh)];
-    auto p2 = vpmap[target(he, mesh)];
+    auto p1 = get(vpmap, source(he, mesh));
+    auto p2 = get(vpmap, target(he, mesh));
     return length(p2 - p1);
 }
 
@@ -212,8 +212,8 @@ squared_edge_length(
     const Mesh& mesh)
 {
     auto vpmap = get(boost::vertex_point, mesh);
-    auto p1 = vpmap[source(he, mesh)];
-    auto p2 = vpmap[target(he, mesh)];
+    auto p1 = get(vpmap, source(he, mesh));
+    auto p2 = get(vpmap, target(he, mesh));
     return (p1 - p2).squared_length();
 }
 
@@ -241,11 +241,11 @@ face_normal(const typename boost::graph_traits<const Mesh>::face_descriptor& f,
             typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
                                          value_type>::Kernel::Vector_3;
 
-    auto vpmap = get(CGAL::vertex_point, mesh);
+    auto vpmap = get(boost::vertex_point, mesh);
     auto he = halfedge(f, mesh);
-    auto p1 = vpmap[source(he, mesh)];
-    auto p2 = vpmap[target(he, mesh)];
-    auto p3 = vpmap[target(next(he, mesh), mesh)];
+    auto p1 = get(vpmap, source(he, mesh));
+    auto p2 = get(vpmap, target(he, mesh));
+    auto p3 = get(vpmap, target(next(he, mesh), mesh));
 
     Vector_3 result;
     if (CGAL::collinear(p1, p2, p3)) {
@@ -267,9 +267,9 @@ face_area(const typename boost::graph_traits<const Mesh>::face_descriptor& f,
 {
     auto vpmap = get(boost::vertex_point, mesh);
     auto he = halfedge(f, mesh);
-    auto p1 = vpmap[source(he, mesh)];
-    auto p2 = vpmap[target(he, mesh)];
-    auto p3 = vpmap[target(next(he, mesh), mesh)];
+    auto p1 = get(vpmap, source(he, mesh));
+    auto p2 = get(vpmap, target(he, mesh));
+    auto p3 = get(vpmap, target(next(he, mesh), mesh));
     return area(p1, p2, p3);
 }
 
@@ -287,13 +287,8 @@ laplacian_matrix(const Mesh& mesh, const Laplacian& method)
         typename boost::graph_traits<Mesh>::vertex_descriptor;
     using Triplet = Eigen::Triplet<T>;
     auto vpmap = get(boost::vertex_point, mesh);
+    auto vimap = get(boost::vertex_index, mesh);
     const auto nv = num_vertices(mesh);
-
-    std::unordered_map<vertex_descriptor, int> vimap;
-    int cnt = 0;
-    for (const auto& v : vertices(mesh)) {
-        vimap.insert({ v, cnt++ });
-    }
 
     auto hash_fcn = [](const Triplet& t) {
         size_t seed = 0;
@@ -308,11 +303,11 @@ laplacian_matrix(const Mesh& mesh, const Laplacian& method)
         nv, hash_fcn, eq_fcn);
 
     for (const auto& vi : vertices(mesh)) {
-        int i = vimap[vi];
+        int i = get(vimap, vi);
         T row_sum = 0.0;
         for (const auto& he : halfedges_around_target(vi, mesh)) {
             auto vj = source(he, mesh);
-            int j = vimap[vj];
+            int j = get(vimap, vj);
             if (method == Laplacian::uniform) {
                 values.emplace(i, j, static_cast<T>(1));
                 row_sum += 1.0;
@@ -326,8 +321,10 @@ laplacian_matrix(const Mesh& mesh, const Laplacian& method)
                 else {
                     auto va = target(next(he, mesh), mesh);
                     auto vb = target(next(opposite(he, mesh), mesh), mesh);
-                    auto cota = cotangent(vpmap[vi], vpmap[va], vpmap[vj]);
-                    auto cotb = cotangent(vpmap[vi], vpmap[vb], vpmap[vj]);
+                    auto cota = cotangent(
+                        get(vpmap, vi), get(vpmap, va), get(vpmap, vj));
+                    auto cotb = cotangent(
+                        get(vpmap, vi), get(vpmap, vb), get(vpmap, vj));
                     auto value = static_cast<T>((cota + cotb) * 0.5);
                     values.emplace(i, j, value);
                     row_sum += value;
@@ -360,7 +357,8 @@ gaussian_curvature(
     for (const auto& he : halfedges_around_target(v, mesh)) {
         auto vp = source(he, mesh);
         auto vq = target(next(he, mesh), mesh);
-        angle_defect -= std::acos(cosine(vpmap[vp], vpmap[v], vpmap[vq]));
+        angle_defect -=
+            std::acos(cosine(get(vpmap, vp), get(vpmap, v), get(vpmap, vq)));
     }
     return angle_defect / vertex_area(v, mesh);
 }

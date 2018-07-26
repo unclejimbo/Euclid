@@ -85,7 +85,7 @@ bool GeodesicsInHeat<Mesh>::compute(
 
     // Solve the heat equation
     Mat delta = Mat::Zero(num_vertices(*_mesh));
-    delta(vimap[v], 0) = 1.0f;
+    delta(get(vimap, v), 0) = 1.0f;
     Mat heat = _heat_solver.solve(delta);
     if (_heat_solver.info() != Eigen::Success) {
         std::cerr << "Unable to solve the heat flow" << std::endl;
@@ -102,13 +102,13 @@ bool GeodesicsInHeat<Mesh>::compute(
         auto v0 = source(he, *_mesh);
         auto v1 = target(he, *_mesh);
         auto v2 = target(next(he, *_mesh), *_mesh);
-        auto e0 = vpmap[v2] - vpmap[v1];
-        auto e1 = vpmap[v0] - vpmap[v2];
-        auto e2 = vpmap[v1] - vpmap[v0];
+        auto e0 = get(vpmap, v2) - get(vpmap, v1);
+        auto e1 = get(vpmap, v0) - get(vpmap, v2);
+        auto e2 = get(vpmap, v1) - get(vpmap, v0);
         auto g = half / fa *
-                 (heat[vimap[v0]] * CGAL::cross_product(fn, e0) +
-                  heat[vimap[v1]] * CGAL::cross_product(fn, e1) +
-                  heat[vimap[v2]] * CGAL::cross_product(fn, e2));
+                 (heat[get(vimap, v0)] * CGAL::cross_product(fn, e0) +
+                  heat[get(vimap, v1)] * CGAL::cross_product(fn, e1) +
+                  heat[get(vimap, v2)] * CGAL::cross_product(fn, e2));
         gradients[fidx++] = -normalized(g);
     }
 
@@ -116,18 +116,18 @@ bool GeodesicsInHeat<Mesh>::compute(
     Mat divs(num_vertices(*_mesh));
     for (const auto& v : vertices(*_mesh)) {
         FT divergence = zero;
-        auto p = vpmap[v];
+        auto p = get(vpmap, v);
         for (const auto& he : halfedges_around_target(v, *_mesh)) {
             auto f = face(he, *_mesh);
-            auto g = gradients[fimap[f]];
+            auto g = gradients[get(fimap, f)];
             auto vi = source(he, *_mesh);
             auto vj = target(next(he, *_mesh), *_mesh);
-            auto pi = vpmap[vi];
-            auto pj = vpmap[vj];
+            auto pi = get(vpmap, vi);
+            auto pj = get(vpmap, vj);
             divergence += cotangent(p, pi, pj) * ((pj - p) * g) +
                           cotangent(p, pj, pi) * ((pi - p) * g);
         }
-        divs(vimap[v], 0) = divergence * half;
+        divs(get(vimap, v), 0) = divergence * half;
     }
 
     // Solve the poisson equation
@@ -139,7 +139,7 @@ bool GeodesicsInHeat<Mesh>::compute(
 
     geodesics.resize(num_vertices(*_mesh));
     for (size_t i = 0; i < num_vertices(*_mesh); ++i) {
-        geodesics[i] = static_cast<T>(geod(i, 0) - geod(vimap[v], 0));
+        geodesics[i] = static_cast<T>(geod(i, 0) - geod(get(vimap, v), 0));
         EASSERT(geodesics[i] >= 0.0);
     }
     return true;

@@ -97,7 +97,7 @@ void HKS<Mesh>::compute(const Vertex& v,
         for (size_t j = 1; j < this->k; ++j) {
             auto eig = this->eigenvalues(j);
             auto e = std::exp(-eig * t);
-            auto phi = this->eigenfunctions(vimap[v], j);
+            auto phi = this->eigenfunctions(get(vimap, v), j);
             denom += e;
             hks_t += e * phi * phi;
         }

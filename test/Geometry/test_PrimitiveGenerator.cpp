@@ -5,7 +5,6 @@
 
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
-#include <CGAL/Polyhedron_3.h>
 #include <Euclid/Geometry/MeshHelpers.h>
 #include <Euclid/IO/OffIO.h>
 

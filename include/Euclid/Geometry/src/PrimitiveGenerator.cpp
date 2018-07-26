@@ -19,11 +19,12 @@ void make_subdivision_sphere(
     // Transform the sphere after subdivision
     auto vpmap = get(boost::vertex_point, mesh);
     for (const auto& v : vertices(mesh)) {
-        auto len = length(vpmap[v] - CGAL::ORIGIN);
-        auto x = vpmap[v].x() * radius / len + center.x();
-        auto y = vpmap[v].y() * radius / len + center.y();
-        auto z = vpmap[v].z() * radius / len + center.z();
-        vpmap[v] = Point_3(x, y, z);
+        auto p = get(vpmap, v);
+        auto len = length(p - CGAL::ORIGIN);
+        auto x = p.x() * radius / len + center.x();
+        auto y = p.y() * radius / len + center.y();
+        auto z = p.z() * radius / len + center.z();
+        put(vpmap, v, Point_3(x, y, z));
     }
 }
 
