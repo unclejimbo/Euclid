@@ -15,7 +15,6 @@ find_package(Boost)
 find_package(Eigen3)
 find_package(Spectra)
 find_package(Libigl)
-find_package(OpenCV COMPONENTS core imgproc)
 find_package(Embree 3.0)
 find_package(CGAL)
 
@@ -44,7 +43,6 @@ target_compile_features(Euclid INTERFACE cxx_std_17)
 target_include_directories(Euclid INTERFACE
     ${Spectra_INCLUDE_DIR}
     ${Libigl_INCLUDE_DIR}
-    ${OpenCV_INCLUDE_DIRS}
     ${EMBREE_INCLUDE_DIRS}
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
@@ -54,7 +52,6 @@ target_link_libraries(Euclid INTERFACE
     Boost::boost
     Eigen3::Eigen
     CGAL::CGAL
-    ${OpenCV_LIBS}
     ${EMBREE_LIBRARIES}
     $<$<AND:$<BOOL:${USE_BLAS}>,$<BOOL:${BLAS_FOUND}>>:${BLAS_LIBRARIES}>
     $<$<AND:$<BOOL:${USE_LAPACK}>,$<BOOL:${LAPACK_FOUND}>>:${LAPACK_LIBRARIES}>
@@ -73,7 +70,6 @@ install(TARGETS Euclid
     INCLUDES DESTINATION
         ${Spectra_INCLUDE_DIR}
         ${Libigl_INCLUDE_DIR}
-        ${OpenCV_INCLUDE_DIRS}
         ${EMBREE_INCLUDE_DIRS}
 )
 

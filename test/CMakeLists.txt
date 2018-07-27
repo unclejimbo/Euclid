@@ -8,7 +8,6 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_MeshHelpers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_PrimitiveGenerator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_TriMeshGeometry.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ImgProc/test_Histogram.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IO/test_ObjIO.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IO/test_OffIO.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IO/test_PlyIO.cpp
@@ -31,7 +30,6 @@ configure_file(
 find_package(Boost REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Libigl REQUIRED)
-find_package(OpenCV REQUIRED core imgproc)
 find_package(Embree 3.0 REQUIRED)
 find_package(CGAL REQUIRED)
 

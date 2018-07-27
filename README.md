@@ -2,7 +2,7 @@
 
 Euclid is a header only library for geometry processing and shape analysis.
 
-It contains some utilities and algorithms which extend and cooperate with other popular libraries around there, like Eigen(libigl), CGAL, OpenCV, to name a few.
+It contains some utilities and algorithms which extend and cooperate with other popular libraries around there, like Eigen(libigl), CGAL, to name a few.
 
 The purpose of Euclid is not to replace any of the above packages, but to glue things together as well as to provide more algorithms which do not appear in those libraries.
 
@@ -12,6 +12,8 @@ The purpose of Euclid is not to replace any of the above packages, but to glue t
 
 - Common operations in linear algebra, matrix analysis, etc.
 - Robust floating point comparisons.
+- Affine transformation.
+- Distance computation between probability distributions.
 
 ## IO
 
@@ -36,10 +38,6 @@ The purpose of Euclid is not to replace any of the above packages, but to glue t
 
 - Fast cpu ray tracing.
 
-## ImgProc
-
-- Histogram processing.
-
 # Dependencies
 
 Some simple third-party libraries has already been included along the distribution of Euclid.
@@ -50,7 +48,6 @@ However, you'll need the following libraries when you use headers in Euclid that
 - [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) for matrix manipulation as well as solving linear systems.
 - [Spectra](https://spectralib.org/) for solving large scale eigen value problems.
 - [Libigl](http://libigl.github.io/libigl/) yet another simple but powerful geometry processing library in C++.
-- [OpenCV](http://opencv.org) for algorithms which require operating on images.
 - [Embree](http://embree.github.io) for fast cpu ray tracing.
 - [Doxygen](http://www.stack.nl/~dimitri/doxygen/) for generating documentations.
 - BLAS, LAPACK, and OpenMP for better performance.

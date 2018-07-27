@@ -10,7 +10,6 @@ find_dependency(Boost)
 find_dependency(Eigen3)
 find_dependency(Spectra)
 find_dependency(Libigl)
-find_dependency(OpenCV COMPONENTS core imgproc)
 find_dependency(Embree 3.0)
 find_dependency(CGAL)
 
