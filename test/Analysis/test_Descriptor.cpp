@@ -1,15 +1,13 @@
 #include <Euclid/Analysis/Descriptor.h>
 #include <catch.hpp>
 
+#include <vector>
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
 #include <Euclid/Geometry/MeshHelpers.h>
 #include <Euclid/IO/PlyIO.h>
-#include <algorithm>
-#include <boost/property_map/property_map.hpp>
-#include <cmath>
+#include <Euclid/Math/Distance.h>
 #include <stb_image_write.h>
-#include <vector>
 
 #include <config.h>
 
@@ -17,11 +15,6 @@ using Kernel = CGAL::Simple_cartesian<double>;
 using Vector_3 = Kernel::Vector_3;
 using Mesh = CGAL::Surface_mesh<Kernel::Point_3>;
 using Vertex = Mesh::Vertex_index;
-
-inline double l2_distance(const Eigen::ArrayXd& d1, const Eigen::ArrayXd& d2)
-{
-    return std::sqrt((d1 - d2).square().sum());
-}
 
 TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
 {
@@ -63,9 +56,9 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
         Eigen::ArrayXd si4;
         si.compute(v4, si4, 1.0f, width, 60.0f);
 
-        auto d12 = l2_distance(si1, si2);
-        auto d13 = l2_distance(si1, si3);
-        auto d14 = l2_distance(si1, si4);
+        auto d12 = Euclid::l2(si1, si2);
+        auto d13 = Euclid::l2(si1, si3);
+        auto d14 = Euclid::l2(si1, si4);
         REQUIRE(d12 < d13);
         REQUIRE(d13 < d14);
 
@@ -138,9 +131,9 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
         Eigen::ArrayXd hks4;
         hks.compute(v4, hks4);
 
-        auto d12 = l2_distance(hks1, hks2);
-        auto d13 = l2_distance(hks1, hks3);
-        auto d14 = l2_distance(hks1, hks4);
+        auto d12 = Euclid::l2(hks1, hks2);
+        auto d13 = Euclid::l2(hks1, hks3);
+        auto d14 = Euclid::l2(hks1, hks4);
         REQUIRE(d12 < d13);
         REQUIRE(d13 < d14);
     }
