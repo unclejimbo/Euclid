@@ -4,6 +4,7 @@
 build/
 x64/
 test/tmp/
+docs/html
 
 # files
 CMakeSettings.json
