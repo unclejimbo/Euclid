@@ -1,4 +1,9 @@
-# Introduction
+# Welcome to Euclid
+
+- [GitHub repo](https://github.com/unclejimbo/Euclid)
+- [Online documentation](https://codedocs.xyz/unclejimbo/Euclid/index.html)
+
+## Introduction
 
 Euclid is a header only library for geometry processing and shape analysis.
 
@@ -6,41 +11,41 @@ It contains some utilities and algorithms which extend and cooperate with other 
 
 The purpose of Euclid is not to replace any of the above packages, but to glue things together as well as to provide more algorithms which do not appear in those libraries.
 
-# Modules Overview
+## Modules Overview
 
-## Math
+### Math
 
 - Common operations in linear algebra, matrix analysis, etc.
 - Robust floating point comparisons.
 - Affine transformation.
 - Distance computation between probability distributions.
 
-## IO
+### IO
 
 - Mesh I/O, currently supporting .ply, .obj and .off file format.
 - Mesh fixers, fixing degeneracies in input meshes.
 
-## Geometry
+### Geometry
 
 - Convert raw mesh arrays read from the IO package into mesh data structures in CGAL and libigl and vice versa.
 - Generate common mesh primitives.
 - Discrete differential and geometric properties.
 - Geodesic distance.
 
-## Analysis
+### Analysis
 
 - Shape bounding boxes.
 - Geometric shape segmentation.
 - Shape descriptors.
 - View selection.
 
-## Render
+### Render
 
 - Fast cpu ray tracing.
 
-# Dependencies
+## Dependencies
 
-Some simple third-party libraries has already been included along the distribution of Euclid.
+Some simple third-party libraries has already been shipped with Euclid.
 However, you'll need the following libraries when you use headers in Euclid that work with them, including
 
 - [Boost](https://www.boost.org/).
@@ -54,11 +59,11 @@ However, you'll need the following libraries when you use headers in Euclid that
 
 Different packages in Euclid may require a different set of dependencies, and some packages may not require any of the above libraries. Also, Euclid uses features in the C++17 standard, so you'll need a C++17 enabled compiler.
 
-# Installation
+## Installation
 
 Since it's a header only library, simply include the needed headers. Although be sure to configure dependencies properly, as some of them are not header only.
 
-If you want to use Euclid with CMake in your own projects, try configure the CMakeLists.txt in Euclid first. It will output an EuclidConfig.cmake file in the build tree for you to use. You can set the variable `Euclid_DIR` to the path containing this file and then in your own CMakeLists.txt you can do
+If you want to use Euclid with CMake in your own projects, try configure Euclid using cmake first. It will output an EuclidConfig.cmake file in the build tree for you to use. You can set the variable `Euclid_DIR` to the path containing this file and then in your own CMakeLists.txt you can do
 
 ```cmake
 find_package(Euclid)
@@ -67,7 +72,7 @@ target_link_libraries(your-target Euclid::Euclid)
 
 and all dependencies and compile options will be handled transitively by CMake.
 
-# Getting Started
+## Getting Started
 
 Here's an example which reads a mesh file, converts it to a CGAL::Surface_mesh data structure, computes its discrete gaussian curvatures and ouput the values into mesh colors.
 
@@ -122,13 +127,13 @@ int main()
 
 And here's the result rendered using MeshLab.
 
-![](./resource/bumpy_gaussian.png)
+![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/resource/bumpy_gaussian.png)
 
-# Examples
+## Examples
 
-Currently there's no tutorial-like examples. However, you could check the test cases to see the usage of most functions.
+Currently there's no tutorial-like examples. However, you could check the [test cases](https://github.com/unclejimbo/Euclid/tree/dev/test) to see the usage of most functions and classes.
 
-# License
+## License
 
 MIT for code not related to any third-party libraries.
 

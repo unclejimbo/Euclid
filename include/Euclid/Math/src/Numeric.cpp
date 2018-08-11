@@ -7,7 +7,7 @@ namespace Euclid
 namespace _impl
 {
 
-#include "AlmostEquals.h"
+#include "../3rdparty/AlmostEquals.h"
 
 } // namespace _impl
 
@@ -65,4 +65,4 @@ inline bool greater_safe(T a, T b, T epsilon)
                epsilon;
 }
 
-} // Euclid
+} // namespace Euclid

@@ -6,10 +6,6 @@
  *  @defgroup PkgGeometry Geometry
  */
 
-/** Image Processing.
- *  @defgroup PkgImgProc ImgProc
- */
-
 /** File I/O.
  *  @defgroup PkgIO I/O
  */
