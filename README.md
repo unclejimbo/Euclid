@@ -1,7 +1,7 @@
 # Welcome to Euclid
 
 - [GitHub repo](https://github.com/unclejimbo/Euclid)
-- [Online documentation](https://codedocs.xyz/unclejimbo/Euclid/index.html)
+- [Latest documentation](https://codedocs.xyz/unclejimbo/Euclid/index.html)
 
 ## Introduction
 
@@ -61,16 +61,26 @@ Different packages in Euclid may require a different set of dependencies, and so
 
 ## Installation
 
-Since it's a header only library, simply include the needed headers. Although be sure to configure dependencies properly, as some of them are not header only.
+Since it's a header only library, the simpliest way to use Euclid is to include the needed headers. Although be sure to configure other dependencies properly, as some of them are not header only.
 
-If you want to use Euclid with CMake in your own projects, try configure Euclid using cmake first. It will output an EuclidConfig.cmake file in the build tree for you to use. You can set the variable `Euclid_DIR` to the path containing this file and then in your own CMakeLists.txt you can do
+If you are using CMake, there are two ways to go:
+
+First you could use the [find script](https://github.com/unclejimbo/Euclid/blob/dev/cmake/Modules/FindEuclid.cmake) shipped with Euclid and configure other dependencies manually like below. This is preferable if you only need parts of the headers and do not wish to configure all the dependencies.
+
+```cmake
+find_package(Euclid)
+target_include_directories(your-target Euclid_INCLUDE_DIR)
+// other dependencies, e.g. Eigen
+```
+
+Otherwise, you could configure Euclid using CMake first. It will output an EuclidConfig.cmake file in the build tree for you to use. You can set the variable `Euclid_DIR` to the path containing this file and then in your own CMakeLists.txt you could do
 
 ```cmake
 find_package(Euclid)
 target_link_libraries(your-target Euclid::Euclid)
 ```
 
-and all dependencies and compile options will be handled transitively by CMake.
+and all the dependencies and compile options will be handled transitively by CMake.
 
 ## Getting Started
 
