@@ -3,7 +3,8 @@
  *  This package provides functions for more robust floating point comparisons
  *  than using operator ==, !=, <, > directly.
  *
- *  #### Warnings
+ *  **Warnings**
+ *
  *  Choose epsilon according to your value range, otherwise you'll get undesired
  *  outcomes.
  *
@@ -89,10 +90,6 @@ bool eq_ulp(T a, T b, std::size_t max_ulps = 4);
  *
  *  Returns true even if a is greater than b by a small margin, due to numeric
  *  error bounded by epsilon.
- *
- *  @param a
- *  @param b
- *  @param epsilon
  */
 template<typename T,
          typename = std::enable_if_t<std::is_floating_point<T>::value>>
@@ -102,11 +99,6 @@ bool less_safe(T a, T b, T epsilon = std::numeric_limits<T>::epsilon());
  *
  *  Returns true even if a is less than b by a small margin, due to numeric
  *  error bounded by epsilon.
- *
- *  @param a
- *  @param b
- *  @param epsilon
- *
  */
 template<typename T,
          typename = std::enable_if_t<std::is_floating_point<T>::value>>

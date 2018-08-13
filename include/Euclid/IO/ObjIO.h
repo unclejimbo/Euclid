@@ -21,7 +21,8 @@ namespace Euclid
 
 /** Read Obj file.
  *
- *  #### Note
+ *  **Note**
+ *
  *  Note that the obj file format is primarily designed for rendering and the
  *  vertex properties may not refer to true geometric quantities. For example,
  *  the vertex of a cube may have one position but three normals corresponding
@@ -35,7 +36,8 @@ void read_obj(const std::string& filename,
 
 /** Read Obj file.
  *
- *  #### Note
+ *  **Note**
+ *
  *  Note that the obj file format is primarily designed for rendering and the
  *  vertex properties may not refer to true geometric quantities. For example,
  *  the vertex of a cube may have one position but three normals corresponding

@@ -35,7 +35,9 @@ struct Film
 class Camera
 {
 public:
-    /** Create a Camera with default paramters.*/
+    /** Create a Camera with default paramters.
+     *
+     */
     Camera() = default;
 
     /** Create a Camera.
@@ -52,7 +54,9 @@ public:
 
     virtual ~Camera() = default;
 
-    /** Position the camera according to the parameteres.*/
+    /** Position the camera according to the parameteres.
+     *
+     */
     void lookat(const Eigen::Vector3f& position,
                 const Eigen::Vector3f& focus,
                 const Eigen::Vector3f& up);
@@ -75,19 +79,29 @@ public:
         float far = std::numeric_limits<float>::max()) const = 0;
 
 public:
-    /** Camera position.*/
+    /** Camera position.
+     *
+     */
     Eigen::Vector3f pos{ 0.0f, 0.0f, 0.0f };
 
-    /** U direction.*/
+    /** U direction.
+     *
+     */
     Eigen::Vector3f u{ 1.0f, 0.0f, 0.0f };
 
-    /** V direction.*/
+    /** V direction.
+     *
+     */
     Eigen::Vector3f v{ 0.0f, 1.0f, 0.0f };
 
-    /** Negative view direction.*/
+    /** Negative view direction.
+     *
+     */
     Eigen::Vector3f dir{ 0.0f, 0.0f, 1.0f };
 
-    /** Film plane.*/
+    /** Film plane.
+     *
+     */
     Film film{ 256, 256 };
 };
 
@@ -99,7 +113,9 @@ public:
 class PerspectiveCamera : public Camera
 {
 public:
-    /** Create a PerspectiveCamera using default parameters.*/
+    /** Create a PerspectiveCamera using default parameters.
+     *
+     */
     PerspectiveCamera() : Camera(){};
 
     /** Create a PerspectiveCamera.
@@ -144,13 +160,19 @@ public:
                       unsigned width = 256,
                       unsigned height = 256);
 
-    /** Set aspect ratio.*/
+    /** Set aspect ratio.
+     *
+     */
     void set_aspect(float aspect);
 
-    /** Set aspect ratio.*/
+    /** Set aspect ratio.
+     *
+     */
     void set_aspect(unsigned width, unsigned height);
 
-    /** Set vertical fov in degrees.*/
+    /** Set vertical fov in degrees.
+     *
+     */
     void set_fov(float vfov);
 
     /** Generate an embree rayhit structure.
@@ -173,7 +195,9 @@ public:
 class OrthogonalCamera : public Camera
 {
 public:
-    /** Create an OrthogonalCamera using default parameters.*/
+    /** Create an OrthogonalCamera using default parameters.
+     *
+     */
     OrthogonalCamera() : Camera() {}
 
     /** Create an OrthogonalCamera.
@@ -195,7 +219,9 @@ public:
                      float xextent = 256.0f,
                      float yextent = 256.0f);
 
-    /** Set the extent of the film plane.*/
+    /** Set the extent of the film plane.
+     *
+     */
     void set_extent(float width, float height);
 
     /** Generate an embree rayhit structure.
@@ -247,7 +273,8 @@ public:
      *  @param type The geometry's type, be either RTC_GEOMETRY_TYPE_TRIANGLE or
      *  RTC_GEOMETRY_TYPE_QUAD.
      *
-     *  #### Note
+     *  **Note**
+     *
      *  This class can only render one mesh at a time. Attach geometry once
      *  again will automatically release the previously attached geometry.
      */
@@ -277,19 +304,29 @@ public:
      */
     void attach_face_mask_buffer(const uint8_t* mask);
 
-    /** Release all associated buffers.*/
+    /** Release all associated buffers.
+     *
+     */
     void release_buffers();
 
-    /** Change the material of the model.*/
+    /** Change the material of the model.
+     *
+     */
     void set_material(const Material& material);
 
-    /** Change the color of background.*/
+    /** Change the color of background.
+     *
+     */
     void set_background(const Eigen::Array3f& color);
 
-    /** Change the color of background.*/
+    /** Change the color of background.
+     *
+     */
     void set_background(float r, float g, float b);
 
-    /** Enable or diable lighting.*/
+    /** Enable or diable lighting.
+     *
+     */
     void enable_light(bool on);
 
     /** Render the mesh into a shaded image.

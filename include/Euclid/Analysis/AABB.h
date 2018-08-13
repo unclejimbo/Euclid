@@ -93,10 +93,9 @@ public:
 
     /** Return the corner point of the box.
      *
-     *  The accepted values for X, Y, Z are 0 and 1. 0 for the smaller value
-     *  in that axis, and 1 for the larger one. So, e.g.,
-     *  AABB<K>::point<0, 0, 0>() returns the left-bottom-back corner of the
-     *  box.
+     *  @param xlarge Set to true for the larger x-corner, to false otherwise.
+     *  @param ylarge Set to true for the larger y-corner, to false otherwise.
+     *  @param zlarge Set to true for the larger z-corner, to false otherwise.
      */
     Point_3 point(bool xlarge, bool ylarge, bool zlarge) const;
 

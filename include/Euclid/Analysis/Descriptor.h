@@ -89,13 +89,19 @@ public:
                  float support_angle = 60.0f);
 
 public:
-    /** The mesh being processed. */
+    /** The mesh being processed.
+     *
+     */
     const Mesh* mesh = nullptr;
 
-    /** The vertex normals. */
+    /** The vertex normals.
+     *
+     */
     const std::vector<Vector_3>* vnormals = nullptr;
 
-    /** The mesh resolution. */
+    /** The mesh resolution.
+     *
+     */
     FT resolution = 0.0;
 
 private:
@@ -140,6 +146,7 @@ public:
      *  number of eigenstructures might be smaller than what is requested in the
      *  because of numerical issues and some may not converge.
      *
+     *  @param mesh The target mesh.
      *  @param k Number of eigenvalues/eigenvectors to use.
      */
     void build(const Mesh& mesh, unsigned k = 300);
@@ -148,6 +155,7 @@ public:
      *
      *  From precomputed eigen decomposition.
      *
+     *  @param mesh The target mesh.
      *  @param eigenvalues Precomputed eigenvalues.
      *  @param eigenfunctions Precomputed eigenfunctions.
      */
@@ -188,13 +196,19 @@ public:
                  float tmax = -1.0f);
 
 public:
-    /** The mesh being processed. */
+    /** The mesh being processed.
+     *
+     */
     const Mesh* mesh;
 
-    /** The eigenvalues. */
+    /** The eigenvalues.
+     *
+     */
     const Vec* eigenvalues;
 
-    /** The eigenfunctions. */
+    /** The eigenfunctions.
+     *
+     */
     const Mat* eigenfunctions;
 
 private:

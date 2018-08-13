@@ -27,7 +27,7 @@ T l2(const Eigen::ArrayBase<Derived>& d1, const Eigen::ArrayBase<Derived>& d2);
 
 /** Chi-squared distance.
  *
- *  \f$D(d_1, d_2) = 2\sum_i \frac{(d1(i) - d2(i))^2}{(d1(i) + d2(i))}\f$
+ *  @f$D(d_1, d_2) = 2\sum_i \frac{(d1(i) - d2(i))^2}{(d1(i) + d2(i))}@f$
  */
 template<typename Derived, typename T = typename Derived::Scalar>
 T chi2(const Eigen::ArrayBase<Derived>& d1,
@@ -35,7 +35,7 @@ T chi2(const Eigen::ArrayBase<Derived>& d1,
 
 /** Asymmetric chi-squared distance.
  *
- *  \f$D(d_1, d_2) = \sum_i \frac{(d1(i) - d2(i))^2}{d1(i)}\f$
+ *  @f$D(d_1, d_2) = \sum_i \frac{(d1(i) - d2(i))^2}{d1(i)}@f$
  */
 template<typename Derived, typename T = typename Derived::Scalar>
 T chi2_asym(const Eigen::ArrayBase<Derived>& d1,

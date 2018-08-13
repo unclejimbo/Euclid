@@ -15,7 +15,7 @@ namespace Euclid
 {
 /** @{*/
 
-/** Object Oriented Bounding Box.
+/** Object oriented bounding box.
  *
  *  This class uses right-handed coordinate system.
  */

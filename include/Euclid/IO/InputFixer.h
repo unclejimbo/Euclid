@@ -19,7 +19,8 @@ namespace Euclid
  *  @param positions A vector of point positions.
  *  @return Number of duplicate vertices.
  *
- *  #### Note
+ *  **Note**
+ *
  *  If you want to remove duplicate vertices of a mesh,
  *  use the other overload to fix indices.
  */
@@ -34,7 +35,7 @@ size_t remove_duplicate_vertices(std::vector<T>& positions);
  */
 template<int N, typename T1, typename T2>
 size_t remove_duplicate_vertices(std::vector<T1>& positions,
-                              std::vector<T2>& indices);
+                                 std::vector<T2>& indices);
 
 /** Remove duplicate faces of a mesh.
  *
@@ -52,7 +53,7 @@ size_t remove_duplicate_faces(std::vector<T>& indices);
  */
 template<int N, typename T1, typename T2>
 size_t remove_unreferenced_vertices(std::vector<T1>& positions,
-                                 std::vector<T2>& indices);
+                                    std::vector<T2>& indices);
 
 /** Remove degenerate faces of a mesh.
  *
@@ -64,7 +65,7 @@ size_t remove_unreferenced_vertices(std::vector<T1>& positions,
  */
 template<int N, typename T1, typename T2>
 size_t remove_degenerate_faces(const std::vector<T1>& positions,
-                            std::vector<T2>& indices);
+                               std::vector<T2>& indices);
 
 /** @}*/
 } // namespace Euclid

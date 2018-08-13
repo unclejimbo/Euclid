@@ -240,10 +240,10 @@ enum class Laplacian
  *  matrix with the mass matrix, which serves as a local average. Now suppose we
  *  use $L$ for the Laplacian matrix, and $M$ for the mass matrix.
  *
- *  - $L$ alone is symmetric but not invariant under meshing.
- *  - $M^{-1}L$ is robust to meshing quality but breaks the symmetric
+ *  - @f$L@f$ alone is symmetric but not invariant under meshing.
+ *  - @f$M^{-1}L@f$ is robust to meshing quality but breaks the symmetric
  *  property.
- *  - $M^{-1/2}LM^{-1/2}$ is both symmetric and robust.
+ *  - @f$M^{-1/2}LM^{-1/2}@f$ is both symmetric and robust.
  *
  *  @sa Laplacian, mass_matrix()
  */

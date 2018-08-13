@@ -1,7 +1,8 @@
 /** Ply I/O.
  *
  *  Ply file are assumed to consist of geomety elements, e.g. vertex and face.
- *  And element has one or more properties, e.g. a vertex has x, y, z positions.
+ *  And each element has one or more properties, e.g. a vertex has x, y, z
+ *  positions.
  *  @defgroup PkgPlyIO Ply I/O
  *  @ingroup PkgIO
  */

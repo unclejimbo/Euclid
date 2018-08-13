@@ -62,9 +62,25 @@ public:
                                         int samples = 1000);
 
 public:
+    /** The mesh data structure of the sphere.
+     *
+     */
     Mesh mesh;
+
+    /** The center of the sphere.
+     *
+     */
     Point_3 center;
+
+    /** Radius of the sphere.
+     *
+     */
     FT radius;
+
+    /** The scale of the view sphere's radius relative to the minimum bounding
+     *  sphere of the target mesh.
+     *
+     */
     FT scale;
 };
 
@@ -100,7 +116,8 @@ void vs_view_entropy(const Mesh& mesh,
  *  @param weight The weighting of the projected area term, (1 - weight) is the
  *  weighting for the visible ratio term.
  *
- *  #### Reference
+ *  **Reference**
+ *
  *  Gao T, Wang W, Han H.
  *  Efficient view selection by measuring proxy information[J].
  *  Computer Animation and Virtual Worlds, 2016, 27(3-4): 351-357.
