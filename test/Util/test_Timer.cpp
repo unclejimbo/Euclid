@@ -1,5 +1,6 @@
 #include <catch.hpp>
 #include <Euclid/Util/Timer.h>
+#include <Euclid/Math/Numeric.h>
 
 #ifdef _MSC_VER
 #include <Windows.h>
@@ -24,17 +25,21 @@ TEST_CASE("Util, TImer", "[util][timer]")
 
     timer.tick();
     sleep_one_ms();
-    REQUIRE(timer.tock() >= 0.0001);
+    auto t1 = timer.tock();
+    REQUIRE(t1 == Approx(0.001).margin(0.001));
 
     timer.tick();
     sleep_one_ms();
-    REQUIRE(timer.tock<int>() == 0);
+    auto t2 = timer.tock<int>();
+    REQUIRE(t2 == 0);
 
     timer.tick();
     sleep_one_ms();
-    REQUIRE(timer.tock<double, std::milli>() >= 1);
+    auto t3 = timer.tock<double, std::milli>();
+    REQUIRE(t3 == Approx(1.0).margin(1.0));
 
     timer.tick();
     sleep_one_ms();
-    REQUIRE(timer.tock<int, std::milli>() == 1);
+    auto t4 = timer.tock<int, std::milli>();
+    REQUIRE(t4 == Approx(1).margin(1));
 }
