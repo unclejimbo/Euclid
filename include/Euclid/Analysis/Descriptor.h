@@ -99,7 +99,6 @@ public:
         typename boost::property_map<Mesh, boost::vertex_point_t>::type;
     using Point_3 = typename boost::property_traits<VPMap>::value_type;
     using Kernel = typename CGAL::Kernel_traits<Point_3>::Kernel;
-    using Vector_3 = typename Kernel::Vector_3;
     using FT = typename Kernel::FT;
     using Vertex = typename boost::graph_traits<Mesh>::vertex_descriptor;
     using Vec = Eigen::Matrix<FT, Eigen::Dynamic, 1>;
@@ -108,12 +107,35 @@ public:
 public:
     /** Constructor.
      *
-     *  Compute eigen decomposition of the mesh Laplacian.
-     *
      *  @param mesh Input mesh.
+     */
+    explicit HKS(const Mesh& mesh);
+
+    /** Destructor.
+     *
+     *  Will free up all memory of internal resource if they are allocated
+     *  by this instance, shared memories are not deleted.
+     */
+    ~HKS();
+
+    /** Build up the necessary computational components.
+     *
+     *  Compute eigen decomposition of the mesh Laplacian. Note that the result
+     *  number of eigenstructures might be smaller than what is requested in the
+     *  because of numerical issues and some may not converge.
+     *
      *  @param k Number of eigenvalues/eigenvectors to use.
      */
-    HKS(const Mesh& mesh, unsigned k = 300);
+    void build(unsigned k = 300);
+
+    /** Build up the necessary computational components.
+     *
+     *  From precomputed eigen decomposition.
+     *
+     *  @param eigenvalues Precomputed eigenvalues.
+     *  @param eigenfunctions Precomputed eigenfunctions.
+     */
+    void build(const Vec* eigenvalues, const Mat* eigenfunctions);
 
     /** Compute hks for a single vertex.
      *
@@ -132,23 +154,33 @@ public:
                  float tmin = -1.0f,
                  float tmax = -1.0f);
 
+    /** Compute hks for all vertices.
+     *
+     *  @param hks Output heat kernel signatures
+     *  @param tscales Number of time scales to use.
+     *  @param tmin The minimum time value, default to -1 which will use the
+     *  parameter setting described in the paper.
+     *  @param tmax The maximum time value, default to -1 which will use the
+     *  parameter setting described in the paper.
+     */
+    template<typename T>
+    void compute(Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>& hks,
+                 unsigned tscales = 100,
+                 float tmin = -1.0f,
+                 float tmax = -1.0f);
+
 public:
     /** The mesh being processed. */
     const Mesh* mesh;
 
-    /** The number of eigenvalues/eigenvectors.
-     *
-     *  Note that this value might be smaller than what is requested in the
-     *  constructor because of numerical issues and some eigenvalues may not
-     *  converge.
-     */
-    unsigned k;
-
     /** The eigenvalues. */
-    Vec eigenvalues;
+    const Vec* eigenvalues;
 
     /** The eigenfunctions. */
-    Mat eigenfunctions;
+    const Mat* eigenfunctions;
+
+private:
+    bool _is_shared = false;
 };
 
 /** @}*/

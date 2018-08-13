@@ -33,10 +33,14 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
         vnormals.emplace_back(normals[i], normals[i + 1], normals[i + 2]);
     }
 
-    auto v1 = Vertex(7505); // vertex on ear
-    auto v2 = Vertex(695);  // vertex next by
-    auto v3 = Vertex(3915); // vertex on the other ear
-    auto v4 = Vertex(0);    // vertex far away
+    auto idx1 = 7505;
+    auto v1 = Vertex(idx1); // vertex on ear
+    auto idx2 = 695;
+    auto v2 = Vertex(idx2); // vertex next by
+    auto idx3 = 3915;
+    auto v3 = Vertex(idx3); // vertex on the other ear
+    auto idx4 = 0;
+    auto v4 = Vertex(idx4); // vertex far away
 
     SECTION("spin images")
     {
@@ -117,24 +121,46 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
 
     SECTION("heat kernel signature")
     {
-        Euclid::HKS<Mesh> hks(mesh, 100);
+        Euclid::HKS<Mesh> hks(mesh);
+        hks.build(100);
 
-        Eigen::ArrayXd hks1;
-        hks.compute(v1, hks1);
+        Eigen::ArrayXd hks_v1;
+        hks.compute(v1, hks_v1);
+        Eigen::ArrayXd hks_v2;
+        hks.compute(v2, hks_v2);
+        Eigen::ArrayXd hks_v3;
+        hks.compute(v3, hks_v3);
+        Eigen::ArrayXd hks_v4;
+        hks.compute(v4, hks_v4);
 
-        Eigen::ArrayXd hks2;
-        hks.compute(v2, hks2);
-
-        Eigen::ArrayXd hks3;
-        hks.compute(v3, hks3);
-
-        Eigen::ArrayXd hks4;
-        hks.compute(v4, hks4);
-
-        auto d12 = Euclid::l2(hks1, hks2);
-        auto d13 = Euclid::l2(hks1, hks3);
-        auto d14 = Euclid::l2(hks1, hks4);
+        auto d12 = Euclid::l2(hks_v1, hks_v2);
+        auto d13 = Euclid::l2(hks_v1, hks_v3);
+        auto d14 = Euclid::l2(hks_v1, hks_v4);
         REQUIRE(d12 < d13);
         REQUIRE(d13 < d14);
+
+        Eigen::ArrayXXd hks_all;
+        hks.compute(hks_all);
+        REQUIRE(hks_v1.isApprox(hks_all.col(idx1)));
+        REQUIRE(hks_v2.isApprox(hks_all.col(idx2)));
+        REQUIRE(hks_v3.isApprox(hks_all.col(idx3)));
+        REQUIRE(hks_v4.isApprox(hks_all.col(idx4)));
+
+        Euclid::HKS<Mesh> hks1(mesh);
+        hks1.build(hks.eigenvalues, hks.eigenfunctions);
+
+        Eigen::ArrayXd hks1_v1;
+        hks1.compute(v1, hks1_v1);
+        Eigen::ArrayXd hks1_v2;
+        hks1.compute(v2, hks1_v2);
+        Eigen::ArrayXd hks1_v3;
+        hks1.compute(v3, hks1_v3);
+        Eigen::ArrayXd hks1_v4;
+        hks1.compute(v4, hks1_v4);
+
+        REQUIRE(hks_v1.isApprox(hks1_v1));
+        REQUIRE(hks_v2.isApprox(hks1_v2));
+        REQUIRE(hks_v3.isApprox(hks1_v3));
+        REQUIRE(hks_v4.isApprox(hks1_v4));
     }
 }
