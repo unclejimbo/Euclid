@@ -156,9 +156,9 @@ std::enable_if_t<std::is_arithmetic_v<FT>, void> extract_mesh(
     auto vpmap = get(boost::vertex_point, mesh);
     for (auto [beg, end] = vertices(mesh); beg != end; ++beg) {
         auto p = get(vpmap, *beg);
-        positions.push_back(p.x());
-        positions.push_back(p.y());
-        positions.push_back(p.z());
+        positions.push_back(static_cast<FT>(p.x()));
+        positions.push_back(static_cast<FT>(p.y()));
+        positions.push_back(static_cast<FT>(p.z()));
     }
 
     auto vimap = get(boost::vertex_index, mesh);
@@ -173,7 +173,7 @@ std::enable_if_t<std::is_arithmetic_v<FT>, void> extract_mesh(
                 err_str.append("-mesh");
                 throw std::runtime_error(err_str);
             }
-            indices.push_back(get(vimap, *vb));
+            indices.push_back(static_cast<IT>(get(vimap, *vb)));
         }
     }
 }
@@ -208,7 +208,7 @@ std::enable_if_t<!std::is_arithmetic_v<Point_3>, void> extract_mesh(
                 err_str.append("-mesh");
                 throw std::runtime_error(err_str);
             }
-            indices.push_back(get(vimap, *vb));
+            indices.push_back(static_cast<IT>(get(vimap, *vb)));
         }
     }
 }
@@ -230,7 +230,7 @@ void extract_mesh(const Eigen::MatrixBase<DerivedV>& V,
         positions.push_back(V(i, 2));
     }
     for (auto i = 0; i < F.rows(); ++i) {
-        for (size_t j = 0; j < N; ++j) {
+        for (auto j = 0; j < N; ++j) {
             indices.push_back(F(i, j));
         }
     }

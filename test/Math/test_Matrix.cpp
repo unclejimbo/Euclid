@@ -28,7 +28,7 @@ TEST_CASE("Math, Matrix", "[math][matrix]")
     {
         using SpMat = Eigen::SparseMatrix<float>;
         std::vector<Eigen::Triplet<float>> values;
-        for (size_t i = 0; i < 10; ++i) {
+        for (int i = 0; i < 10; ++i) {
             values.emplace_back(i, i, i + 0.0f);
         }
         SpMat spmat(10, 10);
