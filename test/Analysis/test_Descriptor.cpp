@@ -27,11 +27,6 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
         filename, positions, &normals, nullptr, &indices, nullptr);
     Mesh mesh;
     Euclid::make_mesh<3>(mesh, positions, indices);
-    std::vector<Vector_3> vnormals;
-    vnormals.reserve(num_vertices(mesh));
-    for (size_t i = 0; i < normals.size(); i += 3) {
-        vnormals.emplace_back(normals[i], normals[i + 1], normals[i + 2]);
-    }
 
     auto idx1 = 7505;
     auto v1 = Vertex(idx1); // vertex on ear
@@ -46,77 +41,100 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
     {
         const unsigned width = 256;
 
-        Euclid::SpinImage si(mesh);
+        Euclid::SpinImage<Mesh> si;
+        si.build(mesh);
 
-        Eigen::ArrayXd si1;
-        si.compute(v1, si1, 1.0f, width, 60.0f);
+        Eigen::ArrayXd si_v1;
+        si.compute(v1, si_v1, 1.0f, width, 60.0f);
+        Eigen::ArrayXd si_v2;
+        si.compute(v2, si_v2, 1.0f, width, 60.0f);
+        Eigen::ArrayXd si_v3;
+        si.compute(v3, si_v3, 1.0f, width, 60.0f);
+        Eigen::ArrayXd si_v4;
+        si.compute(v4, si_v4, 1.0f, width, 60.0f);
 
-        Eigen::ArrayXd si2;
-        si.compute(v2, si2, 1.0f, width, 60.0f);
-
-        Eigen::ArrayXd si3;
-        si.compute(v3, si3, 1.0f, width, 60.0f);
-
-        Eigen::ArrayXd si4;
-        si.compute(v4, si4, 1.0f, width, 60.0f);
-
-        auto d12 = Euclid::l2(si1, si2);
-        auto d13 = Euclid::l2(si1, si3);
-        auto d14 = Euclid::l2(si1, si4);
+        auto d12 = Euclid::l2(si_v1, si_v2);
+        auto d13 = Euclid::l2(si_v1, si_v3);
+        auto d14 = Euclid::l2(si_v1, si_v4);
         REQUIRE(d12 < d13);
         REQUIRE(d13 < d14);
 
+        Eigen::ArrayXXd si_all;
+        si.compute(si_all, 1.0f, width, 60.0f);
+
+        REQUIRE(si_v1.isApprox(si_all.col(idx1)));
+        REQUIRE(si_v2.isApprox(si_all.col(idx2)));
+        REQUIRE(si_v3.isApprox(si_all.col(idx3)));
+        REQUIRE(si_v4.isApprox(si_all.col(idx4)));
+
+        Euclid::SpinImage<Mesh> si1;
+        si1.build(mesh, si.vnormals, si.resolution);
+
+        Eigen::ArrayXd si1_v1;
+        si1.compute(v1, si1_v1, 1.0f, width, 60.0f);
+        Eigen::ArrayXd si1_v2;
+        si1.compute(v2, si1_v2, 1.0f, width, 60.0f);
+        Eigen::ArrayXd si1_v3;
+        si1.compute(v3, si1_v3, 1.0f, width, 60.0f);
+        Eigen::ArrayXd si1_v4;
+        si1.compute(v4, si1_v4, 1.0f, width, 60.0f);
+
+        REQUIRE(si_v1.isApprox(si1_v1));
+        REQUIRE(si_v2.isApprox(si1_v2));
+        REQUIRE(si_v3.isApprox(si1_v3));
+        REQUIRE(si_v4.isApprox(si1_v4));
+
+        SECTION("output to image")
         {
-            auto vmax = si1.maxCoeff();
-            si1 *= 255.0 / vmax;
-            std::string fout(TMP_DIR);
-            fout.append("bunny_spin_image1.png");
-            stbi_write_png(
-                fout.c_str(), width, width, 1, &si1(0), width * sizeof(double));
+            {
+                auto vmax = si_v1.maxCoeff();
+                si_v1 *= 255.0 / vmax;
+                std::string fout(TMP_DIR);
+                fout.append("bunny_spin_image1.png");
+                stbi_write_png(fout.c_str(),
+                               width,
+                               width,
+                               1,
+                               &si_v1(0),
+                               width * sizeof(double));
+            }
+            {
+                auto vmax = si_v2.maxCoeff();
+                si_v2 *= 255.0 / vmax;
+                std::string fout(TMP_DIR);
+                fout.append("bunny_spin_image2.png");
+                stbi_write_png(fout.c_str(),
+                               width,
+                               width,
+                               1,
+                               &si_v2(0),
+                               width * sizeof(double));
+            }
+            {
+                auto vmax = si_v3.maxCoeff();
+                si_v3 *= 255.0 / vmax;
+                std::string fout(TMP_DIR);
+                fout.append("bunny_spin_image3.png");
+                stbi_write_png(fout.c_str(),
+                               width,
+                               width,
+                               1,
+                               &si_v3(0),
+                               width * sizeof(double));
+            }
+            {
+                auto vmax = si_v4.maxCoeff();
+                si_v4 *= 255.0 / vmax;
+                std::string fout(TMP_DIR);
+                fout.append("bunny_spin_image4.png");
+                stbi_write_png(fout.c_str(),
+                               width,
+                               width,
+                               1,
+                               &si_v4(0),
+                               width * sizeof(double));
+            }
         }
-
-        {
-            auto vmax = si2.maxCoeff();
-            si2 *= 255.0 / vmax;
-            std::string fout(TMP_DIR);
-            fout.append("bunny_spin_image2.png");
-            stbi_write_png(
-                fout.c_str(), width, width, 1, &si2(0), width * sizeof(double));
-        }
-
-        {
-            auto vmax = si3.maxCoeff();
-            si3 *= 255.0 / vmax;
-            std::string fout(TMP_DIR);
-            fout.append("bunny_spin_image3.png");
-            stbi_write_png(
-                fout.c_str(), width, width, 1, &si3(0), width * sizeof(double));
-        }
-
-        {
-            auto vmax = si4.maxCoeff();
-            si4 *= 255.0 / vmax;
-            std::string fout(TMP_DIR);
-            fout.append("bunny_spin_image4.png");
-            stbi_write_png(
-                fout.c_str(), width, width, 1, &si4(0), width * sizeof(double));
-        }
-    }
-
-    SECTION("spin image with precomputed normals")
-    {
-        const unsigned width = 256;
-
-        Eigen::ArrayXd simg;
-        Euclid::SpinImage si(mesh, 0.0f, &vnormals);
-        si.compute(Vertex(0), simg, 1.0f, width, 60.0f);
-
-        auto vmax = simg.maxCoeff();
-        simg *= 255.0 / vmax;
-        std::string fout(TMP_DIR);
-        fout.append("bunny_spin_image5.png");
-        stbi_write_png(
-            fout.c_str(), width, width, 1, &simg(0), width * sizeof(double));
     }
 
     SECTION("heat kernel signature")

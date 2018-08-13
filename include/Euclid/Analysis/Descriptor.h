@@ -41,26 +41,28 @@ public:
     using Vertex = typename boost::graph_traits<Mesh>::vertex_descriptor;
 
 public:
-    /** Constructor.
+    /** Destructor.
      *
-     *  Initialize some structures needed to compute a spin image.
-     *
-     *  @param mesh The input mesh.
-     *  @param resolution The resolution of the mesh, default to zero and let
-     *  the construtor estimate this value based on average edge length.
-     *  @param vnormals Vertex normals of the mesh, default to nullptr and let
-     *  the constructor compute the values.
+     *  Will free up all memory of internal resource if they are allocated
+     *  by this instance, shared memories are not deleted.
      */
-    explicit SpinImage(const Mesh& mesh,
-                       FT resolution = 0.0,
-                       const std::vector<Vector_3>* vnormals = nullptr);
-
-    /** Destructor. */
     ~SpinImage();
+
+    /** Build up the necessary computational components.
+     *
+     *  @param mesh The target mesh.
+     *  @param vnormals The precomputed vertex normals, default to nullptr and
+     *  it'll be computed internally.
+     *  @param resolution The mesh resolution, i.e. avg. edge length. Default to
+     *  0.0 and it'll be computed internally.
+     */
+    void build(const Mesh& mesh,
+               const std::vector<Vector_3>* vnormals = nullptr,
+               FT resolution = 0.0);
 
     /** Compute the spin image descriptor for a vertex.
      *
-     *  @param v The vertex descriptor.
+     *  @param v The vertex handle.
      *  @param spin_img The output spin image for v.
      *  @param bin_size Multiples of the mesh resolution.
      *  @param image_width Number of rows and colums for the image.
@@ -73,11 +75,31 @@ public:
                  int image_width = 15,
                  float support_angle = 60.0f);
 
+    /** Compute the spin image descriptor for all vertices.
+     *
+     *  @param spin_img The output spin image for v.
+     *  @param bin_size Multiples of the mesh resolution.
+     *  @param image_width Number of rows and colums for the image.
+     *  @param support_angle Maximum support angle in degrees.
+     */
+    template<typename T>
+    void compute(Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>& spin_img,
+                 float bin_size = 1.0f,
+                 int image_width = 15,
+                 float support_angle = 60.0f);
+
+public:
+    /** The mesh being processed. */
+    const Mesh* mesh = nullptr;
+
+    /** The vertex normals. */
+    const std::vector<Vector_3>* vnormals = nullptr;
+
+    /** The mesh resolution. */
+    FT resolution = 0.0;
+
 private:
-    const Mesh* _mesh;
-    const std::vector<Vector_3>* _vnormals;
-    FT _resolution;
-    bool _is_shared;
+    bool _is_shared = false;
 };
 
 /** Heat kernel signature.
