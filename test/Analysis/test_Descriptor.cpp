@@ -139,8 +139,8 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
 
     SECTION("heat kernel signature")
     {
-        Euclid::HKS<Mesh> hks(mesh);
-        hks.build(100);
+        Euclid::HKS<Mesh> hks;
+        hks.build(mesh, 100);
 
         Eigen::ArrayXd hks_v1;
         hks.compute(v1, hks_v1);
@@ -164,8 +164,8 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
         REQUIRE(hks_v3.isApprox(hks_all.col(idx3)));
         REQUIRE(hks_v4.isApprox(hks_all.col(idx4)));
 
-        Euclid::HKS<Mesh> hks1(mesh);
-        hks1.build(hks.eigenvalues, hks.eigenfunctions);
+        Euclid::HKS<Mesh> hks1;
+        hks1.build(mesh, hks.eigenvalues, hks.eigenfunctions);
 
         Eigen::ArrayXd hks1_v1;
         hks1.compute(v1, hks1_v1);

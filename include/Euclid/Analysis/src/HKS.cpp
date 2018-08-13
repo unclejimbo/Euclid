@@ -14,43 +14,37 @@ namespace Euclid
 {
 
 template<typename Mesh>
-HKS<Mesh>::HKS(const Mesh& mesh)
-{
-    this->mesh = &mesh;
-}
-
-template<typename Mesh>
 HKS<Mesh>::~HKS()
 {
-    if (_is_shared) {
-        delete eigenvalues;
-        delete eigenfunctions;
+    if (!_is_shared) {
+        delete this->eigenvalues;
+        delete this->eigenfunctions;
     }
 }
 
 template<typename Mesh>
-void HKS<Mesh>::build(unsigned k)
+void HKS<Mesh>::build(const Mesh& mesh, unsigned k)
 {
     using SpMat = Eigen::SparseMatrix<FT>;
 
-    if (k > num_vertices(*this->mesh)) {
+    if (k > num_vertices(mesh)) {
         std::string err("You've requested ");
         err.append(std::to_string(k));
         err.append(" eigen values but there are only ");
-        err.append(std::to_string(num_vertices(*this->mesh)));
+        err.append(std::to_string(num_vertices(mesh)));
         err.append(" vertices in your mesh.");
         EWARNING(err);
-        k = num_vertices(*this->mesh);
+        k = num_vertices(mesh);
     }
 
     // Construct a symmetric Laplacian matrix
-    SpMat cot_mat = Euclid::laplacian_matrix(*this->mesh);
-    SpMat mass_mat = Euclid::mass_matrix(*this->mesh);
+    SpMat cot_mat = Euclid::laplacian_matrix(mesh);
+    SpMat mass_mat = Euclid::mass_matrix(mesh);
     Euclid::for_each(mass_mat, [](FT& value) { value = 1 / std::sqrt(value); });
     SpMat laplacian = -mass_mat * cot_mat * mass_mat;
 
     // Eigen decomposition of the Laplacian matrix
-    auto convergence = std::min(2 * k + 1, num_vertices(*this->mesh));
+    auto convergence = std::min(2 * k + 1, num_vertices(mesh));
     Spectra::SparseSymShiftSolve<FT> op(laplacian);
     Spectra::SymEigsShiftSolver<FT,
                                 Spectra::LARGEST_MAGN,
@@ -71,19 +65,24 @@ void HKS<Mesh>::build(unsigned k)
         EWARNING(str);
     }
 
+    this->mesh = &mesh;
     this->eigenvalues = new Vec(eigensolver.eigenvalues());
     EASSERT(this->eigenvalues->rows() == n);
     this->eigenfunctions = new Mat(eigensolver.eigenvectors());
     EASSERT(this->eigenfunctions->cols() == n);
-    EASSERT(this->eigenfunctions->rows() == num_vertices(*this->mesh));
-    _is_shared = true;
+    EASSERT(this->eigenfunctions->rows() == num_vertices(mesh));
+    _is_shared = false;
 }
 
 template<typename Mesh>
-void HKS<Mesh>::build(const Vec* eigenvalues, const Mat* eigenfunctions)
+void HKS<Mesh>::build(const Mesh& mesh,
+                      const Vec* eigenvalues,
+                      const Mat* eigenfunctions)
 {
+    this->mesh = &mesh;
     this->eigenvalues = eigenvalues;
     this->eigenfunctions = eigenfunctions;
+    _is_shared = true;
 }
 
 template<typename Mesh>

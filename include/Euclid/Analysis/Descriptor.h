@@ -127,12 +127,6 @@ public:
     using Mat = Eigen::Matrix<FT, Eigen::Dynamic, Eigen::Dynamic>;
 
 public:
-    /** Constructor.
-     *
-     *  @param mesh Input mesh.
-     */
-    explicit HKS(const Mesh& mesh);
-
     /** Destructor.
      *
      *  Will free up all memory of internal resource if they are allocated
@@ -148,7 +142,7 @@ public:
      *
      *  @param k Number of eigenvalues/eigenvectors to use.
      */
-    void build(unsigned k = 300);
+    void build(const Mesh& mesh, unsigned k = 300);
 
     /** Build up the necessary computational components.
      *
@@ -157,11 +151,13 @@ public:
      *  @param eigenvalues Precomputed eigenvalues.
      *  @param eigenfunctions Precomputed eigenfunctions.
      */
-    void build(const Vec* eigenvalues, const Mat* eigenfunctions);
+    void build(const Mesh& mesh,
+               const Vec* eigenvalues,
+               const Mat* eigenfunctions);
 
     /** Compute hks for a single vertex.
      *
-     *  @param v Vertex descriptor.
+     *  @param v Vertex handle.
      *  @param hks Output heat kernel signature.
      *  @param tscales Number of time scales to use.
      *  @param tmin The minimum time value, default to -1 which will use the
