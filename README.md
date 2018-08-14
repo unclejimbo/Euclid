@@ -43,6 +43,11 @@ The purpose of Euclid is not to replace any of the above packages, but to glue t
 
 - Fast cpu ray tracing.
 
+### Util
+
+- A versatile timer.
+- Memory management.
+
 ## Dependencies
 
 Some simple third-party libraries has already been shipped with Euclid.
