@@ -9,6 +9,7 @@
 #include <vector>
 #include <CGAL/Kernel_traits.h>
 #include <Eigen/SparseCholesky>
+#include <Euclid/Util/Memory.h>
 
 namespace Euclid
 {
@@ -35,31 +36,32 @@ public:
     using SpMat = Eigen::SparseMatrix<FT>;
 
 public:
-    /** Default constructor.*/
-    GeodesicsInHeat() = default;
-
-    /** Build the compute structure.
+    /** Build up the necesssary computational components.
+     *
+     *  Compute the Laplacian matrix and pre-factor the linear system.
      *
      *  @param mesh Target triangle mesh.
-     *  @param scale The time scale of the heat diffusion, relative to the mean
-     *  edge length of the mesh.
+     *  @param scale The time scale of the heat diffusion, relative to the
+     *  average edge length of the mesh.
+     *  @param resolution The average edge length of the mesh, provide a value
+     *  if you have already computed it, otherwise it'll be computed internally.
+     *  @param cot_mat The cotangent matrix of the mesh, provide a value if you
+     *  have already computed it, otherwise it'll be computed internally.
+     *  @param mass_mat The mass matrix of the mesh, provide a value if you have
+     *  already computed it, otherwise it'll be computed internally.
      */
-    explicit GeodesicsInHeat(const Mesh& mesh, float scale = 1.0f);
-
-    /** Build the compute structure.
-     *
-     *  @param mesh Target triangle mesh.
-     *  @param scale The time scale of the heat diffusion, relative to the mean
-     *  edge length of the mesh.
-     */
-    bool build(const Mesh& mesh, float scale = 1.0f);
+    void build(const Mesh& mesh,
+               float scale = 1.0f,
+               FT resolution = 0,
+               const SpMat* cot_mat = nullptr,
+               const SpMat* mass_mat = nullptr);
 
     /** Reset the time scale.
      *
-     *  @param scale The time scale of the heat diffusion, relative to the mean
-     *  edge length of the mesh.
+     *  @param scale The time scale of the heat diffusion, relative to the
+     *  average edge length of the mesh.
      */
-    bool scale(float scale);
+    void scale(float scale);
 
     /** Compute geodesics distance from a vertex.
      *
@@ -68,17 +70,45 @@ public:
      *  vertices to the target vertex v.
      */
     template<typename T>
-    bool compute(
+    void compute(
         const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
         std::vector<T>& geodesics);
 
-private:
-    const Mesh* _mesh;
-    FT _avg_spacing;
-    SpMat _cot_mat;
-    SpMat _mass_mat;
-    Eigen::SimplicialLDLT<SpMat> _heat_solver;
-    Eigen::SimplicialLDLT<SpMat> _poisson_solver;
+public:
+    /** The target mesh.
+     *
+     */
+    const Mesh* mesh = nullptr;
+
+    /** The resolution of mesh.
+     *
+     *  Average edge length.
+     */
+    FT resolution = 0.0;
+
+    /** Cotangent matrix.
+     *
+     *  If you directly set this member without calling the build, you need to
+     *  update heat_solver and poisson_solver manually.
+     */
+    ProPtr<const SpMat> cot_mat = nullptr;
+
+    /** Mass matrix.
+     *
+     *  If you directly set this member without calling the build, you need to
+     *  update heat_solver and poisson_solver manually.
+     */
+    ProPtr<const SpMat> mass_mat = nullptr;
+
+    /** The heat equation solver.
+     *
+     */
+    Eigen::SimplicialLDLT<SpMat> heat_solver;
+
+    /** The poisson equation solver.
+     *
+     */
+    Eigen::SimplicialLDLT<SpMat> poisson_solver;
 };
 
 /** @}*/

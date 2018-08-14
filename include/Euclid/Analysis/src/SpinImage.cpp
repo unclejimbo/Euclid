@@ -11,22 +11,13 @@ namespace Euclid
 {
 
 template<typename Mesh>
-SpinImage<Mesh>::~SpinImage()
-{
-    if (!_is_shared) { delete this->vnormals; }
-}
-
-template<typename Mesh>
 void SpinImage<Mesh>::build(const Mesh& mesh,
                             const std::vector<Vector_3>* vnormals,
                             FT resolution)
 {
     this->mesh = &mesh;
 
-    if (vnormals != nullptr) {
-        this->vnormals = vnormals;
-        _is_shared = true;
-    }
+    if (vnormals != nullptr) { this->vnormals.reset(vnormals, false); }
     else {
         using Face = boost::graph_traits<Mesh>::face_descriptor;
         using FNMap = std::unordered_map<Face, Vector_3>;
@@ -42,8 +33,7 @@ void SpinImage<Mesh>::build(const Mesh& mesh,
         for (const auto& v : vertices(mesh)) {
             vertex_normals->push_back(Euclid::vertex_normal(v, mesh, fn_map));
         }
-        this->vnormals = vertex_normals;
-        _is_shared = false;
+        this->vnormals.reset(vertex_normals, true);
     }
 
     if (resolution != 0.0) { this->resolution = resolution; }

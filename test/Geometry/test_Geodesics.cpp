@@ -34,17 +34,18 @@ TEST_CASE("Geometry, Geodesics", "[geometry][geodesics]")
         Euclid::make_mesh<3>(mesh, positions, indices);
 
         // Construct the method
-        Euclid::GeodesicsInHeat<Mesh> heat_method(mesh, 4.0f);
+        Euclid::GeodesicsInHeat<Mesh> heat_method;
+        heat_method.build(mesh, 4.0f);
 
         // Compute geodesics
         std::vector<double> geodesics;
-        REQUIRE(heat_method.compute(Mesh::Vertex_index(0), geodesics));
+        heat_method.compute(Mesh::Vertex_index(0), geodesics);
         REQUIRE(geodesics[0] == 0.0);
         auto gmax1 = *std::max_element(geodesics.begin(), geodesics.end());
 
         // Change the scale
         heat_method.scale(5.0f);
-        REQUIRE(heat_method.compute(Mesh::Vertex_index(0), geodesics));
+        heat_method.compute(Mesh::Vertex_index(0), geodesics);
         auto gmax2 = *std::max_element(geodesics.begin(), geodesics.end());
         REQUIRE(Euclid::eq_abs_err(gmax1, gmax2, 1.0));
 

@@ -68,7 +68,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
         REQUIRE(si_v4.isApprox(si_all.col(idx4)));
 
         Euclid::SpinImage<Mesh> si1;
-        si1.build(mesh, si.vnormals, si.resolution);
+        si1.build(mesh, si.vnormals.get(), si.resolution);
 
         Eigen::ArrayXd si1_v1;
         si1.compute(v1, si1_v1, 1.0f, width, 60.0f);
@@ -165,7 +165,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
         REQUIRE(hks_v4.isApprox(hks_all.col(idx4)));
 
         Euclid::HKS<Mesh> hks1;
-        hks1.build(mesh, hks.eigenvalues, hks.eigenfunctions);
+        hks1.build(mesh, hks.eigenvalues.get(), hks.eigenfunctions.get());
 
         Eigen::ArrayXd hks1_v1;
         hks1.compute(v1, hks1_v1);

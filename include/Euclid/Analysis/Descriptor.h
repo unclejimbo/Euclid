@@ -9,6 +9,7 @@
 #include <vector>
 #include <CGAL/boost/graph/properties.h>
 #include <Eigen/Core>
+#include <Euclid/Util/Memory.h>
 
 namespace Euclid
 {
@@ -41,13 +42,6 @@ public:
     using Vertex = typename boost::graph_traits<Mesh>::vertex_descriptor;
 
 public:
-    /** Destructor.
-     *
-     *  Will free up all memory of internal resource if they are allocated
-     *  by this instance, shared memories are not deleted.
-     */
-    ~SpinImage();
-
     /** Build up the necessary computational components.
      *
      *  @param mesh The target mesh.
@@ -97,15 +91,12 @@ public:
     /** The vertex normals.
      *
      */
-    const std::vector<Vector_3>* vnormals = nullptr;
+    ProPtr<const std::vector<Vector_3>> vnormals = nullptr;
 
     /** The mesh resolution.
      *
      */
     FT resolution = 0.0;
-
-private:
-    bool _is_shared = false;
 };
 
 /** Heat kernel signature.
@@ -133,13 +124,6 @@ public:
     using Mat = Eigen::Matrix<FT, Eigen::Dynamic, Eigen::Dynamic>;
 
 public:
-    /** Destructor.
-     *
-     *  Will free up all memory of internal resource if they are allocated
-     *  by this instance, shared memories are not deleted.
-     */
-    ~HKS();
-
     /** Build up the necessary computational components.
      *
      *  Compute eigen decomposition of the mesh Laplacian. Note that the result
@@ -204,15 +188,12 @@ public:
     /** The eigenvalues.
      *
      */
-    const Vec* eigenvalues;
+    ProPtr<const Vec> eigenvalues;
 
     /** The eigenfunctions.
      *
      */
-    const Mat* eigenfunctions;
-
-private:
-    bool _is_shared = false;
+    ProPtr<const Mat> eigenfunctions;
 };
 
 /** @}*/

@@ -14,15 +14,6 @@ namespace Euclid
 {
 
 template<typename Mesh>
-HKS<Mesh>::~HKS()
-{
-    if (!_is_shared) {
-        delete this->eigenvalues;
-        delete this->eigenfunctions;
-    }
-}
-
-template<typename Mesh>
 void HKS<Mesh>::build(const Mesh& mesh, unsigned k)
 {
     using SpMat = Eigen::SparseMatrix<FT>;
@@ -66,12 +57,11 @@ void HKS<Mesh>::build(const Mesh& mesh, unsigned k)
     }
 
     this->mesh = &mesh;
-    this->eigenvalues = new Vec(eigensolver.eigenvalues());
+    this->eigenvalues.reset(new Vec(eigensolver.eigenvalues()), true);
     EASSERT(this->eigenvalues->rows() == n);
-    this->eigenfunctions = new Mat(eigensolver.eigenvectors());
+    this->eigenfunctions.reset(new Mat(eigensolver.eigenvectors()), true);
     EASSERT(this->eigenfunctions->cols() == n);
     EASSERT(this->eigenfunctions->rows() == num_vertices(mesh));
-    _is_shared = false;
 }
 
 template<typename Mesh>
@@ -80,9 +70,8 @@ void HKS<Mesh>::build(const Mesh& mesh,
                       const Mat* eigenfunctions)
 {
     this->mesh = &mesh;
-    this->eigenvalues = eigenvalues;
-    this->eigenfunctions = eigenfunctions;
-    _is_shared = true;
+    this->eigenvalues.reset(eigenvalues);
+    this->eigenfunctions.reset(eigenfunctions);
 }
 
 template<typename Mesh>
