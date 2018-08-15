@@ -104,8 +104,9 @@ install(
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Euclid
 )
 install(
-    FILES ${CMAKE_SOURCE_DIR}/cmake/Modules/FindSpectra.cmake
-    FILES ${CMAKE_SOURCE_DIR}/cmake/Modules/FindLibigl.cmake
+    FILES
+        ${CMAKE_SOURCE_DIR}/cmake/Modules/FindSpectra.cmake
+        ${CMAKE_SOURCE_DIR}/cmake/Modules/FindLibigl.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Euclid/Modules
 )
 
