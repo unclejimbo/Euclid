@@ -1,6 +1,9 @@
 #include <exception>
+#include <queue>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include <utility>
 
 #include <CGAL/boost/graph/Euler_operations.h>
 #include <Euclid/Util/Assert.h>
@@ -248,6 +251,35 @@ void extract_mesh(const Eigen::MatrixBase<DerivedV>& V,
         positions.push_back(V(i, 1));
         positions.push_back(V(i, 2));
     }
+}
+
+template<typename Mesh, typename Vertex>
+std::vector<Vertex> nring_vertices(Vertex target, const Mesh& mesh, unsigned n)
+{
+    std::vector<Vertex> neighbors;
+    if (n == 1) {
+        for (auto v : vertices_around_target(target, mesh)) {
+            neighbors.push_back(v);
+        }
+    }
+    else if (n > 1) {
+        std::unordered_set<Vertex> visited{ target };
+        std::queue<std::pair<Vertex, unsigned>> targets;
+        targets.emplace(target, n);
+        do {
+            auto t = targets.front().first;
+            auto m = targets.front().second;
+            targets.pop();
+            for (auto v : vertices_around_target(t, mesh)) {
+                if (visited.find(v) == visited.end()) {
+                    visited.insert(v);
+                    neighbors.push_back(v);
+                    if (m > 1) { targets.emplace(v, m - 1); }
+                }
+            }
+        } while (!targets.empty());
+    }
+    return neighbors;
 }
 
 } // namespace Euclid

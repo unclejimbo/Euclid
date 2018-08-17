@@ -17,6 +17,7 @@
 #include <type_traits>
 #include <vector>
 
+#include <boost/graph/graph_traits.hpp>
 #include <Eigen/Core>
 
 namespace Euclid
@@ -85,6 +86,16 @@ void extract_mesh(const Eigen::MatrixBase<DerivedV>& V,
 template<typename DerivedV, typename FT>
 void extract_mesh(const Eigen::MatrixBase<DerivedV>& V,
                   std::vector<FT>& positions);
+
+/** Find the n-ring vertices given a target vertex.
+ *
+ */
+template<
+    typename Mesh,
+    typename Vertex = typename boost::graph_traits<Mesh>::vertex_descriptor>
+std::vector<Vertex> nring_vertices(Vertex target,
+                                   const Mesh& mesh,
+                                   unsigned n = 1);
 
 /** @}*/
 } // namespace Euclid

@@ -20,7 +20,7 @@ TEST_CASE("Geometry, MeshHelpers", "[geometry][meshhelpers]")
     std::vector<double> positions;
     std::vector<unsigned> indices;
     std::string file_name(DATA_DIR);
-    file_name.append("chair.off");
+    file_name.append("bunny.off");
     Euclid::read_off<3>(file_name, positions, indices);
 
     std::vector<Point_3> points;
@@ -99,5 +99,39 @@ TEST_CASE("Geometry, MeshHelpers", "[geometry][meshhelpers]")
         std::vector<double> only_positions;
         Euclid::extract_mesh(V, only_positions);
         REQUIRE(only_positions == positions);
+    }
+
+    SECTION("n-ring")
+    {
+        using Mesh = CGAL::Surface_mesh<Point_3>;
+        using Vertex = typename Mesh::Vertex_index;
+        Vertex target(410);
+        Mesh mesh;
+        Euclid::make_mesh<3>(mesh, positions, indices);
+
+        const std::unordered_set<Vertex> onering{ Vertex(40),   Vertex(1420),
+                                                  Vertex(1429), Vertex(153),
+                                                  Vertex(1209), Vertex(322) };
+        const std::unordered_set<Vertex> tworing{
+            Vertex(40),   Vertex(1420), Vertex(1429), Vertex(153),
+            Vertex(1209), Vertex(322),  Vertex(131),  Vertex(1365),
+            Vertex(8),    Vertex(1325), Vertex(101),  Vertex(1400),
+            Vertex(381),  Vertex(469),  Vertex(1435), Vertex(1351)
+        };
+
+        auto vertices0 = Euclid::nring_vertices(target, mesh, 0);
+        REQUIRE(vertices0.empty());
+
+        auto vertices1 = Euclid::nring_vertices(target, mesh, 1);
+        REQUIRE(vertices1.size() == onering.size());
+        for (auto v : vertices1) {
+            REQUIRE(onering.find(v) != onering.end());
+        }
+
+        auto vertices2 = Euclid::nring_vertices(target, mesh, 2);
+        REQUIRE(vertices2.size() == tworing.size());
+        for (auto v : vertices2) {
+            REQUIRE(tworing.find(v) != tworing.end());
+        }
     }
 }
