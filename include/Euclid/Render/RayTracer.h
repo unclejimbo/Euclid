@@ -12,7 +12,9 @@
 #include <limits>
 #include <vector>
 
-#include <Eigen/Core>
+// FIXME:
+// #include <Eigen/Core> will generate link error when using Eigen::Ref
+#include <Eigen/Dense>
 #include <embree3/rtcore.h>
 
 namespace Euclid
@@ -35,6 +37,9 @@ struct Film
 class Camera
 {
 public:
+    using Vec3 = Eigen::Ref<const Eigen::Vector3f>;
+
+public:
     /** Create a Camera with default paramters.
      *
      */
@@ -48,18 +53,16 @@ public:
      *  @param focus Focus.
      *  @param up Rough up direction.
      */
-    Camera(const Eigen::Vector3f& position,
-           const Eigen::Vector3f& focus = Eigen::Vector3f::Zero(),
-           const Eigen::Vector3f& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f));
+    Camera(const Vec3& position,
+           const Vec3& focus = Eigen::Vector3f::Zero(),
+           const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f));
 
     virtual ~Camera() = default;
 
     /** Position the camera according to the parameteres.
      *
      */
-    void lookat(const Eigen::Vector3f& position,
-                const Eigen::Vector3f& focus,
-                const Eigen::Vector3f& up);
+    void lookat(const Vec3& position, const Vec3& focus, const Vec3& up);
 
     /** Generate an embree rayhit structure.
      *
@@ -130,11 +133,9 @@ public:
      *  @param vfov Vertical field of view in degrees.
      *  @param aspect Aspect ratio.
      */
-    PerspectiveCamera(const Eigen::Vector3f& position,
-                      const Eigen::Vector3f& focus = Eigen::Vector3f::Zero(),
-                      const Eigen::Vector3f& up = Eigen::Vector3f(0.0f,
-                                                                  1.0f,
-                                                                  0.0f),
+    PerspectiveCamera(const Vec3& position,
+                      const Vec3& focus = Eigen::Vector3f::Zero(),
+                      const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
                       float vfov = 90.0f,
                       float aspect = 1.0f);
 
@@ -151,11 +152,9 @@ public:
      *  @param width Width of the image.
      *  @param height Height of the image.
      */
-    PerspectiveCamera(const Eigen::Vector3f& position,
-                      const Eigen::Vector3f& focus = Eigen::Vector3f::Zero(),
-                      const Eigen::Vector3f& up = Eigen::Vector3f(0.0f,
-                                                                  1.0f,
-                                                                  0.0f),
+    PerspectiveCamera(const Vec3& position,
+                      const Vec3& focus = Eigen::Vector3f::Zero(),
+                      const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
                       float vfov = 90.0f,
                       unsigned width = 256,
                       unsigned height = 256);
@@ -211,11 +210,9 @@ public:
      *  @param xextent Width of the film plane in world space.
      *  @param yextent Height of the film plane in world space.
      */
-    OrthogonalCamera(const Eigen::Vector3f& position,
-                     const Eigen::Vector3f& focus = Eigen::Vector3f::Zero(),
-                     const Eigen::Vector3f& up = Eigen::Vector3f(0.0f,
-                                                                 1.0f,
-                                                                 0.0f),
+    OrthogonalCamera(const Vec3& position,
+                     const Vec3& focus = Eigen::Vector3f::Zero(),
+                     const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
                      float xextent = 256.0f,
                      float yextent = 256.0f);
 
@@ -317,7 +314,7 @@ public:
     /** Change the color of background.
      *
      */
-    void set_background(const Eigen::Array3f& color);
+    void set_background(const Eigen::Ref<const Eigen::Array3f>& color);
 
     /** Change the color of background.
      *

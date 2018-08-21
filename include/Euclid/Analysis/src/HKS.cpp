@@ -75,9 +75,9 @@ void HKS<Mesh>::build(const Mesh& mesh,
 }
 
 template<typename Mesh>
-template<typename T>
+template<typename Derived>
 void HKS<Mesh>::compute(const Vertex& v,
-                        Eigen::Array<T, Eigen::Dynamic, 1>& hks,
+                        Eigen::ArrayBase<Derived>& hks,
                         unsigned tscales,
                         float tmin,
                         float tmax)
@@ -96,7 +96,7 @@ void HKS<Mesh>::compute(const Vertex& v,
     auto log_tmax = std::log(tmax);
     auto log_tstep = (log_tmax - log_tmin) / tscales;
     auto vimap = get(boost::vertex_index, *this->mesh);
-    hks.resize(tscales);
+    hks.derived().resize(tscales);
 
     for (size_t i = 0; i < tscales; ++i) {
         auto t = std::exp(log_tmin + log_tstep * i);
@@ -115,8 +115,8 @@ void HKS<Mesh>::compute(const Vertex& v,
 }
 
 template<typename Mesh>
-template<typename T>
-void HKS<Mesh>::compute(Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>& hks,
+template<typename Derived>
+void HKS<Mesh>::compute(Eigen::ArrayBase<Derived>& hks,
                         unsigned tscales,
                         float tmin,
                         float tmax)
@@ -136,7 +136,7 @@ void HKS<Mesh>::compute(Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>& hks,
     auto log_tstep = (log_tmax - log_tmin) / tscales;
     auto vimap = get(boost::vertex_index, *this->mesh);
     auto nv = num_vertices(*this->mesh);
-    hks.resize(tscales, nv);
+    hks.derived().resize(tscales, nv);
 
     for (auto v : vertices(*this->mesh)) {
         auto idx = get(vimap, v);

@@ -62,9 +62,9 @@ public:
      *  @param image_width Number of rows and colums for the image.
      *  @param support_angle Maximum support angle in degrees.
      */
-    template<typename T>
+    template<typename Derived>
     void compute(const Vertex& v,
-                 Eigen::Array<T, Eigen::Dynamic, 1>& spin_img,
+                 Eigen::ArrayBase<Derived>& spin_img,
                  float bin_size = 1.0f,
                  int image_width = 15,
                  float support_angle = 60.0f);
@@ -76,8 +76,8 @@ public:
      *  @param image_width Number of rows and colums for the image.
      *  @param support_angle Maximum support angle in degrees.
      */
-    template<typename T>
-    void compute(Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>& spin_img,
+    template<typename Derived>
+    void compute(Eigen::ArrayBase<Derived>& spin_img,
                  float bin_size = 1.0f,
                  int image_width = 15,
                  float support_angle = 60.0f);
@@ -157,9 +157,9 @@ public:
      *  @param tmax The maximum time value, default to -1 which will use the
      *  parameter setting described in the paper.
      */
-    template<typename T>
+    template<typename Derived>
     void compute(const Vertex& v,
-                 Eigen::Array<T, Eigen::Dynamic, 1>& hks,
+                 Eigen::ArrayBase<Derived>& hks,
                  unsigned tscales = 100,
                  float tmin = -1.0f,
                  float tmax = -1.0f);
@@ -173,8 +173,8 @@ public:
      *  @param tmax The maximum time value, default to -1 which will use the
      *  parameter setting described in the paper.
      */
-    template<typename T>
-    void compute(Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>& hks,
+    template<typename Derived>
+    void compute(Eigen::ArrayBase<Derived>& hks,
                  unsigned tscales = 100,
                  float tmin = -1.0f,
                  float tmax = -1.0f);

@@ -24,9 +24,7 @@ inline void mask_filter(const RTCFilterFunctionNArguments* args)
 
 } // namespace _impl
 
-inline Camera::Camera(const Eigen::Vector3f& position,
-                      const Eigen::Vector3f& focus,
-                      const Eigen::Vector3f& up)
+inline Camera::Camera(const Vec3& position, const Vec3& focus, const Vec3& up)
 {
     pos = position;
     dir = (position - focus).normalized();
@@ -34,9 +32,9 @@ inline Camera::Camera(const Eigen::Vector3f& position,
     v = dir.cross(u);
 }
 
-inline void Camera::lookat(const Eigen::Vector3f& position,
-                           const Eigen::Vector3f& focus,
-                           const Eigen::Vector3f& up)
+inline void Camera::lookat(const Vec3& position,
+                           const Vec3& focus,
+                           const Vec3& up)
 {
     pos = position;
     dir = (position - focus).normalized();
@@ -44,9 +42,9 @@ inline void Camera::lookat(const Eigen::Vector3f& position,
     v = dir.cross(u);
 }
 
-inline PerspectiveCamera::PerspectiveCamera(const Eigen::Vector3f& position,
-                                            const Eigen::Vector3f& focus,
-                                            const Eigen::Vector3f& up,
+inline PerspectiveCamera::PerspectiveCamera(const Vec3& position,
+                                            const Vec3& focus,
+                                            const Vec3& up,
                                             float vfov,
                                             float aspect)
     : Camera(position, focus, up)
@@ -56,9 +54,9 @@ inline PerspectiveCamera::PerspectiveCamera(const Eigen::Vector3f& position,
     film.width = aspect * film.height;
 }
 
-inline PerspectiveCamera::PerspectiveCamera(const Eigen::Vector3f& position,
-                                            const Eigen::Vector3f& focus,
-                                            const Eigen::Vector3f& up,
+inline PerspectiveCamera::PerspectiveCamera(const Vec3& position,
+                                            const Vec3& focus,
+                                            const Vec3& up,
                                             float vfov,
                                             unsigned width,
                                             unsigned height)
@@ -112,9 +110,9 @@ inline RTCRayHit PerspectiveCamera::gen_ray(float s,
     return rayhit;
 }
 
-inline OrthogonalCamera::OrthogonalCamera(const Eigen::Vector3f& position,
-                                          const Eigen::Vector3f& focus,
-                                          const Eigen::Vector3f& up,
+inline OrthogonalCamera::OrthogonalCamera(const Vec3& position,
+                                          const Vec3& focus,
+                                          const Vec3& up,
                                           float width,
                                           float height)
     : Camera(position, focus, up)
@@ -285,7 +283,8 @@ inline void RayTracer::set_material(const Material& material)
     _material = material;
 }
 
-inline void RayTracer::set_background(const Eigen::Array3f& color)
+inline void RayTracer::set_background(
+    const Eigen::Ref<const Eigen::Array3f>& color)
 {
     _background = color;
 }

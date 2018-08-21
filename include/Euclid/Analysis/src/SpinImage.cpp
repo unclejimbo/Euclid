@@ -47,9 +47,9 @@ void SpinImage<Mesh>::build(const Mesh& mesh,
 }
 
 template<typename Mesh>
-template<typename T>
+template<typename Derived>
 void SpinImage<Mesh>::compute(const Vertex& v,
-                              Eigen::Array<T, Eigen::Dynamic, 1>& spin_img,
+                              Eigen::ArrayBase<Derived>& spin_img,
                               float bin_size,
                               int image_width,
                               float support_angle)
@@ -57,8 +57,7 @@ void SpinImage<Mesh>::compute(const Vertex& v,
     auto vpmap = get(boost::vertex_point, *this->mesh);
     auto vimap = get(boost::vertex_index, *this->mesh);
     auto bin_width = this->resolution * static_cast<FT>(bin_size);
-    spin_img = Eigen::Array<T, Eigen::Dynamic, 1>::Zero((image_width + 1) *
-                                                        (image_width + 1));
+    spin_img.derived().setZero((image_width + 1) * (image_width + 1));
 
     // Transform the coordinate system so that vi is at origin and the vertex
     // normal points in the y axis, while the x and z axes are arbitrary
@@ -98,18 +97,17 @@ void SpinImage<Mesh>::compute(const Vertex& v,
 }
 
 template<typename Mesh>
-template<typename T>
-void SpinImage<Mesh>::compute(
-    Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>& spin_img,
-    float bin_size,
-    int image_width,
-    float support_angle)
+template<typename Derived>
+void SpinImage<Mesh>::compute(Eigen::ArrayBase<Derived>& spin_img,
+                              float bin_size,
+                              int image_width,
+                              float support_angle)
 {
     auto vpmap = get(boost::vertex_point, *this->mesh);
     auto vimap = get(boost::vertex_index, *this->mesh);
     auto bin_width = this->resolution * static_cast<FT>(bin_size);
-    spin_img = Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic>::Zero(
-        (image_width + 1) * (image_width + 1), num_vertices(*this->mesh));
+    spin_img.derived().setZero((image_width + 1) * (image_width + 1),
+                               num_vertices(*this->mesh));
 
     for (const auto& v : vertices(*this->mesh)) {
         auto idx = get(vimap, v);
