@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <array>
-#include <exception>
 #include <map>
 #include <numeric>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <unordered_map>

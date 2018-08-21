@@ -1,7 +1,7 @@
 #pragma once
 
-#include <exception>
 #include <fstream>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>

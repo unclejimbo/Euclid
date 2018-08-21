@@ -1,4 +1,4 @@
-#include <exception>
+#include <stdexcept>
 
 #include <Euclid/Math/Vector.h>
 

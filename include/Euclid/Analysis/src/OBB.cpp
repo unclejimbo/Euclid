@@ -1,4 +1,4 @@
-#include <exception>
+#include <stdexcept>
 
 #include <boost/math/constants/constants.hpp>
 #include <Eigen/Eigenvalues>

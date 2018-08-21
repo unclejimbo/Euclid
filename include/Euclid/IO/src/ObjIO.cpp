@@ -1,6 +1,6 @@
 #include <array>
-#include <exception>
 #include <fstream>
+#include <stdexcept>
 #include <string_view>
 
 #include <Euclid/Util/Assert.h>

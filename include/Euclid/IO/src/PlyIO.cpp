@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <array>
-#include <exception>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
 
 #include <Euclid/Util/Assert.h>
 
