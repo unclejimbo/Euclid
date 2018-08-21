@@ -32,7 +32,8 @@ void proxy_view_selection(const Mesh& mesh,
 
     auto [vbeg, vend] = vertices(mesh);
     auto mesh_vpmap = get(boost::vertex_point, mesh);
-    OBB<Kernel> obb(vbeg, vend, mesh_vpmap);
+    OBB<Kernel> obb;
+    obb.build(vbeg, vend, mesh_vpmap);
 
     // Compute projected area
     std::vector<float> positions;
@@ -47,9 +48,11 @@ void proxy_view_selection(const Mesh& mesh,
         OrthogonalCamera cam;
         auto view_dir = view_sphere.radius * obb.axis(i % 3);
         if (i >= 3) { view_dir = -view_dir; }
-        cam.lookat(cgal_to_eigen<float>(view_sphere.center + view_dir),
-                   cgal_to_eigen<float>(view_sphere.center),
-                   cgal_to_eigen<float>(obb.axis((i + 1) % 3)));
+        Eigen::Vector3f pos, focus, up;
+        cgal_to_eigen(view_sphere.center + view_dir, pos);
+        cgal_to_eigen(view_sphere.center, focus);
+        cgal_to_eigen(obb.axis((i + 1) % 3), up);
+        cam.lookat(pos, focus, up);
         cam.set_extent(view_sphere.radius * 2.0f, view_sphere.radius * 2.0f);
 
         std::vector<unsigned char> pixels(width * height, 0);

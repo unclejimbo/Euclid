@@ -101,19 +101,21 @@ typename Kernel::FT cotangent(const CGAL::Point_3<Kernel>& p1,
                               const CGAL::Point_3<Kernel>& p2,
                               const CGAL::Point_3<Kernel>& p3);
 
-/** Convert a CGAL vector-like to Eigen.
+/** Convert a CGAL vector to Eigen.
  *
- * @tparam CGALVec CGAL::Vector_3, CGAL::Point_3 and the like.
+ *  @tparam CGALVec CGAL::Vector_3, CGAL::Point_3 and the like.
+ *  @tparam Derived Derived type like Eigen::Matrix or Eigen::Array.
  */
-template<typename FT, typename CGALVec>
-Eigen::Matrix<FT, 3, 1> cgal_to_eigen(const CGALVec& vec);
+template<typename CGALVec, typename Derived>
+void cgal_to_eigen(const CGALVec& from, Eigen::PlainObjectBase<Derived>& to);
 
 /** Convert an Eigen vector to CGAL.
  *
- * @tparam CGALVec CGAL::Vector_3, CGAL_Point_3 and the like.
+ *  @tparam Derived Derived type like Eigen::Matrix or Eigen::Array.
+ *  @tparam CGALVec CGAL::Vector_3, CGAL_Point_3 and the like.
  */
-template<typename CGALVec, typename FT>
-CGALVec eigen_to_cgal(const Eigen::Matrix<FT, 3, 1>& vec);
+template<typename Derived, typename CGALVec>
+void eigen_to_cgal(const Eigen::DenseBase<Derived>& from, CGALVec& to);
 
 /** @}*/
 } // namespace Euclid

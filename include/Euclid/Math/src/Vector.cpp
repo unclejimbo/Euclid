@@ -186,16 +186,17 @@ typename Kernel::FT cotangent(const CGAL::Point_3<Kernel>& p1,
     return cotangent(p1 - p2, p3 - p2);
 }
 
-template<typename FT, typename CGALVec>
-inline Eigen::Matrix<FT, 3, 1> cgal_to_eigen(const CGALVec& vec)
+template<typename CGALVec, typename Derived>
+void cgal_to_eigen(const CGALVec& from, Eigen::PlainObjectBase<Derived>& to)
 {
-    return Eigen::Matrix<FT, 3, 1>(vec.x(), vec.y(), vec.z());
+    to.derived().resize(3);
+    to << from.x(), from.y(), from.z();
 }
 
-template<typename CGALVec, typename FT>
-inline CGALVec eigen_to_cgal(const Eigen::Matrix<FT, 3, 1>& vec)
+template<typename Derived, typename CGALVec>
+void eigen_to_cgal(const Eigen::DenseBase<Derived>& from, CGALVec& to)
 {
-    return CGALVec(vec(0), vec(1), vec(2));
+    to = CGALVec(from(0), from(1), from(2));
 }
 
 } // namespace Euclid

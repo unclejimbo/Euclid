@@ -27,7 +27,8 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
         Euclid::read_off<3>(filename, positions, indices);
 
         Euclid::AABB<Kernel> aabb(positions);
-        Eigen::Vector3f center = Euclid::cgal_to_eigen<float>(aabb.center());
+        Eigen::Vector3f center;
+        Euclid::cgal_to_eigen(aabb.center(), center);
         Eigen::Vector3f view =
             center +
             Eigen::Vector3f(0.0f, 0.5f * aabb.ylen(), 2.0f * aabb.zlen());
@@ -324,8 +325,8 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             Euclid::read_off<3>(filename, positions, indices);
 
             Euclid::AABB<Kernel> aabb(positions);
-            Eigen::Vector3f center =
-                Euclid::cgal_to_eigen<float>(aabb.center());
+            Eigen::Vector3f center;
+            Euclid::cgal_to_eigen(aabb.center(), center);
             Eigen::Vector3f view =
                 center +
                 Eigen::Vector3f(0.0f, 0.5f * aabb.ylen(), 2.0f * aabb.zlen());

@@ -146,14 +146,20 @@ TEST_CASE("Math, Vector", "[math][vector]")
 
     SECTION("cgal_to_eigen")
     {
-        auto vec = Euclid::cgal_to_eigen<double>(zerod);
-        REQUIRE(vec == ezerod);
+        Eigen::Vector3d vec1;
+        Eigen::VectorXd vec2;
+        Euclid::cgal_to_eigen(zerod, vec1);
+        Euclid::cgal_to_eigen(zerod, vec2);
+        REQUIRE(vec1 == ezerod);
+        REQUIRE(vec2 == ezerod);
     }
 
     SECTION("eigen_to_cgal")
     {
-        auto p = Euclid::eigen_to_cgal<Point_3d>(ezerod);
-        auto v = Euclid::eigen_to_cgal<Vector_3d>(ezerod);
+        Point_3d p;
+        Vector_3d v;
+        Euclid::eigen_to_cgal(ezerod, p);
+        Euclid::eigen_to_cgal(ezerod, v);
         REQUIRE(p == p1d);
         REQUIRE(v == zerod);
     }

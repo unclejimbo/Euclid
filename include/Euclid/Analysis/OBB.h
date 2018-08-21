@@ -28,21 +28,22 @@ public:
     using FT = typename Kernel::FT;
 
 public:
-    /** Build OBB for a set of positions.
+    /** Build OBB for a set of raw positions.
      *
      */
-    explicit OBB(const std::vector<FT>& positions);
-
-    /** Build OBB for a set of points.
-     *
-     */
-    explicit OBB(const std::vector<Point_3>& points);
+    void build(const std::vector<FT>& positions);
 
     /** Build OBB for a range of points.
      *
      */
     template<typename ForwardIterator, typename VPMap>
-    OBB(ForwardIterator first, ForwardIterator beyond, VPMap vpmap);
+    void build(ForwardIterator first, ForwardIterator beyond, VPMap vpmap);
+
+    /** Build OBB for points represented by a matrix.
+     *
+     */
+    template<typename Derived>
+    void build(const Eigen::MatrixBase<Derived>& v);
 
     /** Return the center of the box.
      *
@@ -53,7 +54,7 @@ public:
      *
      *  The accepted values of n are 0, 1 and 2. The axis are sorted in
      *  descending order w.r.t. to the length, so OBB<KerneL>::axis(0) returns
-     *  the longest axis, although the direction is arbitrary.
+     *  the longest axis, although the sign is arbitrary.
      */
     Vector_3 axis(int n) const;
 
@@ -65,10 +66,8 @@ public:
     FT length(int n) const;
 
 private:
-    using EigenVec = typename Eigen::Matrix<FT, 3, 1>;
-
-private:
-    void _build_obb(const std::vector<EigenVec>& points);
+    template<typename Derived>
+    void _build(const Eigen::MatrixBase<Derived>& points);
 
 private:
     Point_3 _center;
