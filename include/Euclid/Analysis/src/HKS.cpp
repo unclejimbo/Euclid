@@ -7,7 +7,6 @@
 #include <MatOp/SparseSymShiftSolve.h>
 #include <SymEigsShiftSolver.h>
 #include <Euclid/Geometry/TriMeshGeometry.h>
-#include <Euclid/Math/Matrix.h>
 #include <Euclid/Util/Assert.h>
 
 namespace Euclid
@@ -31,7 +30,7 @@ void HKS<Mesh>::build(const Mesh& mesh, unsigned k)
     // Construct a symmetric Laplacian matrix
     SpMat cot_mat = Euclid::laplacian_matrix(mesh);
     SpMat mass_mat = Euclid::mass_matrix(mesh);
-    Euclid::for_each(mass_mat, [](FT& value) { value = 1 / std::sqrt(value); });
+    mass_mat.unaryExpr([](FT& value) { value = 1 / std::sqrt(value); });
     SpMat laplacian = -mass_mat * cot_mat * mass_mat;
 
     // Eigen decomposition of the Laplacian matrix

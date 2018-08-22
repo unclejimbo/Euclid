@@ -15,9 +15,10 @@ The purpose of Euclid is not to replace any of the above packages, but to glue t
 
 ### Math
 
-- Common operations in linear algebra, matrix analysis, etc.
+- Common operations in linear algebra.
 - Robust floating point comparisons.
 - Affine transformation.
+- Statistical analysis.
 - Distance computation between probability distributions.
 
 ### IO

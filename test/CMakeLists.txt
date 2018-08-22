@@ -13,7 +13,6 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/IO/test_PlyIO.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IO/test_InputFixer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Distance.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Matrix.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Numeric.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Statistics.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Transformation.cpp
