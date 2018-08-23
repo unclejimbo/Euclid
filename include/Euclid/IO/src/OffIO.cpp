@@ -23,7 +23,7 @@ inline std::tuple<size_t, size_t, size_t> read_header(std::ifstream& stream)
 }
 
 template<int N>
-inline void write_header(std::ofstream& stream, size_t nv, size_t nf)
+void write_header(std::ofstream& stream, size_t nv, size_t nf)
 {
     stream << "OFF" << std::endl;
     if (N != 0 && nf % N != 0) {
@@ -37,9 +37,7 @@ inline void write_header(std::ofstream& stream, size_t nv, size_t nf)
 }
 
 template<typename T>
-inline void read_positions(std::ifstream& stream,
-                           size_t count,
-                           std::vector<T>& buffer)
+void read_positions(std::ifstream& stream, size_t count, std::vector<T>& buffer)
 {
     buffer.clear();
     buffer.resize(count * 3);
@@ -49,9 +47,7 @@ inline void read_positions(std::ifstream& stream,
 }
 
 template<int N, typename T>
-inline void read_indices(std::ifstream& stream,
-                         size_t count,
-                         std::vector<T>& buffer)
+void read_indices(std::ifstream& stream, size_t count, std::vector<T>& buffer)
 {
     buffer.clear();
     buffer.resize(count * N);
@@ -65,7 +61,7 @@ inline void read_indices(std::ifstream& stream,
 }
 
 template<typename T>
-inline void write_positions(std::ofstream& stream, const std::vector<T>& buffer)
+void write_positions(std::ofstream& stream, const std::vector<T>& buffer)
 {
     for (size_t i = 0; i < buffer.size(); i += 3) {
         stream << buffer[i] << " " << buffer[i + 1] << " " << buffer[i + 2]
@@ -74,7 +70,7 @@ inline void write_positions(std::ofstream& stream, const std::vector<T>& buffer)
 }
 
 template<int N, typename T>
-inline void write_indices(std::ofstream& stream, const std::vector<T>& buffer)
+void write_indices(std::ofstream& stream, const std::vector<T>& buffer)
 {
     for (size_t i = 0; i < buffer.size(); ++i) {
         if (i % N == 0) { stream << N << " "; }
@@ -114,8 +110,8 @@ void read_off(const std::string& file_name,
     _impl::read_indices<N>(stream, n_faces, indices);
 }
 
-template<typename T1, typename T2>
-void write_off(const std::string& file_name, const std::vector<T1>& positions)
+template<typename T>
+void write_off(const std::string& file_name, const std::vector<T>& positions)
 {
     std::ofstream stream(file_name);
     _impl::check_fstream(stream, file_name);

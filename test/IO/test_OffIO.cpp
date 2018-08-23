@@ -5,10 +5,29 @@
 
 TEST_CASE("IO, OffIO", "[io][offio]")
 {
-    SECTION("read_off and write_off")
+    std::string file(DATA_DIR);
+    file.append("chair.off");
+
+    SECTION("positions")
     {
-        std::string file(DATA_DIR);
-        file.append("chair.off");
+        std::vector<float> positions;
+        Euclid::read_off(file, positions);
+
+        REQUIRE(positions.size() == 2382 * 3);
+        REQUIRE(positions[0] == 113.772f);
+
+        std::string tmp_file(TMP_DIR);
+        tmp_file.append("chair_pos.off");
+        Euclid::write_off(tmp_file, positions);
+        std::vector<double> new_positions;
+        Euclid::read_off(tmp_file, new_positions);
+
+        REQUIRE(new_positions.size() == positions.size());
+        REQUIRE(new_positions[0] == 113.772);
+    }
+
+    SECTION("trimesh")
+    {
         std::vector<float> positions;
         std::vector<unsigned> indices;
         Euclid::read_off<3>(file, positions, indices);
