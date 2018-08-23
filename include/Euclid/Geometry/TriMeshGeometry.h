@@ -254,6 +254,18 @@ template<
 T face_area(typename boost::graph_traits<const Mesh>::face_descriptor f,
             const Mesh& mesh);
 
+/** Barycenter/centroid of a face on the mesh.
+ *
+ *  @tparam Mesh Mesh type.
+ *  @tparam Point_3 Optional, derived from Mesh.
+ */
+template<typename Mesh,
+         typename Point_3 = typename boost::property_traits<
+             typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+             value_type>
+Point_3 barycenter(typename boost::graph_traits<const Mesh>::face_descriptor,
+                   const Mesh& mesh);
+
 /** Strategies to compute Laplacian.
  *
  *  @sa laplacian_matrix()

@@ -230,6 +230,18 @@ T face_area(typename boost::graph_traits<const Mesh>::face_descriptor f,
     return area(p1, p2, p3);
 }
 
+template<typename Mesh, typename Point_3>
+Point_3 barycenter(typename boost::graph_traits<const Mesh>::face_descriptor f,
+                   const Mesh& mesh)
+{
+    auto vpmap = get(boost::vertex_point, mesh);
+    auto [vbeg, vend] = CGAL::vertices_around_face(halfedge(f, mesh), mesh);
+    auto p0 = get(vpmap, *vbeg++);
+    auto p1 = get(vpmap, *vbeg++);
+    auto p2 = get(vpmap, *vbeg);
+    return CGAL::centroid(p0, p1, p2);
+}
+
 template<typename Mesh, typename T>
 Eigen::SparseMatrix<T> laplacian_matrix(const Mesh& mesh,
                                         const Laplacian& method)

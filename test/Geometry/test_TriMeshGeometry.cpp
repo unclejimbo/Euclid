@@ -203,6 +203,16 @@ TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
         }
     }
 
+    SECTION("face barycenter")
+    {
+        auto [fbeg, fend] = faces(cube);
+        auto f = *fbeg;
+        auto c = Euclid::barycenter(f, cube);
+        REQUIRE(c.x() == Approx(-1.0 / 3.0));
+        REQUIRE(c.y() == Approx(1.0 / 3.0));
+        REQUIRE(c.z() == -1.0);
+    }
+
     SECTION("laplacian")
     {
         auto laplacian = Euclid::laplacian_matrix(bumpy);
