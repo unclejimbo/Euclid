@@ -147,7 +147,7 @@ And here's the result rendered using MeshLab.
 
 ## Examples
 
-Currently there's no tutorial-like examples. However, you could check the [test cases](https://github.com/unclejimbo/Euclid/tree/dev/test) to see the usage of most functions and classes.
+Currently there's no tutorial-like examples. However, you could check the [test cases](https://github.com/unclejimbo/Euclid/tree/dev/test) to see the usage of most functions and classes. For more information on how to run the tests, see [here](https://codedocs.xyz/unclejimbo/Euclid/md_docs_runtest.html).
 
 ## License
 
