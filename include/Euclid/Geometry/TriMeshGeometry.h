@@ -27,7 +27,6 @@
 
 #include <Eigen/SparseCore>
 #include <CGAL/boost/graph/properties.h>
-#include <CGAL/Vector_3.h>
 
 namespace Euclid
 {
@@ -59,6 +58,9 @@ enum class VertexNormal
  *  Compute vertex normal from the incident face normals.
  *  Choose a weighting strategy of face normals from VertexNormal.
  *
+ *  @tparam Mesh Mesh type.
+ *  @tparam Vector_3 Optional, derived from Mesh.
+ *
  *  **Note**
  *
  *  This function will compute face normals for all the incident triangles
@@ -67,12 +69,13 @@ enum class VertexNormal
  *
  *  @sa VertexNormal
  */
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::Vector_3
-vertex_normal(
-    const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+template<typename Mesh,
+         typename Vector_3 =
+             typename CGAL::Kernel_traits<typename boost::property_traits<
+                 typename boost::property_map<Mesh, boost::vertex_point_t>::
+                     type>::value_type>::Kernel::Vector_3>
+Vector_3 vertex_normal(
+    typename boost::graph_traits<const Mesh>::vertex_descriptor v,
     const Mesh& mesh,
     const VertexNormal& weight = VertexNormal::incident_angle);
 
@@ -81,11 +84,18 @@ vertex_normal(
  *  Compute vertex normal from the incident face normals.
  *  Choose a weighting strategy of face normals from VertexNormal.
  *
+ *  @tparam Mesh Mesh type.
+ *  @tparam FaceNormalMap A property map.
+ *  @tparam Vector_3 Optional, derived from Mesh.
+ *
  *  @sa VertexNormal
  */
-template<typename Mesh, typename FaceNormalMap>
-typename boost::property_traits<FaceNormalMap>::value_type vertex_normal(
-    const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+template<typename Mesh,
+         typename FaceNormalMap,
+         typename Vector_3 =
+             typename boost::property_traits<FaceNormalMap>::value_type>
+Vector_3 vertex_normal(
+    typename boost::graph_traits<const Mesh>::vertex_descriptor v,
     const Mesh& mesh,
     const FaceNormalMap& fnmap,
     const VertexNormal& weight = VertexNormal::incident_angle);
@@ -129,16 +139,19 @@ enum class VertexArea
  *  Choose one type of region as specified in VertexArea.
  *  Only 1-ring neighborhood is considered in this function.
  *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
+ *
  *  @sa VertexArea
  */
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::FT
-vertex_area(
-    const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
-    const Mesh& mesh,
-    const VertexArea& method = VertexArea::mixed_voronoi);
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+T vertex_area(typename boost::graph_traits<const Mesh>::vertex_descriptor v,
+              const Mesh& mesh,
+              const VertexArea& method = VertexArea::mixed_voronoi);
 
 /** Mass matrix of the mesh.
  *
@@ -146,78 +159,100 @@ vertex_area(
  *  written in a diagonal matrix, which serves as the local averaging region
  *  commonly used in discrete differential geometry.
  *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
+ *
  *  @sa VertexArea, vertex_area(), laplacian_matrix()
  */
-template<typename Mesh>
-Eigen::SparseMatrix<
-    typename CGAL::Kernel_traits<typename boost::property_traits<
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
         typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                     value_type>::Kernel::FT>
-mass_matrix(const Mesh& mesh,
-            const VertexArea& method = VertexArea::mixed_voronoi);
+                                                  value_type>::Kernel::FT>
+Eigen::SparseMatrix<T> mass_matrix(
+    const Mesh& mesh,
+    const VertexArea& method = VertexArea::mixed_voronoi);
 
 /** Edge length.
  *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
  */
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::FT
-edge_length(
-    const typename boost::graph_traits<const Mesh>::halfedge_descriptor& he,
-    const Mesh& mesh);
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+T edge_length(typename boost::graph_traits<const Mesh>::halfedge_descriptor he,
+              const Mesh& mesh);
 
 /** Edge length.
  *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
  */
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::FT
-edge_length(const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
-            const Mesh& mesh);
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+T edge_length(typename boost::graph_traits<const Mesh>::edge_descriptor e,
+              const Mesh& mesh);
 
 /** Squared edge length.
  *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
  */
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::FT
-squared_edge_length(
-    const typename boost::graph_traits<const Mesh>::halfedge_descriptor& he,
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+T squared_edge_length(
+    typename boost::graph_traits<const Mesh>::halfedge_descriptor he,
     const Mesh& mesh);
 
 /** Squared edge length.
  *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
  */
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::FT
-squared_edge_length(
-    const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+T squared_edge_length(
+    typename boost::graph_traits<const Mesh>::edge_descriptor e,
     const Mesh& mesh);
 
 /** Normal of a face on the mesh.
  *
+ *  @tparam Mesh Mesh type.
+ *  @tparam Vector_3 Optional, derived from Mesh.
  */
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::Vector_3
-face_normal(const typename boost::graph_traits<const Mesh>::face_descriptor& f,
-            const Mesh& mesh);
+template<typename Mesh,
+         typename Vector_3 =
+             typename CGAL::Kernel_traits<typename boost::property_traits<
+                 typename boost::property_map<Mesh, boost::vertex_point_t>::
+                     type>::value_type>::Kernel::Vector_3>
+Vector_3 face_normal(
+    typename boost::graph_traits<const Mesh>::face_descriptor f,
+    const Mesh& mesh);
 
 /** Area of a face on the mesh.
  *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
  */
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::FT
-face_area(const typename boost::graph_traits<const Mesh>::face_descriptor& f,
-          const Mesh& mesh);
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+T face_area(typename boost::graph_traits<const Mesh>::face_descriptor f,
+            const Mesh& mesh);
 
 /** Strategies to compute Laplacian.
  *
@@ -245,26 +280,34 @@ enum class Laplacian
  *  property.
  *  - @f$M^{-1/2}LM^{-1/2}@f$ is both symmetric and robust.
  *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
+ *
  *  @sa Laplacian, mass_matrix()
  */
-template<typename Mesh>
-Eigen::SparseMatrix<
-    typename CGAL::Kernel_traits<typename boost::property_traits<
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
         typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                     value_type>::Kernel::FT>
-laplacian_matrix(const Mesh& mesh,
-                 const Laplacian& method = Laplacian::cotangent);
+                                                  value_type>::Kernel::FT>
+Eigen::SparseMatrix<T> laplacian_matrix(
+    const Mesh& mesh,
+    const Laplacian& method = Laplacian::cotangent);
 
 /** Gaussian curvature of a vertex on the mesh.
  *
  *  Discrete Gaussian curvature using the angle deficit method.
+ *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
  */
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::FT
-gaussian_curvature(
-    const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+T gaussian_curvature(
+    typename boost::graph_traits<const Mesh>::vertex_descriptor v,
     const Mesh& mesh);
 
 /** @}*/

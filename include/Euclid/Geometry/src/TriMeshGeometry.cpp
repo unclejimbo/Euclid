@@ -12,12 +12,9 @@
 namespace Euclid
 {
 
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::Vector_3
-vertex_normal(
-    const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+template<typename Mesh, typename Vector_3>
+Vector_3 vertex_normal(
+    typename boost::graph_traits<const Mesh>::vertex_descriptor v,
     const Mesh& mesh,
     const VertexNormal& weight)
 {
@@ -26,7 +23,6 @@ vertex_normal(
     using VPMap =
         typename boost::property_map<Mesh, boost::vertex_point_t>::type;
     using Point_3 = typename boost::property_traits<VPMap>::value_type;
-    using Vector_3 = typename CGAL::Kernel_traits<Point_3>::Kernel::Vector_3;
     using FNMap = std::unordered_map<face_descriptor, Vector_3>;
     using FaceNormalMap = boost::const_associative_property_map<FNMap>;
 
@@ -49,15 +45,13 @@ vertex_normal(
     return vertex_normal<Mesh, FaceNormalMap>(v, mesh, map, weight);
 }
 
-template<typename Mesh, typename FaceNormalMap>
-typename boost::property_traits<FaceNormalMap>::value_type vertex_normal(
-    const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+template<typename Mesh, typename FaceNormalMap, typename Vector_3>
+Vector_3 vertex_normal(
+    typename boost::graph_traits<const Mesh>::vertex_descriptor v,
     const Mesh& mesh,
     const FaceNormalMap& fnmap,
     const VertexNormal& weight)
 {
-    using Vector_3 = typename boost::property_traits<FaceNormalMap>::value_type;
-
     auto vpmap = get(boost::vertex_point, mesh);
     Vector_3 normal(0.0, 0.0, 0.0);
     for (const auto& he : halfedges_around_source(v, mesh)) {
@@ -86,22 +80,15 @@ typename boost::property_traits<FaceNormalMap>::value_type vertex_normal(
     return Euclid::normalized(normal);
 }
 
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::FT
-vertex_area(
-    const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
-    const Mesh& mesh,
-    const VertexArea& method)
+template<typename Mesh, typename T>
+T vertex_area(typename boost::graph_traits<const Mesh>::vertex_descriptor v,
+              const Mesh& mesh,
+              const VertexArea& method)
 {
-    using FT = typename CGAL::Kernel_traits<typename boost::property_traits<
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                                value_type>::Kernel::FT;
     auto vpmap = get(boost::vertex_point, mesh);
-    FT va = 0.0;
+    auto va = T(0);
     if (method == VertexArea::barycentric) {
-        const auto one_third = boost::math::constants::third<FT>();
+        const auto one_third = boost::math::constants::third<T>();
         for (const auto& he : halfedges_around_target(v, mesh)) {
             auto p1 = get(vpmap, source(he, mesh));
             auto p2 = get(vpmap, target(he, mesh));
@@ -152,19 +139,12 @@ vertex_area(
     return va;
 }
 
-template<typename Mesh>
-Eigen::SparseMatrix<
-    typename CGAL::Kernel_traits<typename boost::property_traits<
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                     value_type>::Kernel::FT>
-mass_matrix(const Mesh& mesh, const VertexArea& method)
+template<typename Mesh, typename T>
+Eigen::SparseMatrix<T> mass_matrix(const Mesh& mesh, const VertexArea& method)
 {
-    using FT = typename CGAL::Kernel_traits<typename boost::property_traits<
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                                value_type>::Kernel::FT;
     const auto nv = num_vertices(mesh);
-    Eigen::SparseMatrix<FT> mass(nv, nv);
-    std::vector<Eigen::Triplet<FT>> values;
+    Eigen::SparseMatrix<T> mass(nv, nv);
+    std::vector<Eigen::Triplet<T>> values;
 
     int i = 0;
     for (const auto& v : vertices(mesh)) {
@@ -178,13 +158,9 @@ mass_matrix(const Mesh& mesh, const VertexArea& method)
     return mass;
 }
 
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::FT
-edge_length(
-    const typename boost::graph_traits<const Mesh>::halfedge_descriptor& he,
-    const Mesh& mesh)
+template<typename Mesh, typename T>
+T edge_length(typename boost::graph_traits<const Mesh>::halfedge_descriptor he,
+              const Mesh& mesh)
 {
     auto vpmap = get(boost::vertex_point, mesh);
     auto p1 = get(vpmap, source(he, mesh));
@@ -192,23 +168,17 @@ edge_length(
     return length(p2 - p1);
 }
 
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::FT
-edge_length(const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
-            const Mesh& mesh)
+template<typename Mesh, typename T>
+T edge_length(typename boost::graph_traits<const Mesh>::edge_descriptor e,
+              const Mesh& mesh)
 {
     auto he = halfedge(e, mesh);
     return edge_length(he, mesh);
 }
 
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::FT
-squared_edge_length(
-    const typename boost::graph_traits<const Mesh>::halfedge_descriptor& he,
+template<typename Mesh, typename T>
+T squared_edge_length(
+    typename boost::graph_traits<const Mesh>::halfedge_descriptor he,
     const Mesh& mesh)
 {
     auto vpmap = get(boost::vertex_point, mesh);
@@ -217,30 +187,20 @@ squared_edge_length(
     return (p1 - p2).squared_length();
 }
 
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::FT
-squared_edge_length(
-    const typename boost::graph_traits<const Mesh>::edge_descriptor& e,
+template<typename Mesh, typename T>
+T squared_edge_length(
+    typename boost::graph_traits<const Mesh>::edge_descriptor e,
     const Mesh& mesh)
 {
     auto he = halfedge(e, mesh);
     return squared_edge_length(he, mesh);
 }
 
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::Vector_3
-face_normal(const typename boost::graph_traits<const Mesh>::face_descriptor& f,
-            const Mesh& mesh)
+template<typename Mesh, typename Vector_3>
+Vector_3 face_normal(
+    typename boost::graph_traits<const Mesh>::face_descriptor f,
+    const Mesh& mesh)
 {
-    using Vector_3 =
-        typename CGAL::Kernel_traits<typename boost::property_traits<
-            typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                         value_type>::Kernel::Vector_3;
-
     auto vpmap = get(boost::vertex_point, mesh);
     auto he = halfedge(f, mesh);
     auto p1 = get(vpmap, source(he, mesh));
@@ -258,12 +218,9 @@ face_normal(const typename boost::graph_traits<const Mesh>::face_descriptor& f,
     return result;
 }
 
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::FT
-face_area(const typename boost::graph_traits<const Mesh>::face_descriptor& f,
-          const Mesh& mesh)
+template<typename Mesh, typename T>
+T face_area(typename boost::graph_traits<const Mesh>::face_descriptor f,
+            const Mesh& mesh)
 {
     auto vpmap = get(boost::vertex_point, mesh);
     auto he = halfedge(f, mesh);
@@ -273,16 +230,10 @@ face_area(const typename boost::graph_traits<const Mesh>::face_descriptor& f,
     return area(p1, p2, p3);
 }
 
-template<typename Mesh>
-Eigen::SparseMatrix<
-    typename CGAL::Kernel_traits<typename boost::property_traits<
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                     value_type>::Kernel::FT>
-laplacian_matrix(const Mesh& mesh, const Laplacian& method)
+template<typename Mesh, typename T>
+Eigen::SparseMatrix<T> laplacian_matrix(const Mesh& mesh,
+                                        const Laplacian& method)
 {
-    using T = typename CGAL::Kernel_traits<typename boost::property_traits<
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                               value_type>::Kernel::FT;
     using vertex_descriptor =
         typename boost::graph_traits<Mesh>::vertex_descriptor;
     using Triplet = Eigen::Triplet<T>;
@@ -340,17 +291,11 @@ laplacian_matrix(const Mesh& mesh, const Laplacian& method)
     return mat;
 }
 
-template<typename Mesh>
-typename CGAL::Kernel_traits<typename boost::property_traits<
-    typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                 value_type>::Kernel::FT
-gaussian_curvature(
-    const typename boost::graph_traits<const Mesh>::vertex_descriptor& v,
+template<typename Mesh, typename T>
+T gaussian_curvature(
+    typename boost::graph_traits<const Mesh>::vertex_descriptor v,
     const Mesh& mesh)
 {
-    using T = typename CGAL::Kernel_traits<typename boost::property_traits<
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                               value_type>::Kernel::FT;
     auto vpmap = get(boost::vertex_point, mesh);
 
     T angle_defect = boost::math::constants::two_pi<T>();
