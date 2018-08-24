@@ -19,6 +19,7 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Vector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Render/test_RayTracer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Util/test_Memory.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Util/test_Serialize.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Util/test_Timer.cpp
 )
 
@@ -33,6 +34,7 @@ find_package(Eigen3 REQUIRED)
 find_package(Libigl REQUIRED)
 find_package(Embree 3.0 REQUIRED)
 find_package(CGAL REQUIRED)
+find_package(cereal REQUIRED)
 
 target_compile_options(run_test PRIVATE
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:

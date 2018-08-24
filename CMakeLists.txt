@@ -17,6 +17,7 @@ find_package(Spectra)
 find_package(Libigl)
 find_package(Embree 3.0)
 find_package(CGAL)
+find_package(cereal)
 
 option(USE_BLAS "Use BLAS" OFF)
 if(USE_BLAS)
@@ -52,6 +53,7 @@ target_link_libraries(Euclid INTERFACE
     Boost::boost
     Eigen3::Eigen
     CGAL::CGAL
+    cereal
     ${EMBREE_LIBRARIES}
     $<$<AND:$<BOOL:${USE_BLAS}>,$<BOOL:${BLAS_FOUND}>>:${BLAS_LIBRARIES}>
     $<$<AND:$<BOOL:${USE_LAPACK}>,$<BOOL:${LAPACK_FOUND}>>:${LAPACK_LIBRARIES}>

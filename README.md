@@ -48,6 +48,7 @@ The purpose of Euclid is not to replace any of the above packages, but to glue t
 
 - A versatile timer.
 - Memory management.
+- Serialization.
 
 ## Dependencies
 
@@ -60,6 +61,7 @@ However, you'll need the following libraries when you use headers in Euclid that
 - [Spectra](https://spectralib.org/) for solving large scale eigen value problems.
 - [Libigl](http://libigl.github.io/libigl/) yet another simple but powerful geometry processing library in C++.
 - [Embree](http://embree.github.io) for fast cpu ray tracing.
+- [cereal](http://uscilab.github.io/cereal/index.html) for serialization.
 - [Doxygen](http://www.stack.nl/~dimitri/doxygen/) for generating documentations.
 - BLAS, LAPACK, and OpenMP for better performance.
 

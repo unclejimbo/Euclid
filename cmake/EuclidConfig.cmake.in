@@ -12,6 +12,7 @@ find_dependency(Spectra)
 find_dependency(Libigl)
 find_dependency(Embree 3.0)
 find_dependency(CGAL)
+find_dependency(cereal)
 
 option(USE_BLAS "Use BLAS" OFF)
 if(USE_BLAS)
