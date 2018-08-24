@@ -7,6 +7,7 @@
 #pragma once
 
 #include <vector>
+#include <CGAL/boost/graph/properties.h>
 #include <CGAL/Kernel_traits.h>
 #include <Eigen/SparseCholesky>
 #include <Euclid/Util/Memory.h>
