@@ -1,5 +1,5 @@
+#include <catch2/catch.hpp>
 #include <Euclid/IO/OffIO.h>
-#include <catch.hpp>
 
 #include <config.h>
 

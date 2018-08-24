@@ -1,5 +1,5 @@
+#include <catch2/catch.hpp>
 #include <Euclid/IO/PlyIO.h>
-#include <catch.hpp>
 
 #include <iostream>
 #include <vector>

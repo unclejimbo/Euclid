@@ -1,5 +1,5 @@
+#include <catch2/catch.hpp>
 #include <Euclid/Render/RayTracer.h>
-#include <catch.hpp>
 
 #include <random>
 #include <string>

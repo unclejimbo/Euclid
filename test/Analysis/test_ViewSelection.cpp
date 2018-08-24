@@ -1,5 +1,5 @@
+#include <catch2/catch.hpp>
 #include <Euclid/Analysis/ViewSelection.h>
-#include <catch.hpp>
 
 #include <algorithm>
 #include <CGAL/Simple_cartesian.h>
@@ -56,7 +56,7 @@ TEST_CASE("Analysis, ViewSelection", "[analysis][viewselection]")
         std::vector<float> vpositions;
         std::vector<unsigned> vindices;
         Euclid::extract_mesh<3>(view_sphere.mesh, vpositions, vindices);
-        auto[smin, smax] =
+        auto [smin, smax] =
             std::minmax_element(view_scores.begin(), view_scores.end());
         std::vector<unsigned char> colors;
         colors.reserve(view_scores.size() * 4);
@@ -84,7 +84,7 @@ TEST_CASE("Analysis, ViewSelection", "[analysis][viewselection]")
         std::vector<float> vpositions;
         std::vector<unsigned> vindices;
         Euclid::extract_mesh<3>(view_sphere.mesh, vpositions, vindices);
-        auto[smin, smax] =
+        auto [smin, smax] =
             std::minmax_element(view_scores.begin(), view_scores.end());
         std::vector<unsigned char> colors;
         colors.reserve(view_scores.size() * 4);

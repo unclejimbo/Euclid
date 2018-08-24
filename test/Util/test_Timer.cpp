@@ -1,6 +1,5 @@
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <Euclid/Util/Timer.h>
-#include <Euclid/Math/Numeric.h>
 
 #ifdef _MSC_VER
 #include <Windows.h>

@@ -1,5 +1,5 @@
+#include <catch2/catch.hpp>
 #include <Euclid/Math/Statistics.h>
-#include <catch.hpp>
 
 TEST_CASE("Math, Statistics", "[math][statistics]")
 {

@@ -1,5 +1,6 @@
+#include <catch2/catch.hpp>
 #include <Euclid/Math/Numeric.h>
-#include <catch.hpp>
+
 #include <iostream>
 #include <boost/math/constants/constants.hpp>
 

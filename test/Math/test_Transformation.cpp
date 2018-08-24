@@ -1,5 +1,5 @@
+#include <catch2/catch.hpp>
 #include <Euclid/Math/Transformation.h>
-#include <catch.hpp>
 
 #include <CGAL/Simple_cartesian.h>
 

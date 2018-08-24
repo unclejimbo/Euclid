@@ -1,5 +1,5 @@
+#include <catch2/catch.hpp>
 #include <Euclid/Math/Vector.h>
-#include <catch.hpp>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Simple_cartesian.h>

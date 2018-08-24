@@ -1,5 +1,5 @@
+#include <catch2/catch.hpp>
 #include <Euclid/Analysis/Descriptor.h>
-#include <catch.hpp>
 
 #include <vector>
 #include <CGAL/Simple_cartesian.h>

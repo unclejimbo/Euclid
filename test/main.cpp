@@ -3,7 +3,7 @@
 // Do not modify or repeat the macro in this file.
 // Just include <catch.hpp> in your test files.
 #define CATCH_CONFIG_MAIN
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;

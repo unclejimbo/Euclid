@@ -1,5 +1,5 @@
+#include <catch2/catch.hpp>
 #include <Euclid/Math/Distance.h>
-#include <catch.hpp>
 
 TEST_CASE("Math, Distance", "[math][distance]")
 {

@@ -1,11 +1,11 @@
-#include <catch.hpp>
+#include <catch2/catch.hpp>
+#include <Euclid/Geometry/Geodesics.h>
 
 #include <algorithm>
 #include <vector>
 #include <string>
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
-#include <Euclid/Geometry/Geodesics.h>
 #include <Euclid/Geometry/MeshHelpers.h>
 #include <Euclid/Math/Numeric.h>
 #include <Euclid/IO/OffIO.h>
