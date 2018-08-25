@@ -11,6 +11,7 @@
 
 namespace Euclid
 {
+/**@{*/
 
 /** A potentially resource owning pointer.
  *
@@ -195,4 +196,5 @@ void swap(ProPtr<T>& lhs, ProPtr<T>& rhs)
     lhs.swap(rhs);
 }
 
+/**@}*/
 } // namespace Euclid
