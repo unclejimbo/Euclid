@@ -72,6 +72,49 @@ void load(BinaryInputArchive& ar, Eigen::PlainObjectBase<Derived>& mat)
     ar(binary_data(mat.data(), rows * cols * sizeof(T)));
 }
 
+/** Serialize an Eigen sparse matrix.
+ *
+ */
+template<typename Archive, typename Scalar, int Options, typename StorageIndex>
+void save(Archive& ar,
+          const Eigen::SparseMatrix<Scalar, Options, StorageIndex>& mat)
+{
+    using SpMat = Eigen::SparseMatrix<Scalar, Options, StorageIndex>;
+    auto rows = static_cast<StorageIndex>(mat.rows());
+    auto cols = static_cast<StorageIndex>(mat.cols());
+    auto size = static_cast<StorageIndex>(mat.nonZeros());
+    ar(rows, cols, size);
+    for (StorageIndex i = 0; i < mat.outerSize(); ++i) {
+        for (SpMat::InnerIterator it(mat, i); it; ++it) {
+            auto row = static_cast<StorageIndex>(it.row());
+            auto col = static_cast<StorageIndex>(it.col());
+            auto value = it.value();
+            ar(row, col, value);
+        }
+    }
+}
+
+/** Deserialize an Eigen sparse matrix.
+ *
+ */
+template<typename Archive, typename Scalar, int Options, typename StorageIndex>
+void load(Archive& ar, Eigen::SparseMatrix<Scalar, Options, StorageIndex>& mat)
+{
+    using SpMat = Eigen::SparseMatrix<Scalar, Options, StorageIndex>;
+    using Triplet = Eigen::Triplet<Scalar, StorageIndex>;
+    StorageIndex rows, cols, size;
+    ar(rows, cols, size);
+    mat.resize(rows, cols);
+    std::vector<Triplet> triplets(size);
+    for (StorageIndex i = 0; i < size; ++i) {
+        StorageIndex row, col;
+        Scalar value;
+        ar(row, col, value);
+        triplets[i] = Triplet(row, col, value);
+    }
+    mat.setFromTriplets(triplets.begin(), triplets.end());
+}
+
 } // namespace cereal
 
 namespace Euclid
@@ -79,6 +122,7 @@ namespace Euclid
 
 namespace _impl
 {
+
 template<typename Stream>
 void check_fstream(Stream& stream, const std::string& filename)
 {
@@ -89,29 +133,57 @@ void check_fstream(Stream& stream, const std::string& filename)
     }
 }
 
+// The actuall implementation of serialize.
+template<typename T>
+void serialize(const std::string& filename, const T& data)
+{
+    auto mode =
+        std::ios_base::out | std::ios_base::binary | std::ios_base::trunc;
+    std::ofstream ofs(filename, mode);
+    check_fstream(ofs, filename);
+    cereal::BinaryOutputArchive archive(ofs);
+    archive(data);
+}
+
+// The actuall implementation of deserialize.
+template<typename T>
+void deserialize(const std::string& filename, T& data)
+{
+    auto mode = std::ios_base::in | std::ios_base::binary;
+    std::ifstream ifs(filename, mode);
+    check_fstream(ifs, filename);
+    cereal::BinaryInputArchive archive(ifs);
+    archive(data);
+}
+
 } // namespace _impl
 
 template<typename Derived>
 void serialize(const std::string& filename,
                const Eigen::PlainObjectBase<Derived>& mat)
 {
-    auto mode =
-        std::ios_base::out | std::ios_base::binary | std::ios_base::trunc;
-    std::ofstream ofs(filename, mode);
-    _impl::check_fstream(ofs, filename);
-    cereal::BinaryOutputArchive archive(ofs);
-    archive(mat);
+    _impl::serialize(filename, mat);
 }
 
 template<typename Derived>
 void deserialize(const std::string& filename,
                  Eigen::PlainObjectBase<Derived>& mat)
 {
-    auto mode = std::ios_base::in | std::ios_base::binary;
-    std::ifstream ifs(filename, mode);
-    _impl::check_fstream(ifs, filename);
-    cereal::BinaryInputArchive archive(ifs);
-    archive(mat);
+    _impl::deserialize(filename, mat);
+}
+
+template<typename Scalar, int Options, typename StorageIndex>
+void serialize(const std::string& filename,
+               const Eigen::SparseMatrix<Scalar, Options, StorageIndex>& mat)
+{
+    _impl::serialize(filename, mat);
+}
+
+template<typename Scalar, int Options, typename StorageIndex>
+void deserialize(const std::string& filename,
+                 Eigen::SparseMatrix<Scalar, Options, StorageIndex>& mat)
+{
+    _impl::deserialize(filename, mat);
 }
 
 } // namespace Euclid

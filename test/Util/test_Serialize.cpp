@@ -3,6 +3,8 @@
 
 #include <cereal/archives/json.hpp>
 #include <cereal/types/vector.hpp>
+#include <igl/isdiag.h>
+#include <igl/speye.h>
 
 #include <config.h>
 
@@ -13,7 +15,7 @@ TEST_CASE("Util, Serialize", "[util][serialize]")
         Eigen::MatrixXf from = Eigen::MatrixXf::Random(1000, 1000);
         Eigen::MatrixXf to;
         std::string file(TMP_DIR);
-        file.append("1.cereal");
+        file.append("matrix.cereal");
 
         Euclid::serialize(file, from);
         Euclid::deserialize(file, to);
@@ -27,13 +29,27 @@ TEST_CASE("Util, Serialize", "[util][serialize]")
         Eigen::ArrayXXd from = Eigen::ArrayXXd::Random(1000, 1000);
         Eigen::ArrayXXd to;
         std::string file(TMP_DIR);
-        file.append("2.cereal");
+        file.append("array.cereal");
 
         Euclid::serialize(file, from);
         Euclid::deserialize(file, to);
 
         REQUIRE(from.size() == to.size());
         REQUIRE(from(0, 0) == to(0, 0));
+    }
+
+    SECTION("Eigen::SparseMatrix")
+    {
+        Eigen::SparseMatrix<float> from, to;
+        igl::speye(1000, 1000, from);
+        std::string file(TMP_DIR);
+        file.append("spmat.cereal");
+
+        Euclid::serialize(file, from);
+        Euclid::deserialize(file, to);
+
+        REQUIRE(from.nonZeros() == to.nonZeros());
+        REQUIRE(igl::isdiag(to));
     }
 
     SECTION("mix with stl")
@@ -43,7 +59,7 @@ TEST_CASE("Util, Serialize", "[util][serialize]")
             v = Eigen::Vector3f::Random();
         }
         std::string file(TMP_DIR);
-        file.append("3.cereal");
+        file.append("stl.cereal");
 
         {
             auto mode = std::ios_base::out | std::ios_base::binary |
@@ -69,7 +85,7 @@ TEST_CASE("Util, Serialize", "[util][serialize]")
         Eigen::Vector3f from, to;
         from.setRandom();
         std::string file(TMP_DIR);
-        file.append("4.cereal.json");
+        file.append("vec.cereal.json");
 
         {
             auto mode = std::ios_base::out | std::ios_base::trunc;

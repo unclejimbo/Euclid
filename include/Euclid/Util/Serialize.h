@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 #include <Eigen/Core>
+#include <Eigen/SparseCore>
 
 namespace Euclid
 {
@@ -33,6 +34,20 @@ void serialize(const std::string& filename,
 template<typename Derived>
 void deserialize(const std::string& filename,
                  Eigen::PlainObjectBase<Derived>& mat);
+
+/** Serialize an Eigen sparse matrix/array to a binary file.
+ *
+ */
+template<typename Scalar, int Options, typename StorageIndex>
+void serialize(const std::string& filename,
+               const Eigen::SparseMatrix<Scalar, Options, StorageIndex>& mat);
+
+/** Deserialize an Eigen sparse matrix/array from a binary file.
+ *
+ */
+template<typename Scalar, int Options, typename StorageIndex>
+void deserialize(const std::string& filename,
+                 Eigen::SparseMatrix<Scalar, Options, StorageIndex>& mat);
 
 /**@}*/
 } // namespace Euclid
