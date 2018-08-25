@@ -7,7 +7,7 @@
  *  supported in this module can be directly used by an Archive since
  *  serialization functions of these types are already defined within this
  *  module (not shown in the api documentation though).
- *  @defgroup PkgSerialize
+ *  @defgroup PkgSerialize Serialize
  *  @ingroup PkgUtil
  */
 #pragma once
@@ -20,14 +20,14 @@ namespace Euclid
 {
 /**@{*/
 
-/** Serialize an Eigen matrix/array to a binary file.
+/** Serialize an Eigen dense matrix/array to a binary file.
  *
  */
 template<typename Derived>
 void serialize(const std::string& filename,
                const Eigen::PlainObjectBase<Derived>& mat);
 
-/** Deserialize an Eigen matrix/array from a binary file.
+/** Deserialize an Eigen dense matrix/array from a binary file.
  *
  */
 template<typename Derived>

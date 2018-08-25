@@ -8,6 +8,10 @@
 namespace cereal
 {
 
+/** Serialize an Eigen dense object.
+ *
+ *  Coeffwise access, slow.
+ */
 template<typename Archive, typename Derived>
 void save(Archive& ar, const Eigen::PlainObjectBase<Derived>& mat)
 {
@@ -22,6 +26,10 @@ void save(Archive& ar, const Eigen::PlainObjectBase<Derived>& mat)
     }
 }
 
+/** Serialize an Eigen dense object.
+ *
+ *  Buffer access, fast, only work in binary mode.
+ */
 template<typename Derived>
 void save(BinaryOutputArchive& ar, const Eigen::PlainObjectBase<Derived>& mat)
 {
@@ -33,6 +41,10 @@ void save(BinaryOutputArchive& ar, const Eigen::PlainObjectBase<Derived>& mat)
     ar(binary_data(d.data(), rows * cols * sizeof(T)));
 }
 
+/** Deserialize an Eigen dense object.
+ *
+ *  Coeffwise access, slow.
+ */
 template<typename Archive, typename Derived>
 void load(Archive& ar, Eigen::PlainObjectBase<Derived>& mat)
 {
@@ -46,6 +58,10 @@ void load(Archive& ar, Eigen::PlainObjectBase<Derived>& mat)
     }
 }
 
+/** Deserialize an Eigen dense object.
+ *
+ *  Buffer access, fast, only work in binary mode.
+ */
 template<typename Derived>
 void load(BinaryInputArchive& ar, Eigen::PlainObjectBase<Derived>& mat)
 {
