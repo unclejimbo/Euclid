@@ -918,11 +918,11 @@ template<int VN, typename FloatType, typename IndexType, typename ColorType>
 class CommonPlyWriter : public PlyWriter
 {
 public:
-    CommonPlyWriter(std::vector<FloatType>& positions,
-                    std::vector<FloatType>* normals = nullptr,
-                    std::vector<FloatType>* texcoords = nullptr,
-                    std::vector<IndexType>* indices = nullptr,
-                    std::vector<ColorType>* colors = nullptr)
+    CommonPlyWriter(const std::vector<FloatType>& positions,
+                    const std::vector<FloatType>* normals = nullptr,
+                    const std::vector<FloatType>* texcoords = nullptr,
+                    const std::vector<IndexType>* indices = nullptr,
+                    const std::vector<ColorType>* colors = nullptr)
         : _positions(positions), _normals(normals), _texcoords(texcoords),
           _indices(indices), _colors(colors)
     {
@@ -992,11 +992,11 @@ private:
                         PlyFormat format);
 
 private:
-    std::vector<FloatType>& _positions;
-    std::vector<FloatType>* _normals = nullptr;
-    std::vector<FloatType>* _texcoords = nullptr;
-    std::vector<IndexType>* _indices = nullptr;
-    std::vector<ColorType>* _colors = nullptr;
+    const std::vector<FloatType>& _positions;
+    const std::vector<FloatType>* _normals = nullptr;
+    const std::vector<FloatType>* _texcoords = nullptr;
+    const std::vector<IndexType>* _indices = nullptr;
+    const std::vector<ColorType>* _colors = nullptr;
     bool _has_alpha = false;
     size_t _piter = 0;
     size_t _iiter = 0;
@@ -1102,9 +1102,10 @@ void write_ply(const std::string& file_name,
 template<int VN, typename FloatType>
 void write_ply(
     const std::string& file_name,
-    std::vector<FloatType>& positions,
-    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
-    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
+    const std::vector<FloatType>& positions,
+    typename std::enable_if<true, const std::vector<FloatType>*>::type normals,
+    typename std::enable_if<true, const std::vector<FloatType>*>::type
+        texcoords,
     std::nullptr_t indices,
     std::nullptr_t colors,
     PlyFormat format = PlyFormat::ascii);
@@ -1115,10 +1116,11 @@ void write_ply(
 template<int VN, typename FloatType, typename IndexType>
 void write_ply(
     const std::string& file_name,
-    std::vector<FloatType>& positions,
-    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
-    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
-    std::vector<IndexType>* indices,
+    const std::vector<FloatType>& positions,
+    typename std::enable_if<true, const std::vector<FloatType>*>::type normals,
+    typename std::enable_if<true, const std::vector<FloatType>*>::type
+        texcoords,
+    const std::vector<IndexType>* indices,
     std::nullptr_t colors,
     PlyFormat format = PlyFormat::ascii);
 
@@ -1128,11 +1130,12 @@ void write_ply(
 template<int VN, typename FloatType, typename ColorType>
 void write_ply(
     const std::string& file_name,
-    std::vector<FloatType>& positions,
-    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
-    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
+    const std::vector<FloatType>& positions,
+    typename std::enable_if<true, const std::vector<FloatType>*>::type normals,
+    typename std::enable_if<true, const std::vector<FloatType>*>::type
+        texcoords,
     std::nullptr_t indices,
-    std::vector<ColorType>* colors,
+    const std::vector<ColorType>* colors,
     PlyFormat format = PlyFormat::ascii);
 
 /** Write ply file using CommonPlyWriter.
@@ -1160,11 +1163,12 @@ void write_ply(
 template<int VN, typename FloatType, typename IndexType, typename ColorType>
 void write_ply(
     const std::string& file_name,
-    std::vector<FloatType>& positions,
-    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
-    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
-    std::vector<IndexType>* indices,
-    std::vector<ColorType>* colors,
+    const std::vector<FloatType>& positions,
+    typename std::enable_if<true, const std::vector<FloatType>*>::type normals,
+    typename std::enable_if<true, const std::vector<FloatType>*>::type
+        texcoords,
+    const std::vector<IndexType>* indices,
+    const std::vector<ColorType>* colors,
     PlyFormat format = PlyFormat::ascii);
 
 /** @}*/
