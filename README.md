@@ -147,7 +147,7 @@ And here's the result rendered using MeshLab.
 
 ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/resource/bumpy_gaussian.png)
 
-See source code [here](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/examples/hello_world/main.cpp).
+See source code [here](https://github.com/unclejimbo/Euclid/blob/dev/examples/hello_world/main.cpp).
 
 ## Examples
 
