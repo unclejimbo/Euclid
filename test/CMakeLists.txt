@@ -60,7 +60,6 @@ target_link_libraries(run_test PRIVATE
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:stdc++fs>
 )
 
-# Output
 set_target_properties(run_test PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/test
 )
