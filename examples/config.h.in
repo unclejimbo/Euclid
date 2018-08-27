@@ -1,0 +1,2 @@
+#define DATA_DIR "${CMAKE_SOURCE_DIR}/data/"
+#define TMP_DIR "${CMAKE_BINARY_DIR}/bin/"

@@ -133,6 +133,7 @@ export(PACKAGE Euclid)
 # Optional targets
 option(BUILD_DOC "Build documentation" ON)
 option(BUILD_TEST "Build testing" ON)
+option(BUILD_EXAMPLE "Build examples" ON)
 
 if(BUILD_DOC)
     add_subdirectory(docs)
@@ -140,4 +141,8 @@ endif()
 
 if(BUILD_TEST)
     add_subdirectory(test)
+endif()
+
+if(BUILD_EXAMPLE)
+    add_subdirectory(examples)
 endif()
