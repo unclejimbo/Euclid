@@ -1,6 +1,6 @@
 /** Off I/O.
  *
- *  Off is simple geometry file format storing positions,
+ *  Off is a simple geometry file format storing positions,
  *  and indices of edges and faces.
  *  @defgroup PkgOffIO Off I/O
  *  @ingroup PkgIO
