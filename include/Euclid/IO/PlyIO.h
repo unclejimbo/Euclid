@@ -1,8 +1,13 @@
 /** Ply I/O.
  *
- *  Ply file are assumed to consist of geomety elements, e.g. vertex and face.
+ *  Ply file conceptually consists of geomety elements, e.g. vertex and face.
  *  And each element has one or more properties, e.g. a vertex has x, y, z
- *  positions.
+ *  coordinates. As a result, ply is quite versatile and you can store many
+ *  properties using this format. For the sake of simplicity however, you should
+ *  consider using the free read and write functions provided in this module
+ *  since they can deal with the most common type of ply file used in geometry
+ *  processing. When you need to customize the ply format, you can try to extend
+ *  the abstract interface PlyReader and PlyWriter.
  *  @defgroup PkgPlyIO Ply I/O
  *  @ingroup PkgIO
  */
@@ -15,6 +20,10 @@
 
 namespace Euclid
 {
+// Forward declaration
+class PlyReader;
+class PlyWriter;
+
 /** @{*/
 
 /** Ply file format.
@@ -24,14 +33,10 @@ namespace Euclid
  */
 enum class PlyFormat
 {
-    ascii,
-    binary_little_endian,
-    binary_big_endian
+    ascii,                /**< text mode.*/
+    binary_little_endian, /**< little endian binary mode.*/
+    binary_big_endian     /**< big endian binary mode.*/
 };
-
-// Forward declaration
-class PlyReader;
-class PlyWriter;
 
 /** Base class for ply property.
  *
@@ -669,10 +674,19 @@ private:
 
 /** An abstrct class for ply reader.
  *
- *  This class serves as a base class for a specific reader.
- *  You should use the CommonPlyReader class to read the most common
- *  ply format. When you are reading from a custom ply file, derive
- *  from this class and override the functions of the specific PlyProperty.
+ *  This class serves as an abstract base class for a ply file reader. A ply
+ *  reader is supposed to be supplied to the function read_ply to customize the
+ *  process of reading a ply file. A PlyReader is used in the following way,
+ *
+ *  1. Header is read and parsed into elements and properties in read_ply.
+ *  2. read_ply will call PlyReader::on_read.
+ *  3. read_ply will then call PlyReader::read to do the actual reading.
+ *
+ *  **Note**
+ *
+ *  You should use the CommonPlyReader class to read the most common ply format.
+ *
+ *  @sa read_ply CommonPlyReader
  */
 class PlyReader
 {
@@ -683,10 +697,10 @@ public:
 
     /** On reading the header.
      *
-     *  This function is called right after the header specification
-     *  is retrieved from the file. Override this function if you
-     *  wish to do some preprocessing before reader the ply body,
-     *  e.g. allocate space for buffers.
+     *  This function is called right after the header specification is
+     *  retrieved from the file. Override this function if you wish to do some
+     *  preprocessing before reading the ply body, e.g. allocating space for
+     *  buffers.
      */
     virtual void on_read(const PlyHeader&) {}
 
@@ -734,91 +748,22 @@ protected:
     bool _sys_little_endian;
 };
 
-/** A ply reader for a common set of properties.
- *
- *  The most common ply files have the following header specification,
- *  ```
- *  element vertex
- *  property float/double x            // vertex position
- *  property float/double y
- *  property float/double z
- *  property float/double nx           // vertex normal, optional
- *  property float/double ny
- *  property float/double nz
- *  property float/double s/texture_u  // texture coordinate, optional
- *  property float/double y/texture_v
- *  property uchar red                 // vertex color, optional
- *  property uchar green
- *  property uchar blue
- *  property uchar alpha               // alpha is optional for color
- *  element face
- *  property list uchar int/uint vertex_index/vertex_indices // optional
- *  ```
- *  So this class provides a native implementation to read
- *  this type of ply files. Note that it's assumed that all faces
- *  have the same number of vertices.
- */
-template<int VN, typename FloatType, typename IndexType, typename ColorType>
-class CommonPlyReader : public PlyReader
-{
-public:
-    CommonPlyReader(std::vector<FloatType>& positions,
-                    std::vector<FloatType>* normals = nullptr,
-                    std::vector<FloatType>* texcoords = nullptr,
-                    std::vector<IndexType>* indices = nullptr,
-                    std::vector<ColorType>* colors = nullptr)
-        : _positions(positions), _normals(normals), _texcoords(texcoords),
-          _indices(indices), _colors(colors)
-    {}
-
-    void on_read(const PlyHeader& header) override;
-
-    void read(const PlyDoubleProperty* property,
-              std::ifstream& stream,
-              PlyFormat format) override;
-
-    void read(const PlyFloatProperty* property,
-              std::ifstream& stream,
-              PlyFormat format) override;
-
-    void read(const PlyIntProperty* property,
-              std::ifstream& stream,
-              PlyFormat format) override;
-
-    void read(const PlyUintProperty* property,
-              std::ifstream& stream,
-              PlyFormat format) override;
-
-    void read(const PlyUcharProperty* property,
-              std::ifstream& stream,
-              PlyFormat format) override;
-
-private:
-    template<typename TPlyProperty>
-    void _store_float(const TPlyProperty* property,
-                      std::ifstream& stream,
-                      PlyFormat format);
-
-    template<typename TPlyProperty>
-    void _store_color(const TPlyProperty* property,
-                      std::ifstream& stream,
-                      PlyFormat format);
-
-    template<typename TPlyProperty>
-    void _store_indices(const TPlyProperty* property,
-                        std::ifstream& stream,
-                        PlyFormat format);
-
-private:
-    std::vector<FloatType>& _positions;
-    std::vector<FloatType>* _normals = nullptr;
-    std::vector<FloatType>* _texcoords = nullptr;
-    std::vector<IndexType>* _indices = nullptr;
-    std::vector<ColorType>* _colors = nullptr;
-};
-
 /** An abstract ply writer.
  *
+ *  This class serves as an abstract base class for a ply file writer. A ply
+ *  writer is supposed to be supplied to the function write_ply to customize the
+ *  process of writing a ply file. A PlyWriter is used in the following way,
+ *
+ *  1. write_ply will call PlyWriter::on_write.
+ *  2. Header will be write to the file.
+ *  3. write_ply will then call PlyWriter::write to do the actual writing.
+ *
+ *  **Note**
+ *
+ *  You should use the CommonPlyWriter class to write the most common ply
+ *  format.
+ *
+ *  @sa write_ply CommonPlyWriter
  */
 class PlyWriter
 {
@@ -890,6 +835,94 @@ protected:
     bool _sys_little_endian;
 };
 
+/** A ply reader for a common set of properties.
+ *
+ *  The most common ply files have the following header specification,
+ *  ```
+ *  element vertex
+ *  property float/double x            // vertex position
+ *  property float/double y
+ *  property float/double z
+ *  property float/double nx           // vertex normal, optional
+ *  property float/double ny
+ *  property float/double nz
+ *  property float/double s/texture_u  // texture coordinate, optional
+ *  property float/double y/texture_v
+ *  property uchar red                 // vertex color, optional
+ *  property uchar green
+ *  property uchar blue
+ *  property uchar alpha               // alpha is optional for color
+ *  element face
+ *  property list uchar int/uint vertex_index/vertex_indices // optional
+ *  ```
+ *  So this class provides a native implementation to read this type of ply
+ *  files. Note that it's assumed that all faces have the same number of
+ *  vertices.
+ */
+template<int VN, typename FloatType, typename IndexType, typename ColorType>
+class CommonPlyReader : public PlyReader
+{
+public:
+    /** Constructor.
+     *
+     *  The values of the properties are stored into the buffers supplied here.
+     *  Set to nullptr to omit the values of that property.
+     */
+    CommonPlyReader(std::vector<FloatType>& positions,
+                    std::vector<FloatType>* normals = nullptr,
+                    std::vector<FloatType>* texcoords = nullptr,
+                    std::vector<IndexType>* indices = nullptr,
+                    std::vector<ColorType>* colors = nullptr)
+        : _positions(positions), _normals(normals), _texcoords(texcoords),
+          _indices(indices), _colors(colors)
+    {}
+
+    void on_read(const PlyHeader& header) override;
+
+    void read(const PlyDoubleProperty* property,
+              std::ifstream& stream,
+              PlyFormat format) override;
+
+    void read(const PlyFloatProperty* property,
+              std::ifstream& stream,
+              PlyFormat format) override;
+
+    void read(const PlyIntProperty* property,
+              std::ifstream& stream,
+              PlyFormat format) override;
+
+    void read(const PlyUintProperty* property,
+              std::ifstream& stream,
+              PlyFormat format) override;
+
+    void read(const PlyUcharProperty* property,
+              std::ifstream& stream,
+              PlyFormat format) override;
+
+private:
+    template<typename TPlyProperty>
+    void _store_float(const TPlyProperty* property,
+                      std::ifstream& stream,
+                      PlyFormat format);
+
+    template<typename TPlyProperty>
+    void _store_color(const TPlyProperty* property,
+                      std::ifstream& stream,
+                      PlyFormat format);
+
+    template<typename TPlyProperty>
+    void _store_indices(const TPlyProperty* property,
+                        std::ifstream& stream,
+                        PlyFormat format);
+
+private:
+    std::vector<FloatType>& _positions;
+    std::vector<FloatType>* _normals = nullptr;
+    std::vector<FloatType>* _texcoords = nullptr;
+    std::vector<IndexType>* _indices = nullptr;
+    std::vector<ColorType>* _colors = nullptr;
+};
+
 /** A ply writer for a common set of properties.
  *
  *  The most common ply files have the following header specification,
@@ -910,14 +943,19 @@ protected:
  *  element face
  *  property list uchar int/uint vertex_index/vertex_indices // optional
  *  ```
- *  So this class provides a native implementation to write
- *  this type of ply files. Note that it's assumed that all faces
- *  have the same number of vertices.
+ *  So this class provides a native implementation to write this type of ply
+ *  files. Note that it's assumed that all faces have the same number of
+ *  vertices.
  */
 template<int VN, typename FloatType, typename IndexType, typename ColorType>
 class CommonPlyWriter : public PlyWriter
 {
 public:
+    /** Constructor.
+     *
+     *  The values of the properties are read from the buffers supplied here.
+     *  Set to nullptr to omit the values of that property.
+     */
     CommonPlyWriter(const std::vector<FloatType>& positions,
                     const std::vector<FloatType>* normals = nullptr,
                     const std::vector<FloatType>* texcoords = nullptr,
@@ -1147,14 +1185,15 @@ void write_ply(
  *  @tparam IndexType Type of index value.
  *  @tparam ColorType Type of color value.
  *
- *  @param file_name Input file name.
+ *  @param file_name Output file name.
  *  @param positions Vertex positions.
- *  @param normals Vertex normals, use nullptr if you don't want to read this
+ *  @param normals Vertex normals, use nullptr if you don't want to write this
  *  property.
  *  @param texcoords Vertex texture coordinates, use nullptr if you don't want
- *  to read this property.
- *  @param indices Indices, use nullptr if you don't want to read this property.
- *  @param colors Vertex colors, use nullptr if you don't want to read this
+ *  to write this property.
+ *  @param indices Indices, use nullptr if you don't want to write this
+ *  property.
+ *  @param colors Vertex colors, use nullptr if you don't want to write this
  *  property.
  *  @param format Ply encoding format.
  *
