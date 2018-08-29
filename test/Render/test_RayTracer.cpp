@@ -55,7 +55,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                 raytracer.render_shaded(pixels.data(), cam, width, height);
 
                 std::string outfile(TMP_DIR);
-                outfile.append("bunny_shaded1.png");
+                outfile.append("raytracer_persp_ctor.png");
                 stbi_write_png(outfile.c_str(),
                                width,
                                height,
@@ -73,7 +73,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                 raytracer.render_shaded(pixels.data(), cam, width, height);
 
                 std::string outfile(TMP_DIR);
-                outfile.append("bunny_shaded2.png");
+                outfile.append("raytracer_persp_lookat.png");
                 stbi_write_png(outfile.c_str(),
                                width,
                                height,
@@ -95,7 +95,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                 raytracer.render_shaded(pixels.data(), cam, width, height);
 
                 std::string outfile(TMP_DIR);
-                outfile.append("bunny_shaded3.png");
+                outfile.append("raytracer_ortho_ctor.png");
                 stbi_write_png(outfile.c_str(),
                                width,
                                height,
@@ -112,7 +112,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                 raytracer.render_shaded(pixels.data(), cam, width, height);
 
                 std::string outfile(TMP_DIR);
-                outfile.append("bunny_shaded4.png");
+                outfile.append("raytracer_ortho_lookat.png");
                 stbi_write_png(outfile.c_str(),
                                width,
                                height,
@@ -130,7 +130,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             raytracer.render_shaded(pixels.data(), cam, width, height, 8);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bunny_shaded5.png");
+            outfile.append("raytracer_multisample.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
@@ -147,7 +147,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             raytracer.render_shaded(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bunny_shaded6.png");
+            outfile.append("raytracer_material.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
@@ -161,7 +161,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             raytracer.render_shaded(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bunny_shaded7.png");
+            outfile.append("raytracer_background.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
@@ -175,7 +175,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             for (auto& color : rd_colors) {
                 color = rd_number(rd_gen);
             }
-            raytracer.attach_face_color_buffer(rd_colors.data());
+            raytracer.attach_color_buffer(&rd_colors);
 
             std::vector<uint8_t> pixels(3 * width * height);
             Euclid::PerspectiveCamera cam(
@@ -183,7 +183,29 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             raytracer.render_shaded(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bunny_shaded8.png");
+            outfile.append("raytracer_face_color.png");
+            stbi_write_png(
+                outfile.c_str(), width, height, 3, pixels.data(), width * 3);
+        }
+
+        SECTION("random vertex color")
+        {
+            std::random_device rd;
+            std::minstd_rand rd_gen(rd());
+            std::uniform_real_distribution rd_number(0.0, 1.0);
+            std::vector<float> rd_colors(positions.size());
+            for (auto& color : rd_colors) {
+                color = rd_number(rd_gen);
+            }
+            raytracer.attach_color_buffer(&rd_colors, true);
+
+            std::vector<uint8_t> pixels(3 * width * height);
+            Euclid::PerspectiveCamera cam(
+                view, center, up, 60.0f, static_cast<float>(width) / height);
+            raytracer.render_shaded(pixels.data(), cam, width, height);
+
+            std::string outfile(TMP_DIR);
+            outfile.append("raytracer_vertex_color.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
@@ -197,7 +219,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             raytracer.render_shaded(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bunny_shaded9.png");
+            outfile.append("raytracer_lightoff.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
@@ -210,7 +232,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             raytracer.render_depth(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bunny_depth.png");
+            outfile.append("raytracer_depth.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 1, pixels.data(), width);
         }
@@ -223,7 +245,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             raytracer.render_silhouette(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bunny_sillouette.png");
+            outfile.append("raytracer_sillouette.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 1, pixels.data(), width);
         }
@@ -236,7 +258,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             raytracer.render_index(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bunny_index1.png");
+            outfile.append("raytracer_fidx1.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
@@ -255,7 +277,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                 pixels[3 * i + 2] = (indices[i] >> 16) & 0xFF;
             }
             std::string outfile(TMP_DIR);
-            outfile.append("bunny_index2.png");
+            outfile.append("raytracer_fidx2.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
@@ -271,7 +293,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                 colors[3 * i + 1] = g / 255.0f;
                 colors[3 * i + 2] = b / 255.0f;
             }
-            raytracer.attach_face_color_buffer(colors.data());
+            raytracer.attach_color_buffer(&colors);
             Euclid::Material material;
             material.ambient << 0.0f, 0.0f, 0.0f;
             material.diffuse << 0.0f, 0.0f, 0.0f;
@@ -284,7 +306,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             raytracer.render_shaded(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bunny_index3.png");
+            outfile.append("raytracer_fidx3.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
@@ -311,7 +333,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             raytracer.render_shaded(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
-            outfile.append("bunny_shaded10.png");
+            outfile.append("raytracer_face_mask.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }
@@ -341,7 +363,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             raytracer.render_shaded(pixels.data(), cam, width, height);
 
             std::string outfile(TMP_DIR);
-            outfile.append("kitten.png");
+            outfile.append("raytracer_geometry.png");
             stbi_write_png(
                 outfile.c_str(), width, height, 3, pixels.data(), width * 3);
         }

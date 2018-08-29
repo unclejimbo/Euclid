@@ -280,15 +280,21 @@ public:
         const std::vector<unsigned>& indices,
         RTCGeometryType type = RTC_GEOMETRY_TYPE_TRIANGLE);
 
-    /** Attach a shared face color buffer to the ray tracer.
+    /** Attach a shared color buffer to the ray tracer.
      *
-     *  @param colors The size of the array pointed by colors should be equal to
-     *  3 times the number of faces of the attached geometry, storing
-     *  [r,g,b,r,g,b...] values of each face. The values range in [0 1]. Set
-     *  colors to nullptr to disable face coloring and fall back to the
-     *  material.
+     *  Attach a color buffer storing either per-face colors or per-vertex
+     *  colors. This buffer is mapped directly by the RayTracer so their
+     *  lifetime should outlive the end of rendering. Attach another buffer will
+     *  automatically release the previously attached one.
+     *
+     *  @param colors A color array storing [r,g,b,r,g,b...] values of each
+     *  elements. The values range in [0 1]. Set colors to nullptr to disable
+     *  color buffering and fall back to the material.
+     *  @param vertex_color True for vertex color and false for face color.
+     *  Default to false.
      */
-    void attach_face_color_buffer(const float* colors);
+    void attach_color_buffer(const std::vector<float>* colors,
+                             bool vertex_color = false);
 
     /** Attach a face maks buffer to the ray tracer.
      *
@@ -448,14 +454,24 @@ public:
                       int height);
 
 private:
+    std::function<Eigen::Array3f(const RTCHit&)> _select_diffuse_color();
+
+    Eigen::Array3f _diffuse_material(const RTCHit& hit);
+
+    Eigen::Array3f _diffuse_face_color(const RTCHit& hit);
+
+    Eigen::Array3f _diffuse_vertex_color(const RTCHit& hit);
+
+private:
     RTCDevice _device;
     RTCScene _scene;
     RTCGeometry _geometry;
     int _geom_id = -1;
-    const float* _face_colors = nullptr;
+    const std::vector<float>* _colors = nullptr;
     const uint8_t* _face_mask = nullptr;
     Material _material;
     Eigen::Array3f _background = Eigen::Array3f::Zero();
+    bool _vertex_color = false;
     bool _lighting = true;
 };
 
