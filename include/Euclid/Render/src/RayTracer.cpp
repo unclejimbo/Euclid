@@ -24,126 +24,114 @@ inline void mask_filter(const RTCFilterFunctionNArguments* args)
 
 } // namespace _impl
 
-inline Camera::Camera(const Vec3& position, const Vec3& focus, const Vec3& up)
-{
-    pos = position;
-    dir = (position - focus).normalized();
-    u = up.cross(dir).normalized();
-    v = dir.cross(u);
-}
-
-inline void Camera::lookat(const Vec3& position,
-                           const Vec3& focus,
-                           const Vec3& up)
-{
-    pos = position;
-    dir = (position - focus).normalized();
-    u = up.cross(dir).normalized();
-    v = dir.cross(u);
-}
-
-inline PerspectiveCamera::PerspectiveCamera(const Vec3& position,
-                                            const Vec3& focus,
-                                            const Vec3& up,
-                                            float vfov,
-                                            float aspect)
+inline RayCamera::RayCamera(const Vec3& position,
+                            const Vec3& focus,
+                            const Vec3& up)
     : Camera(position, focus, up)
+{}
+
+inline void RayCamera::set_range(float tnear, float tfar)
+{
+    this->tnear = tnear;
+    this->tfar = tfar;
+}
+
+inline PerspRayCamera::PerspRayCamera(const Vec3& position,
+                                      const Vec3& focus,
+                                      const Vec3& up,
+                                      float vfov,
+                                      float aspect)
+    : RayCamera(position, focus, up)
 {
     auto fov = vfov * boost::math::float_constants::degree;
-    film.height = 2.0f * std::tan(fov * 0.5f);
-    film.width = aspect * film.height;
+    this->film.height = 2.0f * std::tan(fov * 0.5f);
+    this->film.width = aspect * this->film.height;
 }
 
-inline PerspectiveCamera::PerspectiveCamera(const Vec3& position,
-                                            const Vec3& focus,
-                                            const Vec3& up,
-                                            float vfov,
-                                            unsigned width,
-                                            unsigned height)
-    : Camera(position, focus, up)
+inline PerspRayCamera::PerspRayCamera(const Vec3& position,
+                                      const Vec3& focus,
+                                      const Vec3& up,
+                                      float vfov,
+                                      unsigned width,
+                                      unsigned height)
+    : RayCamera(position, focus, up)
 {
     auto fov = vfov * boost::math::float_constants::degree;
     auto aspect = static_cast<float>(width) / height;
-    film.height = 2.0f * std::tan(fov * 0.5f);
-    film.width = aspect * film.height;
+    this->film.height = 2.0f * std::tan(fov * 0.5f);
+    this->film.width = aspect * film.height;
 }
 
-inline void PerspectiveCamera::set_aspect(float aspect)
+inline void PerspRayCamera::set_aspect(float aspect)
 {
-    film.width = aspect * film.height;
+    this->film.width = aspect * this->film.height;
 }
 
-inline void PerspectiveCamera::set_aspect(unsigned width, unsigned height)
+inline void PerspRayCamera::set_aspect(unsigned width, unsigned height)
 {
     auto aspect = static_cast<float>(width) / height;
-    film.width = aspect * film.height;
+    this->film.width = aspect * this->film.height;
 }
 
-inline void PerspectiveCamera::set_fov(float vfov)
+inline void PerspRayCamera::set_fov(float vfov)
 {
     auto fov = vfov * boost::math::float_constants::degree;
-    auto aspect = film.width / film.height;
-    film.height = 2.0f * std::tan(fov * 0.5f);
-    film.width = aspect * film.height;
+    auto aspect = this->film.width / this->film.height;
+    this->film.height = 2.0f * std::tan(fov * 0.5f);
+    this->film.width = aspect * this->film.height;
 }
 
-inline RTCRayHit PerspectiveCamera::gen_ray(float s,
-                                            float t,
-                                            float near,
-                                            float far) const
+inline RTCRayHit PerspRayCamera::gen_ray(float s, float t) const
 {
     RTCRayHit rayhit;
-    Eigen::Vector3f view =
-        -dir + (s - 0.5f) * film.width * u + (t - 0.5f) * film.height * v;
-    EASSERT(view.dot(dir) < 0.0f);
+    Eigen::Vector3f view = -this->dir + (s - 0.5f) * this->film.width * u +
+                           (t - 0.5f) * this->film.height * v;
+    EASSERT(view.dot(this->dir) < 0.0f);
 
-    rayhit.ray.org_x = pos(0);
-    rayhit.ray.org_y = pos(1);
-    rayhit.ray.org_z = pos(2);
+    rayhit.ray.org_x = this->pos(0);
+    rayhit.ray.org_y = this->pos(1);
+    rayhit.ray.org_z = this->pos(2);
     rayhit.ray.dir_x = view(0);
     rayhit.ray.dir_y = view(1);
     rayhit.ray.dir_z = view(2);
-    rayhit.ray.tnear = near;
-    rayhit.ray.tfar = far;
+    rayhit.ray.tnear = this->tnear;
+    rayhit.ray.tfar = this->tfar;
     rayhit.ray.flags = 0;
     rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
     return rayhit;
 }
 
-inline OrthogonalCamera::OrthogonalCamera(const Vec3& position,
-                                          const Vec3& focus,
-                                          const Vec3& up,
-                                          float width,
-                                          float height)
-    : Camera(position, focus, up)
+inline OrthoRayCamera::OrthoRayCamera(const Vec3& position,
+                                      const Vec3& focus,
+                                      const Vec3& up,
+                                      float width,
+                                      float height)
+    : RayCamera(position, focus, up)
 {
-    film.width = width;
-    film.height = height;
+    this->film.width = width;
+    this->film.height = height;
 }
 
-inline void OrthogonalCamera::set_extent(float width, float height)
+inline void OrthoRayCamera::set_extent(float width, float height)
 {
-    film.width = width;
-    film.height = height;
+    this->film.width = width;
+    this->film.height = height;
 }
 
-inline RTCRayHit OrthogonalCamera::gen_ray(float s,
-                                           float t,
-                                           float near,
-                                           float far) const
+inline RTCRayHit OrthoRayCamera::gen_ray(float s, float t) const
 {
     RTCRayHit rayhit;
-    Eigen::Vector3f origin =
-        pos + (s - 0.5f) * film.width * u + (t - 0.5f) * film.height * v;
+    Eigen::Vector3f origin = this->pos + (s - 0.5f) * this->film.width * u +
+                             (t - 0.5f) * this->film.height * v;
 
     rayhit.ray.org_x = origin(0);
     rayhit.ray.org_y = origin(1);
     rayhit.ray.org_z = origin(2);
-    rayhit.ray.dir_x = -dir(0);
-    rayhit.ray.dir_y = -dir(1);
-    rayhit.ray.dir_z = -dir(2);
-    rayhit.ray.tnear = near;
-    rayhit.ray.tfar = far;
+    rayhit.ray.dir_x = -this->dir(0);
+    rayhit.ray.dir_y = -this->dir(1);
+    rayhit.ray.dir_z = -this->dir(2);
+    rayhit.ray.tnear = this->tnear;
+    rayhit.ray.tfar = this->tfar;
     rayhit.ray.flags = 0;
     rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
     return rayhit;
@@ -322,7 +310,7 @@ inline void RayTracer::enable_light(bool on)
 }
 
 inline void RayTracer::render_shaded(std::vector<uint8_t>& pixels,
-                                     const Camera& camera,
+                                     const RayCamera& camera,
                                      int width,
                                      int height,
                                      bool interleaved)
@@ -384,7 +372,7 @@ inline void RayTracer::render_shaded(std::vector<uint8_t>& pixels,
 }
 
 inline void RayTracer::render_shaded(std::vector<uint8_t>& pixels,
-                                     const Camera& camera,
+                                     const RayCamera& camera,
                                      int width,
                                      int height,
                                      int samples,
@@ -456,7 +444,7 @@ inline void RayTracer::render_shaded(std::vector<uint8_t>& pixels,
 }
 
 inline void RayTracer::render_depth(std::vector<uint8_t>& pixels,
-                                    const Camera& camera,
+                                    const RayCamera& camera,
                                     int width,
                                     int height)
 {
@@ -492,7 +480,7 @@ inline void RayTracer::render_depth(std::vector<uint8_t>& pixels,
 }
 
 inline void RayTracer::render_depth(std::vector<float>& values,
-                                    const Camera& camera,
+                                    const RayCamera& camera,
                                     int width,
                                     int height)
 {
@@ -518,7 +506,7 @@ inline void RayTracer::render_depth(std::vector<float>& values,
 }
 
 inline void RayTracer::render_silhouette(std::vector<uint8_t>& pixels,
-                                         const Camera& camera,
+                                         const RayCamera& camera,
                                          int width,
                                          int height)
 {
@@ -543,7 +531,7 @@ inline void RayTracer::render_silhouette(std::vector<uint8_t>& pixels,
 }
 
 inline void RayTracer::render_index(std::vector<uint8_t>& pixels,
-                                    const Camera& camera,
+                                    const RayCamera& camera,
                                     int width,
                                     int height,
                                     bool interleaved)
@@ -583,7 +571,7 @@ inline void RayTracer::render_index(std::vector<uint8_t>& pixels,
 }
 
 inline void RayTracer::render_index(std::vector<uint32_t>& indices,
-                                    const Camera& camera,
+                                    const RayCamera& camera,
                                     int width,
                                     int height)
 {

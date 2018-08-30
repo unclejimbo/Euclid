@@ -45,7 +45,7 @@ void proxy_view_selection(const Mesh& mesh,
 
     std::vector<float> projected_areas(proxies);
     for (size_t i = 0; i < projected_areas.size(); ++i) {
-        OrthogonalCamera cam;
+        OrthoRayCamera cam;
         auto view_dir = view_sphere.radius * obb.axis(i % 3);
         if (i >= 3) { view_dir = -view_dir; }
         Eigen::Vector3f pos, focus, up;
