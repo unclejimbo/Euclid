@@ -3,7 +3,7 @@
  *  Many times geometry algorithms require analysis on the rendered views.
  *  This package utilizes Embree to do fast CPU ray tracing.
  *
- *  @defgroup PkgRayTracer Ray-Tracer
+ *  @defgroup PkgRayTracer Ray Tracer
  *  @ingroup PkgRender
  */
 #pragma once
@@ -238,8 +238,8 @@ public:
  */
 struct Material
 {
-    Eigen::Array3f ambient;
-    Eigen::Array3f diffuse;
+    Eigen::Array3f ambient; /**< Ambient color, in range [0, 1].*/
+    Eigen::Array3f diffuse; /**< Diffuse color, in range [0, 1]*/
 };
 
 /** A simple ray tracer.
@@ -262,18 +262,19 @@ public:
      *
      *  Attach both the positions and indices buffer. These buffers are mapped
      *  directly by the RayTracer so their lifetime should outlive the end of
-     *  rendering. The user is responsible of padding the positions buffer with
-     *  one more float for Embree's SSE instructions to work correctly.
+     *  rendering. This class can only render one mesh at a time, so attaching
+     *  another geometry will automatically release the previously attached
+     *  geometry and all associated buffers.
+     *
+     *  **Note**
+     *
+     *  The user is responsible of padding the positions buffer with one more
+     *  float for Embree's SSE instructions to work correctly.
      *
      *  @param positions The geometry's positions buffer.
      *  @param indices The geometry's indices buffer.
      *  @param type The geometry's type, be either RTC_GEOMETRY_TYPE_TRIANGLE or
      *  RTC_GEOMETRY_TYPE_QUAD.
-     *
-     *  **Note**
-     *
-     *  This class can only render one mesh at a time. Attach geometry once
-     *  again will automatically release the previously attached geometry.
      */
     void attach_geometry_buffers(
         const std::vector<float>& positions,
@@ -286,6 +287,12 @@ public:
      *  colors. This buffer is mapped directly by the RayTracer so their
      *  lifetime should outlive the end of rendering. Attach another buffer will
      *  automatically release the previously attached one.
+     *
+     *  **Note**
+     *
+     *  The user is responsible of padding the positions buffer with one more
+     *  float for Embree's SSE instructions to work correctly, if you are in
+     *  vertex color mode. Otherwise the padding will not be necessary.
      *
      *  @param colors A color array storing [r,g,b,r,g,b...] values of each
      *  elements. The values range in [0 1]. Set colors to nullptr to disable
@@ -305,7 +312,7 @@ public:
      *  face i in intersection, otherwise it will be ignored. Set mask to
      *  nullptr to disable masking.
      */
-    void attach_face_mask_buffer(const uint8_t* mask);
+    void attach_face_mask_buffer(const std::vector<uint8_t>* mask);
 
     /** Release all associated buffers.
      *
@@ -334,9 +341,8 @@ public:
 
     /** Render the mesh into a shaded image.
      *
-     *  This function renders the mesh with simple lambertian shading and store
-     *  the pixel values to an array, using a point light located at the camera
-     *  position.
+     *  This function renders the mesh with simple lambertian shading, using a
+     *  point light located at the camera position.
      *
      *  @param pixels Output pixels
      *  @param camera Camera.
@@ -345,7 +351,7 @@ public:
      *  @param interleaved If true, pixels are stored like [RGBRGBRGB...],
      *  otherwise pixels are stored like [RRR...GGG...BBB...].
      */
-    void render_shaded(uint8_t* pixels,
+    void render_shaded(std::vector<uint8_t>& pixels,
                        const Camera& camera,
                        int width,
                        int height,
@@ -353,9 +359,9 @@ public:
 
     /** Render the mesh into a shaded image.
      *
-     *  This function renders the mesh with simple lambertian shading and store
-     *  the pixel values to an array, using a point light located at the camera
-     *  position. Random multisampling is enabled.
+     *  This function renders the mesh with simple lambertian shading, using a
+     *  point light located at the camera position. Random multisampling is
+     *  enabled.
      *
      *  @param pixels Output pixels
      *  @param camera Camera.
@@ -365,7 +371,7 @@ public:
      *  @param interleaved If true, pixels are stored like [RGBRGBRGB...],
      *  otherwise pixels are stored like [RRR...GGG...BBB...].
      */
-    void render_shaded(uint8_t* pixels,
+    void render_shaded(std::vector<uint8_t>& pixels,
                        const Camera& camera,
                        int width,
                        int height,
@@ -382,7 +388,7 @@ public:
      *  @param width Image width.
      *  @param height Image height.
      */
-    void render_depth(uint8_t* pixels,
+    void render_depth(std::vector<uint8_t>& pixels,
                       const Camera& camera,
                       int width,
                       int height);
@@ -397,7 +403,7 @@ public:
      *  @param width Image width.
      *  @param height Image height.
      */
-    void render_depth(float* values,
+    void render_depth(std::vector<float>& values,
                       const Camera& camera,
                       int width,
                       int height);
@@ -409,7 +415,7 @@ public:
      *  @param width Image width.
      *  @param height Image height.
      */
-    void render_silhouette(uint8_t* pixels,
+    void render_silhouette(std::vector<uint8_t>& pixels,
                            const Camera& camera,
                            int width,
                            int height);
@@ -431,7 +437,7 @@ public:
      *  @param interleaved If true, pixels are stored like [RGBRGBRGB...],
      *  otherwise pixels are stored like [RRR...GGG...BBB...].
      */
-    void render_index(uint8_t* pixels,
+    void render_index(std::vector<uint8_t>& pixels,
                       const Camera& camera,
                       int width,
                       int height,
@@ -448,29 +454,41 @@ public:
      *  @param width Image width.
      *  @param height Image height.
      */
-    void render_index(uint32_t* indices,
+    void render_index(std::vector<uint32_t>& indices,
                       const Camera& camera,
                       int width,
                       int height);
 
 private:
+    /** Select the correct diffuse color function.
+     *
+     */
     std::function<Eigen::Array3f(const RTCHit&)> _select_diffuse_color();
 
+    /** Return diffuse color based on material.
+     *
+     */
     Eigen::Array3f _diffuse_material(const RTCHit& hit);
 
+    /** Retrun diffuse color based on face color.
+     *
+     */
     Eigen::Array3f _diffuse_face_color(const RTCHit& hit);
 
+    /** Retrun diffuse color based on vertex color.
+     *
+     */
     Eigen::Array3f _diffuse_vertex_color(const RTCHit& hit);
 
 private:
+    Material _material;
+    Eigen::Array3f _background = Eigen::Array3f::Zero();
     RTCDevice _device;
     RTCScene _scene;
     RTCGeometry _geometry;
-    int _geom_id = -1;
     const std::vector<float>* _colors = nullptr;
-    const uint8_t* _face_mask = nullptr;
-    Material _material;
-    Eigen::Array3f _background = Eigen::Array3f::Zero();
+    const std::vector<uint8_t>* _face_mask = nullptr;
+    int _geom_id = -1;
     bool _vertex_color = false;
     bool _lighting = true;
 };

@@ -52,7 +52,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                                               60.0f,
                                               static_cast<float>(width) /
                                                   height);
-                raytracer.render_shaded(pixels.data(), cam, width, height);
+                raytracer.render_shaded(pixels, cam, width, height);
 
                 std::string outfile(TMP_DIR);
                 outfile.append("raytracer_persp_ctor.png");
@@ -70,7 +70,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                 cam.lookat(view, center, up);
                 cam.set_fov(60.0f);
                 cam.set_aspect(width, height);
-                raytracer.render_shaded(pixels.data(), cam, width, height);
+                raytracer.render_shaded(pixels, cam, width, height);
 
                 std::string outfile(TMP_DIR);
                 outfile.append("raytracer_persp_lookat.png");
@@ -92,7 +92,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             {
                 Euclid::OrthogonalCamera cam(
                     view, center, up, xextent, yextent);
-                raytracer.render_shaded(pixels.data(), cam, width, height);
+                raytracer.render_shaded(pixels, cam, width, height);
 
                 std::string outfile(TMP_DIR);
                 outfile.append("raytracer_ortho_ctor.png");
@@ -109,7 +109,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                 Euclid::OrthogonalCamera cam;
                 cam.lookat(view, center, up);
                 cam.set_extent(xextent, yextent);
-                raytracer.render_shaded(pixels.data(), cam, width, height);
+                raytracer.render_shaded(pixels, cam, width, height);
 
                 std::string outfile(TMP_DIR);
                 outfile.append("raytracer_ortho_lookat.png");
@@ -127,7 +127,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             std::vector<uint8_t> pixels(3 * width * height);
             Euclid::PerspectiveCamera cam(
                 view, center, up, 60.0f, static_cast<float>(width) / height);
-            raytracer.render_shaded(pixels.data(), cam, width, height, 8);
+            raytracer.render_shaded(pixels, cam, width, height, 8);
 
             std::string outfile(TMP_DIR);
             outfile.append("raytracer_multisample.png");
@@ -144,7 +144,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             material.ambient << 0.2f, 0.0f, 0.0f;
             material.diffuse << 0.7f, 0.0f, 0.0f;
             raytracer.set_material(material);
-            raytracer.render_shaded(pixels.data(), cam, width, height);
+            raytracer.render_shaded(pixels, cam, width, height);
 
             std::string outfile(TMP_DIR);
             outfile.append("raytracer_material.png");
@@ -158,7 +158,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             Euclid::PerspectiveCamera cam(
                 view, center, up, 60.0f, static_cast<float>(width) / height);
             raytracer.set_background(0.0f, 0.3f, 0.4f);
-            raytracer.render_shaded(pixels.data(), cam, width, height);
+            raytracer.render_shaded(pixels, cam, width, height);
 
             std::string outfile(TMP_DIR);
             outfile.append("raytracer_background.png");
@@ -180,7 +180,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             std::vector<uint8_t> pixels(3 * width * height);
             Euclid::PerspectiveCamera cam(
                 view, center, up, 60.0f, static_cast<float>(width) / height);
-            raytracer.render_shaded(pixels.data(), cam, width, height);
+            raytracer.render_shaded(pixels, cam, width, height);
 
             std::string outfile(TMP_DIR);
             outfile.append("raytracer_face_color.png");
@@ -202,7 +202,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             std::vector<uint8_t> pixels(3 * width * height);
             Euclid::PerspectiveCamera cam(
                 view, center, up, 60.0f, static_cast<float>(width) / height);
-            raytracer.render_shaded(pixels.data(), cam, width, height);
+            raytracer.render_shaded(pixels, cam, width, height);
 
             std::string outfile(TMP_DIR);
             outfile.append("raytracer_vertex_color.png");
@@ -216,7 +216,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             Euclid::PerspectiveCamera cam(
                 view, center, up, 60.0f, static_cast<float>(width) / height);
             raytracer.enable_light(false);
-            raytracer.render_shaded(pixels.data(), cam, width, height);
+            raytracer.render_shaded(pixels, cam, width, height);
 
             std::string outfile(TMP_DIR);
             outfile.append("raytracer_lightoff.png");
@@ -229,7 +229,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             std::vector<uint8_t> pixels(width * height);
             Euclid::PerspectiveCamera cam(
                 view, center, up, 60.0f, static_cast<float>(width) / height);
-            raytracer.render_depth(pixels.data(), cam, width, height);
+            raytracer.render_depth(pixels, cam, width, height);
 
             std::string outfile(TMP_DIR);
             outfile.append("raytracer_depth.png");
@@ -242,7 +242,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             std::vector<uint8_t> pixels(width * height);
             Euclid::PerspectiveCamera cam(
                 view, center, up, 60.0f, static_cast<float>(width) / height);
-            raytracer.render_silhouette(pixels.data(), cam, width, height);
+            raytracer.render_silhouette(pixels, cam, width, height);
 
             std::string outfile(TMP_DIR);
             outfile.append("raytracer_sillouette.png");
@@ -255,7 +255,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             std::vector<uint8_t> pixels(3 * width * height);
             Euclid::PerspectiveCamera cam(
                 view, center, up, 60.0f, static_cast<float>(width) / height);
-            raytracer.render_index(pixels.data(), cam, width, height);
+            raytracer.render_index(pixels, cam, width, height);
 
             std::string outfile(TMP_DIR);
             outfile.append("raytracer_fidx1.png");
@@ -268,7 +268,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             std::vector<uint32_t> indices(width * height);
             Euclid::PerspectiveCamera cam(
                 view, center, up, 60.0f, static_cast<float>(width) / height);
-            raytracer.render_index(indices.data(), cam, width, height);
+            raytracer.render_index(indices, cam, width, height);
 
             std::vector<uint8_t> pixels(3 * width * height);
             for (size_t i = 0; i < indices.size(); ++i) {
@@ -303,7 +303,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             std::vector<uint8_t> pixels(3 * width * height);
             Euclid::PerspectiveCamera cam(
                 view, center, up, 60.0f, static_cast<float>(width) / height);
-            raytracer.render_shaded(pixels.data(), cam, width, height);
+            raytracer.render_shaded(pixels, cam, width, height);
 
             std::string outfile(TMP_DIR);
             outfile.append("raytracer_fidx3.png");
@@ -325,12 +325,12 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
                     mask[i / 3] = 1;
                 }
             }
-            raytracer.attach_face_mask_buffer(mask.data());
+            raytracer.attach_face_mask_buffer(&mask);
 
             std::vector<uint8_t> pixels(3 * width * height);
             Euclid::PerspectiveCamera cam(
                 view, center, up, 60.0f, static_cast<float>(width) / height);
-            raytracer.render_shaded(pixels.data(), cam, width, height);
+            raytracer.render_shaded(pixels, cam, width, height);
 
             std::string outfile(TMP_DIR);
             outfile.append("raytracer_face_mask.png");
@@ -360,7 +360,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
             std::vector<uint8_t> pixels(3 * width * height);
             Euclid::PerspectiveCamera cam(
                 view, center, up, 60.0f, static_cast<float>(width) / height);
-            raytracer.render_shaded(pixels.data(), cam, width, height);
+            raytracer.render_shaded(pixels, cam, width, height);
 
             std::string outfile(TMP_DIR);
             outfile.append("raytracer_geometry.png");

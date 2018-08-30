@@ -55,8 +55,8 @@ void proxy_view_selection(const Mesh& mesh,
         cam.lookat(pos, focus, up);
         cam.set_extent(view_sphere.radius * 2.0f, view_sphere.radius * 2.0f);
 
-        std::vector<unsigned char> pixels(width * height, 0);
-        raytracer.render_silhouette(pixels.data(), cam, width, height);
+        std::vector<uint8_t> pixels(width * height, 0);
+        raytracer.render_silhouette(pixels, cam, width, height);
         auto proj = 0;
         for (size_t j = 0; j < pixels.size(); ++j) {
             if (pixels[j] != 0) { ++proj; }

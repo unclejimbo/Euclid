@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <functional>
-#include <limits>
 #include <string>
 #include <random>
 
@@ -193,7 +192,7 @@ inline void RayTracer::attach_geometry_buffers(
     }
     if (positions.size() % 3 != 1) {
         throw std::invalid_argument("The last element of the positions buffer "
-                                    "is not padded to 16 bytes, add "
+                                    "is not padded to 16 bytes. Add "
                                     "one more 0.0f to your positions buffer.");
     }
     if (!(type == RTC_GEOMETRY_TYPE_TRIANGLE ||
@@ -253,6 +252,16 @@ inline void RayTracer::attach_geometry_buffers(
 inline void RayTracer::attach_color_buffer(const std::vector<float>* colors,
                                            bool vertex_color)
 {
+    if (colors && colors->empty()) {
+        EWARNING("Input geometry is empty.");
+        return;
+    }
+    if (colors && vertex_color && colors->size() % 3 != 1) {
+        throw std::invalid_argument("The last element of the colors buffer "
+                                    "is not padded to 16 bytes. Add "
+                                    "one more 0.0f to your colors buffer.");
+    }
+
     // ! vertex color -> vertex color
     if (!(_colors && _vertex_color) && (colors && vertex_color)) {
         rtcSetGeometryVertexAttributeCount(_geometry, 1);
@@ -288,15 +297,20 @@ inline void RayTracer::attach_color_buffer(const std::vector<float>* colors,
     _vertex_color = vertex_color;
 }
 
-inline void RayTracer::attach_face_mask_buffer(const uint8_t* mask)
+inline void RayTracer::attach_face_mask_buffer(const std::vector<uint8_t>* mask)
 {
-    if (mask != nullptr && _face_mask == nullptr) {
+    // no mask -> mask
+    if (!_face_mask && mask) {
         rtcSetGeometryIntersectFilterFunction(_geometry, _impl::mask_filter);
     }
-    if (mask == nullptr && _face_mask != nullptr) {
+    // mask -> no mask
+    else if (_face_mask && !mask) {
         rtcSetGeometryIntersectFilterFunction(_geometry, nullptr);
     }
-    rtcSetGeometryUserData(_geometry, const_cast<uint8_t*>(mask));
+
+    uint8_t* buffer = nullptr;
+    if (mask) { buffer = const_cast<uint8_t*>(mask->data()); }
+    rtcSetGeometryUserData(_geometry, buffer);
     rtcCommitGeometry(_geometry);
     _face_mask = mask;
 }
@@ -333,12 +347,13 @@ inline void RayTracer::enable_light(bool on)
     _lighting = on;
 }
 
-inline void RayTracer::render_shaded(uint8_t* pixels,
+inline void RayTracer::render_shaded(std::vector<uint8_t>& pixels,
                                      const Camera& camera,
                                      int width,
                                      int height,
                                      bool interleaved)
 {
+    pixels.resize(3 * width * height);
     auto diffuse_color = _select_diffuse_color();
 
     RTCIntersectContext context;
@@ -394,13 +409,14 @@ inline void RayTracer::render_shaded(uint8_t* pixels,
     }
 }
 
-inline void RayTracer::render_shaded(uint8_t* pixels,
+inline void RayTracer::render_shaded(std::vector<uint8_t>& pixels,
                                      const Camera& camera,
                                      int width,
                                      int height,
                                      int samples,
                                      bool interleaved)
 {
+    pixels.resize(3 * width * height);
     auto diffuse_color = _select_diffuse_color();
 
     RTCIntersectContext context;
@@ -465,11 +481,12 @@ inline void RayTracer::render_shaded(uint8_t* pixels,
     }
 }
 
-inline void RayTracer::render_depth(uint8_t* pixels,
+inline void RayTracer::render_depth(std::vector<uint8_t>& pixels,
                                     const Camera& camera,
                                     int width,
                                     int height)
 {
+    pixels.resize(width * height);
     std::vector<float> depths(width * height, -1.0f);
     float min_depth = std::numeric_limits<float>::max();
     float max_depth = -1.0f;
@@ -500,11 +517,12 @@ inline void RayTracer::render_depth(uint8_t* pixels,
     }
 }
 
-inline void RayTracer::render_depth(float* values,
+inline void RayTracer::render_depth(std::vector<float>& values,
                                     const Camera& camera,
                                     int width,
                                     int height)
 {
+    values.resize(width * height);
     RTCIntersectContext context;
     rtcInitIntersectContext(&context);
 #pragma omp parallel for schedule(dynamic)
@@ -525,11 +543,12 @@ inline void RayTracer::render_depth(float* values,
     }
 }
 
-inline void RayTracer::render_silhouette(uint8_t* pixels,
+inline void RayTracer::render_silhouette(std::vector<uint8_t>& pixels,
                                          const Camera& camera,
                                          int width,
                                          int height)
 {
+    pixels.resize(width * height);
     RTCIntersectContext context;
     rtcInitIntersectContext(&context);
 #pragma omp parallel for schedule(dynamic)
@@ -549,12 +568,13 @@ inline void RayTracer::render_silhouette(uint8_t* pixels,
     }
 }
 
-inline void RayTracer::render_index(uint8_t* pixels,
+inline void RayTracer::render_index(std::vector<uint8_t>& pixels,
                                     const Camera& camera,
                                     int width,
                                     int height,
                                     bool interleaved)
 {
+    pixels.resize(3 * width * height);
     RTCIntersectContext context;
     rtcInitIntersectContext(&context);
 #pragma omp parallel for schedule(dynamic)
@@ -588,11 +608,12 @@ inline void RayTracer::render_index(uint8_t* pixels,
     }
 }
 
-inline void RayTracer::render_index(uint32_t* indices,
+inline void RayTracer::render_index(std::vector<uint32_t>& indices,
                                     const Camera& camera,
                                     int width,
                                     int height)
 {
+    indices.resize(width * height);
     RTCIntersectContext context;
     rtcInitIntersectContext(&context);
 #pragma omp parallel for schedule(dynamic)
