@@ -244,8 +244,7 @@ struct Material
 
 /** A simple ray tracer.
  *
- *  This ray tracer could render the shaded, depth or silhouette image of a
- *  single mesh model.
+ *  This ray tracer could render several types of images of a triangle mesh.
  */
 class RayTracer
 {
@@ -273,13 +272,9 @@ public:
      *
      *  @param positions The geometry's positions buffer.
      *  @param indices The geometry's indices buffer.
-     *  @param type The geometry's type, be either RTC_GEOMETRY_TYPE_TRIANGLE or
-     *  RTC_GEOMETRY_TYPE_QUAD.
      */
-    void attach_geometry_buffers(
-        const std::vector<float>& positions,
-        const std::vector<unsigned>& indices,
-        RTCGeometryType type = RTC_GEOMETRY_TYPE_TRIANGLE);
+    void attach_geometry_buffers(const std::vector<float>& positions,
+                                 const std::vector<unsigned>& indices);
 
     /** Attach a shared color buffer to the ray tracer.
      *

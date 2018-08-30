@@ -183,8 +183,7 @@ inline RayTracer::~RayTracer()
 // TODO: add generic type support
 inline void RayTracer::attach_geometry_buffers(
     const std::vector<float>& positions,
-    const std::vector<unsigned>& indices,
-    RTCGeometryType type)
+    const std::vector<unsigned>& indices)
 {
     if (positions.empty() || indices.empty()) {
         EWARNING("Input geometry is empty.");
@@ -195,25 +194,14 @@ inline void RayTracer::attach_geometry_buffers(
                                     "is not padded to 16 bytes. Add "
                                     "one more 0.0f to your positions buffer.");
     }
-    if (!(type == RTC_GEOMETRY_TYPE_TRIANGLE ||
-          type == RTC_GEOMETRY_TYPE_QUAD)) {
-        throw std::invalid_argument(
-            "Input type must be RTC_GEOMETRY_TYPE_TRIANGLE or "
-            "RTC_GEOMETRY_TYPE_QUAD.");
-    }
-    if (type == RTC_GEOMETRY_TYPE_TRIANGLE && indices.size() % 3 != 0) {
+    if (indices.size() % 3 != 0) {
         throw std::invalid_argument("Size of input indices is not divisible by "
                                     "3, thus not a valid triangle mesh.");
-    }
-    if (type == RTC_GEOMETRY_TYPE_QUAD && indices.size() % 4 != 0) {
-        throw std::invalid_argument("Size of input indices is not divisible by "
-                                    "4, thus not a valid quad mesh.");
     }
 
     release_buffers();
 
-    _geometry = rtcNewGeometry(_device, type);
-
+    _geometry = rtcNewGeometry(_device, RTC_GEOMETRY_TYPE_TRIANGLE);
     rtcSetSharedGeometryBuffer(_geometry,
                                RTC_BUFFER_TYPE_VERTEX,
                                0,
@@ -222,28 +210,14 @@ inline void RayTracer::attach_geometry_buffers(
                                0,
                                3 * sizeof(float),
                                positions.size() / 3);
-
-    if (type == RTC_GEOMETRY_TYPE_TRIANGLE) {
-        rtcSetSharedGeometryBuffer(_geometry,
-                                   RTC_BUFFER_TYPE_INDEX,
-                                   0,
-                                   RTC_FORMAT_UINT3,
-                                   indices.data(),
-                                   0,
-                                   3 * sizeof(unsigned),
-                                   indices.size() / 3);
-    }
-    else { // type == RTC_GEOMETRY_TYPE_QUAD
-        rtcSetSharedGeometryBuffer(_geometry,
-                                   RTC_BUFFER_TYPE_INDEX,
-                                   0,
-                                   RTC_FORMAT_UINT4,
-                                   indices.data(),
-                                   0,
-                                   4 * sizeof(unsigned),
-                                   indices.size() / 4);
-    }
-
+    rtcSetSharedGeometryBuffer(_geometry,
+                               RTC_BUFFER_TYPE_INDEX,
+                               0,
+                               RTC_FORMAT_UINT3,
+                               indices.data(),
+                               0,
+                               3 * sizeof(unsigned),
+                               indices.size() / 3);
     rtcCommitGeometry(_geometry);
     _geom_id = rtcAttachGeometry(_scene, _geometry);
     rtcCommitScene(_scene);
