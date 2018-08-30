@@ -1,0 +1,368 @@
+/** Render mesh using GPU rasterization.
+ *
+ *  Many times geometry algorithms require analysis on the rendered views.
+ *  This package utilizes Vulkan to do headless GPU rendering.
+ *
+ *  @defgroup PkgRasterizer Rasterizer
+ *  @ingroup PkgRender
+ */
+#pragma once
+
+#include <Euclid/Render/RenderCore.h>
+
+namespace Euclid
+{
+/** @{*/
+
+/** A camera model used for rasterization.
+ *
+ */
+class RasCamera : public Camera
+{
+public:
+    /** Create a RasCamera.
+     *
+     */
+    RasCamera() = default;
+
+    /** Create a RasCamera.
+     *
+     *  @param position Position.
+     *  @param focus Focus.
+     *  @param up Rough up direction.
+     */
+    RasCamera(const Vec3& position,
+              const Vec3& focus = Eigen::Vector3f::Zero(),
+              const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f));
+
+    virtual ~RasCamera() = default;
+
+    /** Return the view/lookat matrix.
+     *
+     */
+    Eigen::Matrix4f view() const;
+
+    /** Return the projection matrix.
+     *
+     */
+    virtual Eigen::Matrix4f projection() const = 0;
+};
+
+/** A RasCamera using perspective projection.
+ *
+ *  The range of visible frustum of a perspective camera is determined
+ *  by the field of view and aspect ratio.
+ */
+class PerspRasCamera : public RasCamera
+{
+public:
+    /** Create a PerspRasCamera using default parameters.
+     *
+     */
+    PerspRasCamera() = default;
+
+    /** Create a PerspRasCamera.
+     *
+     *  In addition to camera position and orientation, a perspective camera
+     *  uses field of view and apsect ratio to determine the extent of the
+     *  film plane.
+     *
+     *  @param position Position.
+     *  @param focus Focus.
+     *  @param up Rough up direction.
+     *  @param vfov Vertical field of view in degrees.
+     *  @param aspect Aspect ratio.
+     */
+    PerspRasCamera(const Vec3& position,
+                   const Vec3& focus = Eigen::Vector3f::Zero(),
+                   const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
+                   float vfov = 90.0f,
+                   float aspect = 1.0f);
+
+    /** Create a PerspRasCamera.
+     *
+     *  In addition to camera position and orientation, a perspective camera
+     *  uses field of view and apsect ratio to determine the extent of the
+     *  film plane.
+     *
+     *  @param position Position.
+     *  @param focus Focus.
+     *  @param up Rough up direction.
+     *  @param vfov Vertical field of view in degrees.
+     *  @param width Width of the image.
+     *  @param height Height of the image.
+     */
+    PerspRasCamera(const Vec3& position,
+                   const Vec3& focus = Eigen::Vector3f::Zero(),
+                   const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
+                   float vfov = 90.0f,
+                   unsigned width = 256,
+                   unsigned height = 256);
+
+    /** Set aspect ratio.
+     *
+     */
+    void set_aspect(float aspect);
+
+    /** Set aspect ratio.
+     *
+     */
+    void set_aspect(unsigned width, unsigned height);
+
+    /** Set vertical fov in degrees.
+     *
+     */
+    void set_fov(float vfov);
+
+    /** Return the projection matrix.
+     *
+     */
+    virtual Eigen::Matrix4f projection() const override;
+};
+
+/** A RasCamera using orthographic projection.
+ *
+ *  The range of visible frustum of an orthographic camera is determined
+ *  by the extent of film plane in world space.
+ */
+class OrthoRasCamera : public RasCamera
+{
+public:
+    /** Create an OrthoRasCamera using default parameters.
+     *
+     */
+    OrthoRasCamera() = default;
+
+    /** Create an OrthoRasCamera.
+     *
+     *  In addition to camera position and orientation, an orthogonal camera
+     *  specifies width and height of the film plane directly.
+     *
+     *  @param position Position.
+     *  @param focus Focus.
+     *  @param up Rough up direction.
+     *  @param xextent Width of the film plane in world space.
+     *  @param yextent Height of the film plane in world space.
+     */
+    OrthoRasCamera(const Vec3& position,
+                   const Vec3& focus = Eigen::Vector3f::Zero(),
+                   const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
+                   float xextent = 1.0f,
+                   float yextent = 1.0f);
+
+    /** Set the extent of the film plane.
+     *
+     */
+    void set_extent(float width, float height);
+
+    /** Return the projection matrix.
+     *
+     */
+    virtual Eigen::Matrix4f projection() const override;
+};
+
+/** A simple rasterizer.
+ *
+ *  This rasterizer could render several types of images of a triangle mesh.
+ */
+class Rasterizer
+{
+public:
+    /** Create a rasterizer.
+     *
+     */
+    Rasterizer();
+
+    ~Rasterizer();
+
+    /** Attach shared geoemtry buffers to the rasterizer.
+     *
+     *  Attach both the positions and indices buffer. These buffers are mapped
+     *  directly by the Rasterizer so their lifetime should outlive the end of
+     *  rendering. This class can only render one mesh at a time, so attaching
+     *  another geometry will automatically release the previously attached
+     *  geometry and all associated buffers.
+     *
+     *  @param positions The geometry's positions buffer.
+     *  @param indices The geometry's indices buffer.
+     */
+    void attach_geometry_buffers(const std::vector<float>& positions,
+                                 const std::vector<unsigned>& indices);
+
+    /** Attach a shared color buffer to the rasterizer.
+     *
+     *  Attach a color buffer storing either per-face colors or per-vertex
+     *  colors. This buffer is mapped directly by the Rasterizer so their
+     *  lifetime should outlive the end of rendering. Attach another buffer will
+     *  automatically release the previously attached one.
+     *
+     *  @param colors A color array storing [r,g,b,r,g,b...] values of each
+     *  elements. The values range in [0 1]. Set colors to nullptr to disable
+     *  color buffering and fall back to the material.
+     *  @param vertex_color True for vertex color and false for face color.
+     *  Default to false.
+     */
+    void attach_color_buffer(const std::vector<float>* colors,
+                             bool vertex_color = false);
+
+    /** Attach a face maks buffer to the rasterizer.
+     *
+     *  This mask is used to filter out specified faces.
+     *
+     *  @param mask The size of the array pointed by mask should be equal to the
+     *  number of faces of the attached geometry. Set (*mask)[i] to 1 to enable
+     *  face i in intersection, otherwise it will be ignored. Set mask to
+     *  nullptr to disable masking.
+     */
+    void attach_face_mask_buffer(const std::vector<uint8_t>* mask);
+
+    /** Release all associated buffers.
+     *
+     */
+    void release_buffers();
+
+    /** Change the material of the model.
+     *
+     */
+    void set_material(const Material& material);
+
+    /** Change the color of background.
+     *
+     */
+    void set_background(const Eigen::Ref<const Eigen::Array3f>& color);
+
+    /** Change the color of background.
+     *
+     */
+    void set_background(float r, float g, float b);
+
+    /** Enable or diable lighting.
+     *
+     */
+    void enable_light(bool on);
+
+    /** Render the mesh into a shaded image.
+     *
+     *  This function renders the mesh with simple lambertian shading, using a
+     *  point light located at the camera position.
+     *
+     *  @param pixels Output pixels
+     *  @param camera Camera.
+     *  @param width Image width.
+     *  @param height Image height.
+     *  @param interleaved If true, pixels are stored like [RGBRGBRGB...],
+     *  otherwise pixels are stored like [RRR...GGG...BBB...].
+     */
+    void render_shaded(std::vector<uint8_t>& pixels,
+                       const RasCamera& camera,
+                       int width,
+                       int height,
+                       bool interleaved = true);
+
+    /** Render the mesh into a shaded image.
+     *
+     *  This function renders the mesh with simple lambertian shading, using a
+     *  point light located at the camera position. Random multisampling is
+     *  enabled.
+     *
+     *  @param pixels Output pixels
+     *  @param camera Camera.
+     *  @param width Image width.
+     *  @param height Image height.
+     *  @param samples Number of samples per pixel.
+     *  @param interleaved If true, pixels are stored like [RGBRGBRGB...],
+     *  otherwise pixels are stored like [RRR...GGG...BBB...].
+     */
+    void render_shaded(std::vector<uint8_t>& pixels,
+                       const RasCamera& camera,
+                       int width,
+                       int height,
+                       int samples,
+                       bool interleaved = true);
+
+    /** Render the mesh into a depth image.
+     *
+     *  The minimum depth value is mapped to 255 in image, and the maximum depth
+     *  value is mapped to 0.
+     *
+     *  @param pixels Output pixels.
+     *  @param camera Camera.
+     *  @param width Image width.
+     *  @param height Image height.
+     */
+    void render_depth(std::vector<uint8_t>& pixels,
+                      const RasCamera& camera,
+                      int width,
+                      int height);
+
+    /** Render the mesh into a depth image.
+     *
+     *  The depth values are returned as they are, while the depth of the
+     *  background is set to negative.
+     *
+     *  @param values Output depth values.
+     *  @param camera Camera.
+     *  @param width Image width.
+     *  @param height Image height.
+     */
+    void render_depth(std::vector<float>& values,
+                      const RasCamera& camera,
+                      int width,
+                      int height);
+
+    /** Render the mesh into a silhouette image.
+     *
+     *  @param pixels Output pixels.
+     *  @param camera Camera.
+     *  @param width Image width.
+     *  @param height Image height.
+     */
+    void render_silhouette(std::vector<uint8_t>& pixels,
+                           const RasCamera& camera,
+                           int width,
+                           int height);
+
+    /** Render the mesh based on face index.
+     *
+     *  Color each face base on its index, following
+     *
+     *  face_index = r + g << 8 + b << 16 - 1;
+     *
+     *  The background is set to 0, and the primitive index starts from 1. Due
+     *  to bit width limitations, only 2^24 number of faces could be uniquely
+     *  colored.
+     *
+     *  @param pixels Output pixels.
+     *  @param camera Camera.
+     *  @param width Image width.
+     *  @param height Image height.
+     *  @param interleaved If true, pixels are stored like [RGBRGBRGB...],
+     *  otherwise pixels are stored like [RRR...GGG...BBB...].
+     */
+    void render_index(std::vector<uint8_t>& pixels,
+                      const RasCamera& camera,
+                      int width,
+                      int height,
+                      bool interleaved = true);
+
+    /** Render the mesh based on face index.
+     *
+     *  Each index is stored as a uint32_t value. The background is set to 0,
+     *  and the primitive index starts from 1. Due to bit width limitations, the
+     *  maximum number of indices supported is 2^32.
+     *
+     *  @param indices The face indices of each pixel.
+     *  @param camera Camera.
+     *  @param width Image width.
+     *  @param height Image height.
+     */
+    void render_index(std::vector<uint32_t>& indices,
+                      const RasCamera& camera,
+                      int width,
+                      int height);
+};
+
+/** @}*/
+} // namespace Euclid
+
+#include "src/Rasterizer.cpp"
