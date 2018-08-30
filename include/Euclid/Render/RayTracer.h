@@ -12,116 +12,96 @@
 #include <limits>
 #include <vector>
 
-// FIXME:
-// #include <Eigen/Core> will generate link error when using Eigen::Ref
-#include <Eigen/Dense>
 #include <embree3/rtcore.h>
+#include <Euclid/Render/RenderCore.h>
 
 namespace Euclid
 {
 /** @{*/
 
-/** The film plane.
+/** A camera model used for ray tracing.
  *
  */
-struct Film
-{
-    float width;
-    float height;
-};
-
-/** A simple positionable camera model.
- *
- *  This class uses the right-handed coordinate system.
- */
-class Camera
+class RayCamera : public Camera
 {
 public:
-    using Vec3 = Eigen::Ref<const Eigen::Vector3f>;
+    /** The film plane of a camera.
+     *
+     *  The film plane is used to help generating rays for a RayCamera. The
+     *  width and height are the actual size of the film in the world
+     *  coordinates.
+     */
+    struct Film
+    {
+        float width = 0.0f;
+        float height = 0.0f;
+    };
 
 public:
-    /** Create a Camera with default paramters.
+    /** Create a RayCamera.
      *
      */
-    Camera() = default;
+    RayCamera() = default;
 
-    /** Create a Camera.
-     *
-     *  Position the camera using position, focus and up.
+    /** Create a RayCamera.
      *
      *  @param position Position.
      *  @param focus Focus.
      *  @param up Rough up direction.
      */
-    Camera(const Vec3& position,
-           const Vec3& focus = Eigen::Vector3f::Zero(),
-           const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f));
+    RayCamera(const Vec3& position,
+              const Vec3& focus = Eigen::Vector3f::Zero(),
+              const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f));
 
-    virtual ~Camera() = default;
+    virtual ~RayCamera() = default;
 
-    /** Position the camera according to the parameteres.
+    /** Set the range of the ray.
      *
+     *  @param tnear The near range of ray.
+     *  @param tfar The far range of ray.
      */
-    void lookat(const Vec3& position, const Vec3& focus, const Vec3& up);
+    void set_range(float tnear, float tfar);
 
     /** Generate an embree rayhit structure.
      *
-     *  Generate a ray for a pixel (s, t) on the film plane.
-     *  The parameter of the ray ranges in [near, far). The returned RTCRayHit
-     *  structure also has its hit.geomID filed set to RTC_INVALID_GEOMETRY_ID.
-     *
-     *  @param s The u coordinate on the film plane, ranges in [0, 1).
-     *  @param t The v coordinate on the film plane, ranges in [0, 1).
-     *  @param near The value of ray parameter for the near end point.
-     *  @param far The value of ray parameter for the far end point.
+     *  The ray's origin be at the pixel (s, t) on the film plane and points
+     *  to the camera viewing direction.
      */
-    virtual RTCRayHit gen_ray(
-        float s,
-        float t,
-        float near = 0.0f,
-        float far = std::numeric_limits<float>::max()) const = 0;
+    virtual RTCRayHit gen_ray(float s, float t) const = 0;
 
 public:
-    /** Camera position.
+    /** The film plane.
      *
+     *  @param tnear The near range of ray.
+     *  @param tfar The far range of ray.
      */
-    Eigen::Vector3f pos{ 0.0f, 0.0f, 0.0f };
+    Film film;
 
-    /** U direction.
+    /** The near plane.
      *
      */
-    Eigen::Vector3f u{ 1.0f, 0.0f, 0.0f };
+    float tnear = 0.0f;
 
-    /** V direction.
+    /** The far plane.
      *
      */
-    Eigen::Vector3f v{ 0.0f, 1.0f, 0.0f };
-
-    /** Negative view direction.
-     *
-     */
-    Eigen::Vector3f dir{ 0.0f, 0.0f, 1.0f };
-
-    /** Film plane.
-     *
-     */
-    Film film{ 256, 256 };
+    float tfar = std::numeric_limits<float>::max();
 };
 
-/** A persective camera.
+/** A RayCamera using perspective projection.
  *
  *  The range of visible frustum of a perspective camera is determined
  *  by the field of view and aspect ratio.
  */
-class PerspectiveCamera : public Camera
+class PerspRayCamera : public RayCamera
 {
 public:
-    /** Create a PerspectiveCamera using default parameters.
+    /** Create a PerspRayCamera using default parameters.
      *
      */
-    PerspectiveCamera() : Camera(){};
+    PerspRayCamera() = default;
 
-    /** Create a PerspectiveCamera.
+    /** Create a PerspRayCamera.
      *
      *  In addition to camera position and orientation, a perspective camera
      *  uses field of view and apsect ratio to determine the extent of the
@@ -133,13 +113,13 @@ public:
      *  @param vfov Vertical field of view in degrees.
      *  @param aspect Aspect ratio.
      */
-    PerspectiveCamera(const Vec3& position,
-                      const Vec3& focus = Eigen::Vector3f::Zero(),
-                      const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
-                      float vfov = 90.0f,
-                      float aspect = 1.0f);
+    PerspRayCamera(const Vec3& position,
+                   const Vec3& focus = Eigen::Vector3f::Zero(),
+                   const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
+                   float vfov = 90.0f,
+                   float aspect = 1.0f);
 
-    /** Create a PerspectiveCamera.
+    /** Create a PerspRayCamera.
      *
      *  In addition to camera position and orientation, a perspective camera
      *  uses field of view and apsect ratio to determine the extent of the
@@ -152,12 +132,12 @@ public:
      *  @param width Width of the image.
      *  @param height Height of the image.
      */
-    PerspectiveCamera(const Vec3& position,
-                      const Vec3& focus = Eigen::Vector3f::Zero(),
-                      const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
-                      float vfov = 90.0f,
-                      unsigned width = 256,
-                      unsigned height = 256);
+    PerspRayCamera(const Vec3& position,
+                   const Vec3& focus = Eigen::Vector3f::Zero(),
+                   const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
+                   float vfov = 90.0f,
+                   unsigned width = 256,
+                   unsigned height = 256);
 
     /** Set aspect ratio.
      *
@@ -179,27 +159,23 @@ public:
      *  The ray's origin be at the camera position and points to the pixel
      *  (s, t) on the film plane.
      */
-    RTCRayHit gen_ray(
-        float s,
-        float t,
-        float near = 0.0f,
-        float far = std::numeric_limits<float>::max()) const override;
+    RTCRayHit gen_ray(float s, float t) const override;
 };
 
-/** An orthogonal camera.
+/** A RayCamera using orthographic projection.
  *
- *  The range of visible frustum of an orthogonal camera is determined
+ *  The range of visible frustum of an orthographic camera is determined
  *  by the extent of film plane in world space.
  */
-class OrthogonalCamera : public Camera
+class OrthoRayCamera : public RayCamera
 {
 public:
-    /** Create an OrthogonalCamera using default parameters.
+    /** Create an OrthoRayCamera using default parameters.
      *
      */
-    OrthogonalCamera() : Camera() {}
+    OrthoRayCamera() = default;
 
-    /** Create an OrthogonalCamera.
+    /** Create an OrthoRayCamera.
      *
      *  In addition to camera position and orientation, an orthogonal camera
      *  specifies width and height of the film plane directly.
@@ -210,11 +186,11 @@ public:
      *  @param xextent Width of the film plane in world space.
      *  @param yextent Height of the film plane in world space.
      */
-    OrthogonalCamera(const Vec3& position,
-                     const Vec3& focus = Eigen::Vector3f::Zero(),
-                     const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
-                     float xextent = 256.0f,
-                     float yextent = 256.0f);
+    OrthoRayCamera(const Vec3& position,
+                   const Vec3& focus = Eigen::Vector3f::Zero(),
+                   const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
+                   float xextent = 1.0f,
+                   float yextent = 1.0f);
 
     /** Set the extent of the film plane.
      *
@@ -226,20 +202,7 @@ public:
      *  The ray's origin be at the pixel (s, t) on the film plane and points
      *  to the camera viewing direction.
      */
-    RTCRayHit gen_ray(
-        float s,
-        float t,
-        float near = 0.0f,
-        float far = std::numeric_limits<float>::max()) const override;
-};
-
-/** A simple Phong material model.
- *
- */
-struct Material
-{
-    Eigen::Array3f ambient; /**< Ambient color, in range [0, 1].*/
-    Eigen::Array3f diffuse; /**< Diffuse color, in range [0, 1]*/
+    RTCRayHit gen_ray(float s, float t) const override;
 };
 
 /** A simple ray tracer.
@@ -347,7 +310,7 @@ public:
      *  otherwise pixels are stored like [RRR...GGG...BBB...].
      */
     void render_shaded(std::vector<uint8_t>& pixels,
-                       const Camera& camera,
+                       const RayCamera& camera,
                        int width,
                        int height,
                        bool interleaved = true);
@@ -367,7 +330,7 @@ public:
      *  otherwise pixels are stored like [RRR...GGG...BBB...].
      */
     void render_shaded(std::vector<uint8_t>& pixels,
-                       const Camera& camera,
+                       const RayCamera& camera,
                        int width,
                        int height,
                        int samples,
@@ -384,7 +347,7 @@ public:
      *  @param height Image height.
      */
     void render_depth(std::vector<uint8_t>& pixels,
-                      const Camera& camera,
+                      const RayCamera& camera,
                       int width,
                       int height);
 
@@ -399,7 +362,7 @@ public:
      *  @param height Image height.
      */
     void render_depth(std::vector<float>& values,
-                      const Camera& camera,
+                      const RayCamera& camera,
                       int width,
                       int height);
 
@@ -411,7 +374,7 @@ public:
      *  @param height Image height.
      */
     void render_silhouette(std::vector<uint8_t>& pixels,
-                           const Camera& camera,
+                           const RayCamera& camera,
                            int width,
                            int height);
 
@@ -433,7 +396,7 @@ public:
      *  otherwise pixels are stored like [RRR...GGG...BBB...].
      */
     void render_index(std::vector<uint8_t>& pixels,
-                      const Camera& camera,
+                      const RayCamera& camera,
                       int width,
                       int height,
                       bool interleaved = true);
@@ -450,7 +413,7 @@ public:
      *  @param height Image height.
      */
     void render_index(std::vector<uint32_t>& indices,
-                      const Camera& camera,
+                      const RayCamera& camera,
                       int width,
                       int height);
 
