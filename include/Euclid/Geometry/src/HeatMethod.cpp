@@ -30,13 +30,13 @@ void GeodesicsInHeat<Mesh>::build(const Mesh& mesh,
         this->resolution * this->resolution * static_cast<FT>(scale);
     if (cot_mat) { this->cot_mat.reset(cot_mat); }
     else {
-        this->cot_mat.reset(new SpMat(laplacian_matrix(mesh)), true);
+        this->cot_mat.reset(new SpMat(cotangent_matrix(mesh)), true);
     }
     if (mass_mat) { this->mass_mat.reset(mass_mat); }
     else {
         this->mass_mat.reset(new SpMat(mass_matrix(mesh)), true);
     }
-    SpMat heat_mat = *this->mass_mat - diffuse_time * *this->cot_mat;
+    SpMat heat_mat = *this->mass_mat + diffuse_time * *this->cot_mat;
 
     // Factorize the heat matrix
     this->heat_solver.compute(heat_mat);
@@ -55,7 +55,7 @@ template<typename Mesh>
 void GeodesicsInHeat<Mesh>::scale(float scale)
 {
     FT diffuse_time = this->resolution * this->resolution * scale;
-    SpMat heat_mat = *this->mass_mat - diffuse_time * *this->cot_mat;
+    SpMat heat_mat = *this->mass_mat + diffuse_time * *this->cot_mat;
 
     // Factorize the heat matrix
     this->heat_solver.compute(heat_mat);
