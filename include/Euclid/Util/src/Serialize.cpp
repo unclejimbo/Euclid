@@ -133,57 +133,27 @@ void check_fstream(Stream& stream, const std::string& filename)
     }
 }
 
-// The actuall implementation of serialize.
-template<typename T>
-void serialize(const std::string& filename, const T& data)
+} // namespace _impl
+
+template<typename... T>
+void serialize(const std::string& filename, const T&... data)
 {
     auto mode =
         std::ios_base::out | std::ios_base::binary | std::ios_base::trunc;
     std::ofstream ofs(filename, mode);
-    check_fstream(ofs, filename);
+    _impl::check_fstream(ofs, filename);
     cereal::BinaryOutputArchive archive(ofs);
-    archive(data);
+    archive(data...);
 }
 
-// The actuall implementation of deserialize.
-template<typename T>
-void deserialize(const std::string& filename, T& data)
+template<typename... T>
+void deserialize(const std::string& filename, T&... data)
 {
     auto mode = std::ios_base::in | std::ios_base::binary;
     std::ifstream ifs(filename, mode);
-    check_fstream(ifs, filename);
+    _impl::check_fstream(ifs, filename);
     cereal::BinaryInputArchive archive(ifs);
-    archive(data);
-}
-
-} // namespace _impl
-
-template<typename Derived>
-void serialize(const std::string& filename,
-               const Eigen::PlainObjectBase<Derived>& mat)
-{
-    _impl::serialize(filename, mat);
-}
-
-template<typename Derived>
-void deserialize(const std::string& filename,
-                 Eigen::PlainObjectBase<Derived>& mat)
-{
-    _impl::deserialize(filename, mat);
-}
-
-template<typename Scalar, int Options, typename StorageIndex>
-void serialize(const std::string& filename,
-               const Eigen::SparseMatrix<Scalar, Options, StorageIndex>& mat)
-{
-    _impl::serialize(filename, mat);
-}
-
-template<typename Scalar, int Options, typename StorageIndex>
-void deserialize(const std::string& filename,
-                 Eigen::SparseMatrix<Scalar, Options, StorageIndex>& mat)
-{
-    _impl::deserialize(filename, mat);
+    archive(data...);
 }
 
 } // namespace Euclid

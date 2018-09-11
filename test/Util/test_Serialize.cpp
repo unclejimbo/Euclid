@@ -61,23 +61,28 @@ TEST_CASE("Util, Serialize", "[util][serialize]")
         std::string file(TMP_DIR);
         file.append("stl.cereal");
 
-        {
-            auto mode = std::ios_base::out | std::ios_base::binary |
-                        std::ios_base::trunc;
-            std::ofstream ofs(file, mode);
-            cereal::BinaryOutputArchive archive(ofs);
-            archive(from);
-        }
-
-        {
-            auto mode = std::ios_base::in | std::ios_base::binary;
-            std::ifstream ifs(file, mode);
-            cereal::BinaryInputArchive archive(ifs);
-            archive(to);
-        }
+        Euclid::serialize(file, from);
+        Euclid::deserialize(file, to);
 
         REQUIRE(from.size() == to.size());
         REQUIRE(from[0] == to[0]);
+    }
+
+    SECTION("multiple values")
+    {
+        int from_i = -5, to_i;
+        std::vector<float> from_vec(3, 1.0f), to_vec;
+        Eigen::Matrix3d from_mat, to_mat;
+        from_mat << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0;
+        std::string file(TMP_DIR);
+        file.append("multiple.cereal");
+
+        Euclid::serialize(file, from_i, from_vec, from_mat);
+        Euclid::deserialize(file, to_i, to_vec, to_mat);
+
+        REQUIRE(from_i == to_i);
+        REQUIRE(from_vec == to_vec);
+        REQUIRE(from_mat == to_mat);
     }
 
     SECTION("serialize to json")
