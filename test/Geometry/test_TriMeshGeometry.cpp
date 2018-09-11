@@ -213,93 +213,69 @@ TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
         REQUIRE(c.z() == -1.0);
     }
 
-    SECTION("laplacian")
+    SECTION("gaussian curvature")
     {
-        auto laplacian = Euclid::laplacian_matrix(bumpy);
+        std::vector<float> gaussian_curvatures;
+        for (const auto& v : vertices(bumpy)) {
+            auto c = Euclid::gaussian_curvature(v, bumpy);
+            gaussian_curvatures.push_back(c);
+        }
+        auto gmax = *std::max_element(gaussian_curvatures.begin(),
+                                      gaussian_curvatures.end());
+        auto gmin = *std::min_element(gaussian_curvatures.begin(),
+                                      gaussian_curvatures.end());
+        auto gscale = std::max(std::abs(gmax), std::abs(gmin));
+        gscale = 255.0 / gscale;
+        std::vector<float> colors;
+        for (auto g : gaussian_curvatures) {
+            if (g > 0.0f) {
+                colors.push_back(g * gscale);
+                colors.push_back(0.0f);
+                colors.push_back(0.0f);
+            }
+            else if (g == 0.0f) {
+                colors.push_back(0.0f);
+                colors.push_back(0.0f);
+                colors.push_back(0.0f);
+            }
+            else {
+                colors.push_back(0.0f);
+                colors.push_back(-g * gscale);
+                colors.push_back(0.0f);
+            }
+        }
+        std::string fout(TMP_DIR);
+        fout.append("bumpy_gaussian_curvature.ply");
+        Euclid::write_ply<3>(
+            fout, bpositions, nullptr, nullptr, &bindices, &colors);
+    }
+
+    SECTION("mean curvature w/ laplacian beltrami operator")
+    {
+        auto laplacian = Euclid::cotangent_matrix(bumpy);
         auto mass = Euclid::mass_matrix(bumpy);
         Eigen::SparseMatrix<float> inv_mass;
         igl::invert_diag(mass, inv_mass);
+        Eigen::MatrixXf hn = inv_mass * laplacian * bumpy_v;
+        Eigen::VectorXf norms = hn.rowwise().norm();
 
-        SECTION("mean curvature")
-        {
-            Eigen::MatrixXf hn = -inv_mass * (laplacian * bumpy_v);
-            Eigen::VectorXf norms = hn.rowwise().norm();
-
-            std::vector<float> mean_curvatures(hn.rows() * 3);
-            auto nmax = norms.maxCoeff();
-            nmax = 255.0 / nmax;
-            for (int i = 0; i < hn.rows(); ++i) {
-                mean_curvatures[i * 3 + 0] = norms(i) * nmax;
-                mean_curvatures[i * 3 + 1] = 0.0f;
-                mean_curvatures[i * 3 + 2] = 0.0f;
-            }
-            std::string fout(TMP_DIR);
-            fout.append("bumpy_mean_curvature.ply");
-            Euclid::write_ply<3>(fout,
-                                 bpositions,
-                                 nullptr,
-                                 nullptr,
-                                 &bindices,
-                                 &mean_curvatures);
+        std::vector<float> mean_curvatures(hn.rows() * 3);
+        auto nmax = norms.maxCoeff();
+        nmax = 255.0 / nmax;
+        for (int i = 0; i < hn.rows(); ++i) {
+            mean_curvatures[i * 3 + 0] = norms(i) * nmax;
+            mean_curvatures[i * 3 + 1] = 0.0f;
+            mean_curvatures[i * 3 + 2] = 0.0f;
         }
+        std::string fout(TMP_DIR);
+        fout.append("bumpy_mean_curvature.ply");
+        Euclid::write_ply<3>(
+            fout, bpositions, nullptr, nullptr, &bindices, &mean_curvatures);
+    }
 
-        SECTION("mean curavture normal to fair surface")
-        {
-            const float step = 0.1f;
-            const size_t iterations = 5;
-            Eigen::SimplicialLDLT<Eigen::SparseMatrix<float>> solver;
-            solver.compute(mass - step * laplacian);
-            REQUIRE(solver.info() == Eigen::Success);
-
-            for (size_t i = 0; i < iterations; ++i) {
-                bumpy_v = solver.solve(mass * bumpy_v);
-                REQUIRE(solver.info() == Eigen::Success);
-
-                std::vector<float> positions;
-                Euclid::extract_mesh(bumpy_v, positions);
-                std::string fout(TMP_DIR);
-                fout.append("bumpy_fair_");
-                fout.append(std::to_string(i));
-                fout.append(".off");
-                Euclid::write_off<3>(fout, positions, bindices);
-            }
-        }
-
-        SECTION("gaussian curvature")
-        {
-            std::vector<float> gaussian_curvatures;
-            for (const auto& v : vertices(bumpy)) {
-                auto c = Euclid::gaussian_curvature(v, bumpy);
-                gaussian_curvatures.push_back(c);
-            }
-            auto gmax = *std::max_element(gaussian_curvatures.begin(),
-                                          gaussian_curvatures.end());
-            auto gmin = *std::min_element(gaussian_curvatures.begin(),
-                                          gaussian_curvatures.end());
-            auto gscale = std::max(std::abs(gmax), std::abs(gmin));
-            gscale = 255.0 / gscale;
-            std::vector<float> colors;
-            for (auto g : gaussian_curvatures) {
-                if (g > 0.0f) {
-                    colors.push_back(g * gscale);
-                    colors.push_back(0.0f);
-                    colors.push_back(0.0f);
-                }
-                else if (g == 0.0f) {
-                    colors.push_back(0.0f);
-                    colors.push_back(0.0f);
-                    colors.push_back(0.0f);
-                }
-                else {
-                    colors.push_back(0.0f);
-                    colors.push_back(-g * gscale);
-                    colors.push_back(0.0f);
-                }
-            }
-            std::string fout(TMP_DIR);
-            fout.append("bumpy_gaussian_curvature.ply");
-            Euclid::write_ply<3>(
-                fout, bpositions, nullptr, nullptr, &bindices, &colors);
-        }
+    SECTION("graph laplacian")
+    {
+        auto [adj, degree] = Euclid::adjacency_matrix(bumpy);
+        auto laplacian = degree - adj;
     }
 }

@@ -140,25 +140,6 @@ T vertex_area(typename boost::graph_traits<const Mesh>::vertex_descriptor v,
 }
 
 template<typename Mesh, typename T>
-Eigen::SparseMatrix<T> mass_matrix(const Mesh& mesh, const VertexArea& method)
-{
-    const auto nv = num_vertices(mesh);
-    Eigen::SparseMatrix<T> mass(nv, nv);
-    std::vector<Eigen::Triplet<T>> values;
-
-    int i = 0;
-    for (const auto& v : vertices(mesh)) {
-        auto area = vertex_area(v, mesh, method);
-        values.emplace_back(i, i, area);
-        ++i;
-    }
-
-    mass.setFromTriplets(values.begin(), values.end());
-    mass.makeCompressed();
-    return mass;
-}
-
-template<typename Mesh, typename T>
 T edge_length(typename boost::graph_traits<const Mesh>::halfedge_descriptor he,
               const Mesh& mesh)
 {
@@ -243,8 +224,56 @@ Point_3 barycenter(typename boost::graph_traits<const Mesh>::face_descriptor f,
 }
 
 template<typename Mesh, typename T>
-Eigen::SparseMatrix<T> laplacian_matrix(const Mesh& mesh,
-                                        const Laplacian& method)
+T gaussian_curvature(
+    typename boost::graph_traits<const Mesh>::vertex_descriptor v,
+    const Mesh& mesh)
+{
+    auto vpmap = get(boost::vertex_point, mesh);
+
+    T angle_defect = boost::math::constants::two_pi<T>();
+    for (const auto& he : halfedges_around_target(v, mesh)) {
+        auto vp = source(he, mesh);
+        auto vq = target(next(he, mesh), mesh);
+        angle_defect -=
+            std::acos(cosine(get(vpmap, vp), get(vpmap, v), get(vpmap, vq)));
+    }
+    return angle_defect / vertex_area(v, mesh);
+}
+
+template<typename Mesh, typename T>
+std::tuple<Eigen::SparseMatrix<T>, Eigen::SparseMatrix<T>> adjacency_matrix(
+    const Mesh& mesh)
+{
+    using vertex_descriptor =
+        typename boost::graph_traits<Mesh>::vertex_descriptor;
+    using Triplet = Eigen::Triplet<T>;
+    auto vpmap = get(boost::vertex_point, mesh);
+    auto vimap = get(boost::vertex_index, mesh);
+    const auto nv = num_vertices(mesh);
+
+    std::vector<Triplet> adj, degree;
+    for (const auto& vi : vertices(mesh)) {
+        int i = get(vimap, vi);
+        int d = 0;
+        for (const auto& he : halfedges_around_target(vi, mesh)) {
+            auto vj = source(he, mesh);
+            int j = get(vimap, vj);
+            adj.emplace_back(i, j, -1);
+            ++d;
+        }
+        degree.emplace_back(i, i, d);
+    }
+
+    Eigen::SparseMatrix<T> adj_mat(nv, nv), degree_mat(nv, nv);
+    adj_mat.setFromTriplets(adj.begin(), adj.end());
+    adj_mat.makeCompressed();
+    degree_mat.setFromTriplets(degree.begin(), degree.end());
+    degree_mat.makeCompressed();
+    return std::make_tuple(adj_mat, degree_mat);
+}
+
+template<typename Mesh, typename T>
+Eigen::SparseMatrix<T> cotangent_matrix(const Mesh& mesh)
 {
     using vertex_descriptor =
         typename boost::graph_traits<Mesh>::vertex_descriptor;
@@ -271,30 +300,24 @@ Eigen::SparseMatrix<T> laplacian_matrix(const Mesh& mesh,
         for (const auto& he : halfedges_around_target(vi, mesh)) {
             auto vj = source(he, mesh);
             int j = get(vimap, vj);
-            if (method == Laplacian::uniform) {
-                values.emplace(i, j, static_cast<T>(1));
-                row_sum += 1.0;
+            auto existing = values.find(Triplet(j, i, 0.0));
+            if (existing != values.end()) {
+                values.emplace(i, j, existing->value());
+                row_sum -= existing->value();
             }
-            else { // cotangent
-                auto existing = values.find(Triplet(j, i, 0.0));
-                if (existing != values.end()) {
-                    values.emplace(i, j, existing->value());
-                    row_sum += existing->value();
-                }
-                else {
-                    auto va = target(next(he, mesh), mesh);
-                    auto vb = target(next(opposite(he, mesh), mesh), mesh);
-                    auto cota = cotangent(
-                        get(vpmap, vi), get(vpmap, va), get(vpmap, vj));
-                    auto cotb = cotangent(
-                        get(vpmap, vi), get(vpmap, vb), get(vpmap, vj));
-                    auto value = static_cast<T>((cota + cotb) * 0.5);
-                    values.emplace(i, j, value);
-                    row_sum += value;
-                }
+            else {
+                auto va = target(next(he, mesh), mesh);
+                auto vb = target(next(opposite(he, mesh), mesh), mesh);
+                auto cota =
+                    cotangent(get(vpmap, vi), get(vpmap, va), get(vpmap, vj));
+                auto cotb =
+                    cotangent(get(vpmap, vi), get(vpmap, vb), get(vpmap, vj));
+                auto value = static_cast<T>((cota + cotb) * 0.5);
+                values.emplace(i, j, -value);
+                row_sum += value;
             }
         }
-        values.emplace(i, i, -row_sum);
+        values.emplace(i, i, row_sum);
     }
 
     Eigen::SparseMatrix<T> mat(nv, nv);
@@ -304,20 +327,22 @@ Eigen::SparseMatrix<T> laplacian_matrix(const Mesh& mesh,
 }
 
 template<typename Mesh, typename T>
-T gaussian_curvature(
-    typename boost::graph_traits<const Mesh>::vertex_descriptor v,
-    const Mesh& mesh)
+Eigen::SparseMatrix<T> mass_matrix(const Mesh& mesh, const VertexArea& method)
 {
-    auto vpmap = get(boost::vertex_point, mesh);
+    const auto nv = num_vertices(mesh);
+    Eigen::SparseMatrix<T> mass(nv, nv);
+    std::vector<Eigen::Triplet<T>> values;
 
-    T angle_defect = boost::math::constants::two_pi<T>();
-    for (const auto& he : halfedges_around_target(v, mesh)) {
-        auto vp = source(he, mesh);
-        auto vq = target(next(he, mesh), mesh);
-        angle_defect -=
-            std::acos(cosine(get(vpmap, vp), get(vpmap, v), get(vpmap, vq)));
+    int i = 0;
+    for (const auto& v : vertices(mesh)) {
+        auto area = vertex_area(v, mesh, method);
+        values.emplace_back(i, i, area);
+        ++i;
     }
-    return angle_defect / vertex_area(v, mesh);
+
+    mass.setFromTriplets(values.begin(), values.end());
+    mass.makeCompressed();
+    return mass;
 }
 
 } // namespace Euclid

@@ -25,6 +25,7 @@
  */
 #pragma once
 
+#include <tuple>
 #include <Eigen/SparseCore>
 #include <CGAL/boost/graph/properties.h>
 
@@ -153,26 +154,6 @@ T vertex_area(typename boost::graph_traits<const Mesh>::vertex_descriptor v,
               const Mesh& mesh,
               const VertexArea& method = VertexArea::mixed_voronoi);
 
-/** Mass matrix of the mesh.
- *
- *  The mass matrix is simply the vertex areas of all the vertices of a mesh
- *  written in a diagonal matrix, which serves as the local averaging region
- *  commonly used in discrete differential geometry.
- *
- *  @tparam Mesh Mesh type.
- *  @tparam T Optional, derived from Mesh.
- *
- *  @sa VertexArea, vertex_area(), laplacian_matrix()
- */
-template<
-    typename Mesh,
-    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                                  value_type>::Kernel::FT>
-Eigen::SparseMatrix<T> mass_matrix(
-    const Mesh& mesh,
-    const VertexArea& method = VertexArea::mixed_voronoi);
-
 /** Edge length.
  *
  *  @tparam Mesh Mesh type.
@@ -266,46 +247,6 @@ template<typename Mesh,
 Point_3 barycenter(typename boost::graph_traits<const Mesh>::face_descriptor,
                    const Mesh& mesh);
 
-/** Strategies to compute Laplacian.
- *
- *  @sa laplacian_matrix()
- */
-enum class Laplacian
-{
-    uniform,  /**< Simple graph Laplacian.*/
-    cotangent /**< Cotangent formula.*/
-};
-
-/** Laplacian operator on a mesh.
- *
- *  The Laplacian matrix forms the basis for all kinds of geometry
- *  processing algorithms, you name it. There exist many discretizations for
- *  the Laplace-Beltrami operator, and here you can choose between graph
- *  Laplacian and geometric Laplacian which are specified in Laplacian.
- *
- *  Other than that, you can further choose to multiply the pure Laplacian
- *  matrix with the mass matrix, which serves as a local average. Now suppose we
- *  use $L$ for the Laplacian matrix, and $M$ for the mass matrix.
- *
- *  - @f$L@f$ alone is symmetric but not invariant under meshing.
- *  - @f$M^{-1}L@f$ is robust to meshing quality but breaks the symmetric
- *  property.
- *  - @f$M^{-1/2}LM^{-1/2}@f$ is both symmetric and robust.
- *
- *  @tparam Mesh Mesh type.
- *  @tparam T Optional, derived from Mesh.
- *
- *  @sa Laplacian, mass_matrix()
- */
-template<
-    typename Mesh,
-    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                                  value_type>::Kernel::FT>
-Eigen::SparseMatrix<T> laplacian_matrix(
-    const Mesh& mesh,
-    const Laplacian& method = Laplacian::cotangent);
-
 /** Gaussian curvature of a vertex on the mesh.
  *
  *  Discrete Gaussian curvature using the angle deficit method.
@@ -321,6 +262,72 @@ template<
 T gaussian_curvature(
     typename boost::graph_traits<const Mesh>::vertex_descriptor v,
     const Mesh& mesh);
+
+/** Adjacency matrix of the mesh.
+ *
+ *  Return the unweighted adjacency matrix as well as the degree matrix of a
+ *  mesh.
+ *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
+ */
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+std::tuple<Eigen::SparseMatrix<T>, Eigen::SparseMatrix<T>> adjacency_matrix(
+    const Mesh& mesh);
+
+/** Cotangent matrix of the mesh.
+ *
+ *  The cotangent matrix is a discretization of the Laplacian-Beltrami operator.
+ *  It is a symemtric, positive semi-definitive matrix. Assume that the
+ *  cotangent matrix is @f$L@f$, and the mass matrix is @f$A@f$, here're some
+ *  variants of discrete LB operator.
+ *
+ *  - @f$L@f$, alone is not invariant to meshing
+ *  - @f$A^{-1}L@f$, accurate discretization but not symmetric
+ *  - @f$A^{-1/2}LA^{-1/2}@f$, symmetric and mesh independent
+ *
+ *  **Note**
+ *
+ *  It's kinda arbitary in the literature when people refer to the Laplacian
+ *  matrix, especially the sign. In this particular implementation, the diagonal
+ *  elements are positive and the others are negative, thus forming a positive
+ *  smei-definitive matrix.
+ *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
+ *
+ *  @sa mass_matrix
+ */
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+Eigen::SparseMatrix<T> cotangent_matrix(const Mesh& mesh);
+
+/** Mass matrix of the mesh.
+ *
+ *  The mass matrix is simply the vertex areas of all the vertices of a mesh
+ *  written in a diagonal matrix, which serves as the local averaging region
+ *  commonly used in discrete differential geometry.
+ *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
+ *
+ *  @sa VertexArea, vertex_area, cotangent_matrix
+ */
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+Eigen::SparseMatrix<T> mass_matrix(
+    const Mesh& mesh,
+    const VertexArea& method = VertexArea::mixed_voronoi);
 
 /** @}*/
 } // namespace Euclid
