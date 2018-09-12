@@ -7,6 +7,8 @@
 #include <Euclid/Geometry/MeshHelpers.h>
 #include <Euclid/IO/PlyIO.h>
 #include <Euclid/Math/Distance.h>
+#include <Euclid/Util/Serialize.h>
+#include <igl/colormap.h>
 #include <stb_image_write.h>
 
 #include <config.h>
@@ -22,20 +24,20 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
     std::vector<double> normals;
     std::vector<unsigned> indices;
     std::string filename(DATA_DIR);
-    filename.append("bunny_vn.ply");
+    filename.append("dragon.ply");
     Euclid::read_ply<3>(
         filename, positions, &normals, nullptr, &indices, nullptr);
     Mesh mesh;
     Euclid::make_mesh<3>(mesh, positions, indices);
 
-    auto idx1 = 7505;
-    auto v1 = Vertex(idx1); // vertex on ear
-    auto idx2 = 695;
-    auto v2 = Vertex(idx2); // vertex next by
-    auto idx3 = 3915;
-    auto v3 = Vertex(idx3); // vertex on the other ear
-    auto idx4 = 0;
-    auto v4 = Vertex(idx4); // vertex far away
+    auto idx1 = 21785;
+    auto v1 = Vertex(idx1); // left-front foot
+    auto idx2 = 24103;
+    auto v2 = Vertex(idx2); // vertex nearby
+    auto idx3 = 36874;
+    auto v3 = Vertex(idx3); // right-front foot
+    auto idx4 = 16807;
+    auto v4 = Vertex(idx4); // back
 
     SECTION("spin images")
     {
@@ -90,7 +92,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
                 auto vmax = si_v1.maxCoeff();
                 si_v1 *= 255.0 / vmax;
                 std::string fout(TMP_DIR);
-                fout.append("bunny_spin_image1.png");
+                fout.append("spinimage1.png");
                 stbi_write_png(fout.c_str(),
                                width,
                                width,
@@ -102,7 +104,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
                 auto vmax = si_v2.maxCoeff();
                 si_v2 *= 255.0 / vmax;
                 std::string fout(TMP_DIR);
-                fout.append("bunny_spin_image2.png");
+                fout.append("spinimage2.png");
                 stbi_write_png(fout.c_str(),
                                width,
                                width,
@@ -114,7 +116,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
                 auto vmax = si_v3.maxCoeff();
                 si_v3 *= 255.0 / vmax;
                 std::string fout(TMP_DIR);
-                fout.append("bunny_spin_image3.png");
+                fout.append("spinimage3.png");
                 stbi_write_png(fout.c_str(),
                                width,
                                width,
@@ -126,7 +128,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
                 auto vmax = si_v4.maxCoeff();
                 si_v4 *= 255.0 / vmax;
                 std::string fout(TMP_DIR);
-                fout.append("bunny_spin_image4.png");
+                fout.append("spinimage4.png");
                 stbi_write_png(fout.c_str(),
                                width,
                                width,
@@ -139,46 +141,126 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
 
     SECTION("heat kernel signature")
     {
+        constexpr const int ne = 100;
+        std::string fcereal(TMP_DIR);
+        fcereal.append("hks.cereal");
         Euclid::HKS<Mesh> hks;
-        hks.build(mesh, 100);
+        Eigen::VectorXd eigenvalues;
+        Eigen::MatrixXd eigenfunctions;
+        try {
+            Euclid::deserialize(fcereal, eigenvalues, eigenfunctions);
+            if (eigenvalues.rows() != ne ||
+                eigenvalues.rows() != eigenfunctions.cols() ||
+                eigenfunctions.rows() != positions.size() / 3) {
+                throw std::runtime_error("Need to be build again.");
+            }
+            hks.build(mesh, &eigenvalues, &eigenfunctions);
+        }
+        catch (const std::exception& e) {
+            hks.build(mesh, ne);
+            Euclid::serialize(fcereal, *hks.eigenvalues, *hks.eigenfunctions);
+        }
 
-        Eigen::ArrayXd hks_v1;
-        hks.compute(v1, hks_v1);
-        Eigen::ArrayXd hks_v2;
-        hks.compute(v2, hks_v2);
-        Eigen::ArrayXd hks_v3;
-        hks.compute(v3, hks_v3);
-        Eigen::ArrayXd hks_v4;
-        hks.compute(v4, hks_v4);
+        SECTION("default time range")
+        {
+            Eigen::ArrayXXd hks_all;
+            hks.compute(hks_all);
 
-        auto d12 = Euclid::l2(hks_v1, hks_v2);
-        auto d13 = Euclid::l2(hks_v1, hks_v3);
-        auto d14 = Euclid::l2(hks_v1, hks_v4);
-        REQUIRE(d12 < d13);
-        REQUIRE(d13 < d14);
+            std::vector<double> distances(hks_all.cols());
+            for (size_t i = 0; i < hks_all.cols(); ++i) {
+                distances[i] = Euclid::chi2(hks_all.col(i), hks_all.col(idx1));
+            }
+            REQUIRE(distances[idx1] == 0);
+            REQUIRE(distances[idx2] < distances[idx3]);
+            REQUIRE(distances[idx3] < distances[idx4]);
 
-        Eigen::ArrayXXd hks_all;
-        hks.compute(hks_all);
-        REQUIRE(hks_v1.isApprox(hks_all.col(idx1)));
-        REQUIRE(hks_v2.isApprox(hks_all.col(idx2)));
-        REQUIRE(hks_v3.isApprox(hks_all.col(idx3)));
-        REQUIRE(hks_v4.isApprox(hks_all.col(idx4)));
+            // colorize output
+            std::vector<unsigned char> colors;
+            colors.reserve(hks_all.cols() * 3);
+            auto dmax = std::max_element(distances.begin(), distances.end());
+            auto dmaxid = dmax - distances.begin();
+            for (auto d : distances) {
+                double r, g, b;
+                igl::colormap(
+                    igl::COLOR_MAP_TYPE_JET, (*dmax - d) / *dmax, r, g, b);
+                colors.push_back(static_cast<unsigned char>(r * 255));
+                colors.push_back(static_cast<unsigned char>(g * 255));
+                colors.push_back(static_cast<unsigned char>(b * 255));
+            }
+            std::string fout(TMP_DIR);
+            fout.append("hks1.ply");
+            Euclid::write_ply<3>(
+                fout, positions, nullptr, nullptr, &indices, &colors);
+        }
 
-        Euclid::HKS<Mesh> hks1;
-        hks1.build(mesh, hks.eigenvalues.get(), hks.eigenfunctions.get());
+        SECTION("smaller time range")
+        {
+            auto c = std::log(10.0);
+            auto tmin = c / hks.eigenvalues->coeff(hks.eigenvalues->size() - 1);
+            auto tmax = c / hks.eigenvalues->coeff(1);
+            Eigen::ArrayXXd hks_all;
+            hks.compute(hks_all, 100, tmin, tmax);
 
-        Eigen::ArrayXd hks1_v1;
-        hks1.compute(v1, hks1_v1);
-        Eigen::ArrayXd hks1_v2;
-        hks1.compute(v2, hks1_v2);
-        Eigen::ArrayXd hks1_v3;
-        hks1.compute(v3, hks1_v3);
-        Eigen::ArrayXd hks1_v4;
-        hks1.compute(v4, hks1_v4);
+            std::vector<double> distances(hks_all.cols());
+            for (size_t i = 0; i < hks_all.cols(); ++i) {
+                distances[i] = Euclid::chi2(hks_all.col(i), hks_all.col(idx1));
+            }
+            REQUIRE(distances[idx1] == 0);
+            REQUIRE(distances[idx2] < distances[idx3]);
+            REQUIRE(distances[idx3] < distances[idx4]);
 
-        REQUIRE(hks_v1.isApprox(hks1_v1));
-        REQUIRE(hks_v2.isApprox(hks1_v2));
-        REQUIRE(hks_v3.isApprox(hks1_v3));
-        REQUIRE(hks_v4.isApprox(hks1_v4));
+            // colorize output
+            std::vector<unsigned char> colors;
+            colors.reserve(hks_all.cols() * 3);
+            auto dmax = std::max_element(distances.begin(), distances.end());
+            auto dmaxid = dmax - distances.begin();
+            for (auto d : distances) {
+                double r, g, b;
+                igl::colormap(
+                    igl::COLOR_MAP_TYPE_JET, (*dmax - d) / *dmax, r, g, b);
+                colors.push_back(static_cast<unsigned char>(r * 255));
+                colors.push_back(static_cast<unsigned char>(g * 255));
+                colors.push_back(static_cast<unsigned char>(b * 255));
+            }
+            std::string fout(TMP_DIR);
+            fout.append("hks2.ply");
+            Euclid::write_ply<3>(
+                fout, positions, nullptr, nullptr, &indices, &colors);
+        }
+
+        SECTION("larger time range")
+        {
+            auto c = 12 * std::log(10.0);
+            auto tmin = c / hks.eigenvalues->coeff(hks.eigenvalues->size() - 1);
+            auto tmax = c / hks.eigenvalues->coeff(1);
+            Eigen::ArrayXXd hks_all;
+            hks.compute(hks_all, 100, tmin, tmax);
+
+            std::vector<double> distances(hks_all.cols());
+            for (size_t i = 0; i < hks_all.cols(); ++i) {
+                distances[i] = Euclid::chi2(hks_all.col(i), hks_all.col(idx1));
+            }
+            REQUIRE(distances[idx1] == 0);
+            REQUIRE(distances[idx2] < distances[idx3]);
+            REQUIRE(distances[idx3] < distances[idx4]);
+
+            // colorize output
+            std::vector<unsigned char> colors;
+            colors.reserve(hks_all.cols() * 3);
+            auto dmax = std::max_element(distances.begin(), distances.end());
+            auto dmaxid = dmax - distances.begin();
+            for (auto d : distances) {
+                double r, g, b;
+                igl::colormap(
+                    igl::COLOR_MAP_TYPE_JET, (*dmax - d) / *dmax, r, g, b);
+                colors.push_back(static_cast<unsigned char>(r * 255));
+                colors.push_back(static_cast<unsigned char>(g * 255));
+                colors.push_back(static_cast<unsigned char>(b * 255));
+            }
+            std::string fout(TMP_DIR);
+            fout.append("hks3.ply");
+            Euclid::write_ply<3>(
+                fout, positions, nullptr, nullptr, &indices, &colors);
+        }
     }
 }

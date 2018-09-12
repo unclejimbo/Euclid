@@ -147,23 +147,6 @@ public:
                const Vec* eigenvalues,
                const Mat* eigenfunctions);
 
-    /** Compute hks for a single vertex.
-     *
-     *  @param v Vertex handle.
-     *  @param hks Output heat kernel signature.
-     *  @param tscales Number of time scales to use.
-     *  @param tmin The minimum time value, default to -1 which will use the
-     *  parameter setting described in the paper.
-     *  @param tmax The maximum time value, default to -1 which will use the
-     *  parameter setting described in the paper.
-     */
-    template<typename Derived>
-    void compute(const Vertex& v,
-                 Eigen::ArrayBase<Derived>& hks,
-                 unsigned tscales = 100,
-                 float tmin = -1.0f,
-                 float tmax = -1.0f);
-
     /** Compute hks for all vertices.
      *
      *  @param hks Output heat kernel signatures
