@@ -210,7 +210,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
         raytracer.render_silhouette(pixels, cam, width, height);
 
         std::string outfile(TMP_DIR);
-        outfile.append("raytracer_sillouette.png");
+        outfile.append("raytracer_silhouette.png");
         stbi_write_png(outfile.c_str(), width, height, 1, pixels.data(), width);
     }
 
