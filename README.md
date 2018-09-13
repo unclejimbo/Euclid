@@ -49,6 +49,7 @@ The purpose of Euclid is not to replace any of the above packages, but to glue t
 - A versatile timer.
 - Memory management.
 - Serialization.
+- Color utilities.
 
 ## Dependencies
 
