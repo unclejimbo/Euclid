@@ -246,7 +246,7 @@ inline void RayTracer::attach_color_buffer(const std::vector<float>* colors,
                                    colors->data(),
                                    0,
                                    3 * sizeof(float),
-                                   colors->size());
+                                   colors->size() / 3);
         rtcCommitGeometry(_geometry);
     }
     // vertex color -> ! vertex color
@@ -263,7 +263,7 @@ inline void RayTracer::attach_color_buffer(const std::vector<float>* colors,
                                    colors->data(),
                                    0,
                                    3 * sizeof(float),
-                                   colors->size());
+                                   colors->size() / 3);
         rtcCommitGeometry(_geometry);
     }
 
