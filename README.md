@@ -2,6 +2,7 @@
 
 - [GitHub repo](https://github.com/unclejimbo/Euclid)
 - [Latest documentation](https://codedocs.xyz/unclejimbo/Euclid/index.html)
+- [Gallery](https://github.com/unclejimbo/Euclid/tree/dev/gallery)
 
 ## Introduction
 
@@ -136,7 +137,7 @@ int main()
 
 And here's the result rendered using MeshLab.
 
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/resource/bumpy_gaussian.png)
+![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/gaussian_curvatures.png)
 
 See source code [here](https://github.com/unclejimbo/Euclid/blob/dev/examples/hello_world/main.cpp).
 
