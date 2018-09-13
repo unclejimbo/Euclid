@@ -1,13 +1,12 @@
 #include <catch2/catch.hpp>
 #include <Euclid/Render/RayTracer.h>
 
-#include <random>
 #include <string>
-
 #include <CGAL/Simple_cartesian.h>
 #include <Euclid/IO/OffIO.h>
 #include <Euclid/Analysis/AABB.h>
 #include <Euclid/Math/Vector.h>
+#include <Euclid/Util/Color.h>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
@@ -144,13 +143,8 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
 
     SECTION("random face color")
     {
-        std::random_device rd;
-        std::minstd_rand rd_gen(rd());
-        std::uniform_real_distribution rd_number(0.0, 1.0);
-        std::vector<float> rd_colors(indices.size());
-        for (auto& color : rd_colors) {
-            color = rd_number(rd_gen);
-        }
+        std::vector<float> rd_colors;
+        Euclid::rnd_colors(indices.size() / 3, rd_colors);
         raytracer.attach_color_buffer(&rd_colors);
 
         std::vector<uint8_t> pixels(3 * width * height);
@@ -166,13 +160,9 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
 
     SECTION("random vertex color")
     {
-        std::random_device rd;
-        std::minstd_rand rd_gen(rd());
-        std::uniform_real_distribution rd_number(0.0, 1.0);
-        std::vector<float> rd_colors(positions.size());
-        for (auto& color : rd_colors) {
-            color = rd_number(rd_gen);
-        }
+        std::vector<float> rd_colors;
+        Euclid::rnd_colors(positions.size() / 3, rd_colors);
+        rd_colors.push_back(0.0f);
         raytracer.attach_color_buffer(&rd_colors, true);
 
         std::vector<uint8_t> pixels(3 * width * height);

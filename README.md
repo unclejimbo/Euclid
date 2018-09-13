@@ -96,7 +96,6 @@ and all the dependencies and compile options will be handled transitively by CMa
 Here's an example which reads a mesh file, converts it to a CGAL::Surface_mesh data structure, computes its discrete gaussian curvatures and ouput the values into mesh colors.
 
 ```cpp
-#include <algorithm>
 #include <vector>
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
@@ -104,7 +103,7 @@ Here's an example which reads a mesh file, converts it to a CGAL::Surface_mesh d
 #include <Euclid/IO/PlyIO.h>
 #include <Euclid/Geometry/MeshHelpers.h>
 #include <Euclid/Geometry/TriMeshGeometry.h>
-#include <igl/colormap.h>
+#include <Euclid/Util/Color.h>
 
 using Kernel = CGAL::Simple_cartesian<float>;
 using Point_3 = Kernel::Point_3;
@@ -128,17 +127,8 @@ int main()
     }
 
     // Turn cuvatures into colors and output to a file
-    auto [cmin, cmax] =
-        std::minmax_element(curvatures.begin(), curvatures.end());
     std::vector<unsigned char> colors;
-    for (auto c : curvatures) {
-        auto curvature = (c - *cmin) / (*cmax - *cmin);
-        float r, g, b;
-        igl::colormap(igl::COLOR_MAP_TYPE_JET, curvature, r, g, b);
-        colors.push_back(static_cast<unsigned char>(r * 255));
-        colors.push_back(static_cast<unsigned char>(g * 255));
-        colors.push_back(static_cast<unsigned char>(b * 255));
-    }
+    Euclid::colormap(igl::COLOR_MAP_TYPE_JET, curvatures, colors, true);
     Euclid::write_ply<3>(
         "outdir/bumpy.ply", positions, nullptr, nullptr, &indices, &colors);
 }

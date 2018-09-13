@@ -10,7 +10,7 @@
 #include <Euclid/Math/Numeric.h>
 #include <Euclid/IO/OffIO.h>
 #include <Euclid/IO/PlyIO.h>
-#include <igl/colormap.h>
+#include <Euclid/Util/Color.h>
 
 #include <config.h>
 
@@ -50,18 +50,9 @@ TEST_CASE("Geometry, Geodesics", "[geometry][geodesics]")
         REQUIRE(Euclid::eq_abs_err(gmax1, gmax2, 1.0));
 
         // Turn geodesic distances into colors and output to a file
-        auto [gmin, gmax] =
-            std::minmax_element(geodesics.begin(), geodesics.end());
-        auto denom = 1.0f / (*gmax - *gmin);
         std::vector<unsigned char> colors;
-        for (auto d : geodesics) {
-            auto dist = (*gmax - d) * denom;
-            decltype(dist) r, g, b;
-            igl::colormap(igl::COLOR_MAP_TYPE_PARULA, dist, r, g, b);
-            colors.push_back(static_cast<unsigned char>(r * 255));
-            colors.push_back(static_cast<unsigned char>(g * 255));
-            colors.push_back(static_cast<unsigned char>(b * 255));
-        }
+        Euclid::colormap(
+            igl::COLOR_MAP_TYPE_PARULA, geodesics, colors, true, true);
 
         std::string fout(TMP_DIR);
         fout.append("kitten_geodesics_heat.ply");

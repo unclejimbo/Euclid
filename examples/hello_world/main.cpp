@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <vector>
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
@@ -6,7 +5,7 @@
 #include <Euclid/IO/PlyIO.h>
 #include <Euclid/Geometry/MeshHelpers.h>
 #include <Euclid/Geometry/TriMeshGeometry.h>
-#include <igl/colormap.h>
+#include <Euclid/Util/Color.h>
 
 #include <config.h>
 
@@ -34,17 +33,8 @@ int main()
     }
 
     // Turn cuvatures into colors and output to a file
-    auto [cmin, cmax] =
-        std::minmax_element(curvatures.begin(), curvatures.end());
     std::vector<unsigned char> colors;
-    for (auto c : curvatures) {
-        auto curvature = (c - *cmin) / (*cmax - *cmin);
-        float r, g, b;
-        igl::colormap(igl::COLOR_MAP_TYPE_JET, curvature, r, g, b);
-        colors.push_back(static_cast<unsigned char>(r * 255));
-        colors.push_back(static_cast<unsigned char>(g * 255));
-        colors.push_back(static_cast<unsigned char>(b * 255));
-    }
+    Euclid::colormap(igl::COLOR_MAP_TYPE_JET, curvatures, colors, true);
     std::string fout(TMP_DIR);
     fout.append("hello_world/bumpy.ply");
     Euclid::write_ply<3>(fout, positions, nullptr, nullptr, &indices, &colors);

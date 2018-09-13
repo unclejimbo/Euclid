@@ -7,8 +7,8 @@
 #include <Euclid/Geometry/MeshHelpers.h>
 #include <Euclid/IO/PlyIO.h>
 #include <Euclid/Math/Distance.h>
+#include <Euclid/Util/Color.h>
 #include <Euclid/Util/Serialize.h>
-#include <igl/colormap.h>
 #include <stb_image_write.h>
 
 #include <config.h>
@@ -37,15 +37,7 @@ void _write_distances_to_colored_mesh(const std::string& f,
                                       const std::vector<double>& distances)
 {
     std::vector<unsigned char> colors;
-    colors.reserve(positions.size());
-    auto dmax = *std::max_element(distances.begin(), distances.end());
-    for (auto d : distances) {
-        double r, g, b;
-        igl::colormap(igl::COLOR_MAP_TYPE_JET, (dmax - d) / dmax, r, g, b);
-        colors.push_back(static_cast<unsigned char>(r * 255));
-        colors.push_back(static_cast<unsigned char>(g * 255));
-        colors.push_back(static_cast<unsigned char>(b * 255));
-    }
+    Euclid::colormap(igl::COLOR_MAP_TYPE_JET, distances, colors, true, true);
     std::string fout(TMP_DIR);
     fout.append(f);
     Euclid::write_ply<3>(fout, positions, nullptr, nullptr, &indices, &colors);
