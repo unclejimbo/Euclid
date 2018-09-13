@@ -54,33 +54,22 @@ public:
                const std::vector<Vector_3>* vnormals = nullptr,
                FT resolution = 0.0);
 
-    /** Compute the spin image descriptor for a vertex.
-     *
-     *  @param v The vertex handle.
-     *  @param spin_img The output spin image for v.
-     *  @param bin_size Multiples of the mesh resolution.
-     *  @param image_width Number of rows and colums for the image.
-     *  @param support_angle Maximum support angle in degrees.
-     */
-    template<typename Derived>
-    void compute(const Vertex& v,
-                 Eigen::ArrayBase<Derived>& spin_img,
-                 float bin_size = 1.0f,
-                 int image_width = 15,
-                 float support_angle = 60.0f);
-
     /** Compute the spin image descriptor for all vertices.
      *
      *  @param spin_img The output spin image for v.
-     *  @param bin_size Multiples of the mesh resolution.
-     *  @param image_width Number of rows and colums for the image.
-     *  @param support_angle Maximum support angle in degrees.
+     *  @param bin_scale Multiple of the mesh resolution, default to 1.0 which
+     *  is equavalent to use the mesh resolution as bin size.
+     *  @param image_width Number of rows and columns for the image, default to
+     *  16. bin_size * image_width equals to the actual image size in mesh
+     *  coordinates.
+     *  @param support_angle Maximum support angle in degrees, default to 90.0
+     *  thus supporting vertices pointing in the same direction as v.
      */
     template<typename Derived>
     void compute(Eigen::ArrayBase<Derived>& spin_img,
-                 float bin_size = 1.0f,
-                 int image_width = 15,
-                 float support_angle = 60.0f);
+                 float bin_scale = 1.0f,
+                 int image_width = 16,
+                 float support_angle = 90.0f);
 
 public:
     /** The mesh being processed.

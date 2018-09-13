@@ -18,6 +18,39 @@ using Vector_3 = Kernel::Vector_3;
 using Mesh = CGAL::Surface_mesh<Kernel::Point_3>;
 using Vertex = Mesh::Vertex_index;
 
+void _write_spin_image(const std::string& f,
+                       const Eigen::ArrayXd& si,
+                       int width)
+{
+    auto vmax = si.maxCoeff();
+    Eigen::ArrayXd sig = si;
+    sig *= 255.0 / vmax;
+    std::string fout(TMP_DIR);
+    fout.append(f);
+    stbi_write_png(
+        fout.c_str(), width, width, 1, &sig(0), width * sizeof(double));
+}
+
+void _write_distances_to_colored_mesh(const std::string& f,
+                                      const std::vector<double>& positions,
+                                      const std::vector<unsigned>& indices,
+                                      const std::vector<double>& distances)
+{
+    std::vector<unsigned char> colors;
+    colors.reserve(positions.size());
+    auto dmax = *std::max_element(distances.begin(), distances.end());
+    for (auto d : distances) {
+        double r, g, b;
+        igl::colormap(igl::COLOR_MAP_TYPE_JET, (dmax - d) / dmax, r, g, b);
+        colors.push_back(static_cast<unsigned char>(r * 255));
+        colors.push_back(static_cast<unsigned char>(g * 255));
+        colors.push_back(static_cast<unsigned char>(b * 255));
+    }
+    std::string fout(TMP_DIR);
+    fout.append(f);
+    Euclid::write_ply<3>(fout, positions, nullptr, nullptr, &indices, &colors);
+}
+
 TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
 {
     std::vector<double> positions;
@@ -41,101 +74,94 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
 
     SECTION("spin images")
     {
-        const unsigned width = 256;
-
-        Euclid::SpinImage<Mesh> si;
-        si.build(mesh);
-
-        Eigen::ArrayXd si_v1;
-        si.compute(v1, si_v1, 1.0f, width, 60.0f);
-        Eigen::ArrayXd si_v2;
-        si.compute(v2, si_v2, 1.0f, width, 60.0f);
-        Eigen::ArrayXd si_v3;
-        si.compute(v3, si_v3, 1.0f, width, 60.0f);
-        Eigen::ArrayXd si_v4;
-        si.compute(v4, si_v4, 1.0f, width, 60.0f);
-
-        auto d12 = Euclid::l2(si_v1, si_v2);
-        auto d13 = Euclid::l2(si_v1, si_v3);
-        auto d14 = Euclid::l2(si_v1, si_v4);
-        REQUIRE(d12 < d13);
-        REQUIRE(d13 < d14);
-
-        Eigen::ArrayXXd si_all;
-        si.compute(si_all, 1.0f, width, 60.0f);
-
-        REQUIRE(si_v1.isApprox(si_all.col(idx1)));
-        REQUIRE(si_v2.isApprox(si_all.col(idx2)));
-        REQUIRE(si_v3.isApprox(si_all.col(idx3)));
-        REQUIRE(si_v4.isApprox(si_all.col(idx4)));
-
-        Euclid::SpinImage<Mesh> si1;
-        si1.build(mesh, si.vnormals.get(), si.resolution);
-
-        Eigen::ArrayXd si1_v1;
-        si1.compute(v1, si1_v1, 1.0f, width, 60.0f);
-        Eigen::ArrayXd si1_v2;
-        si1.compute(v2, si1_v2, 1.0f, width, 60.0f);
-        Eigen::ArrayXd si1_v3;
-        si1.compute(v3, si1_v3, 1.0f, width, 60.0f);
-        Eigen::ArrayXd si1_v4;
-        si1.compute(v4, si1_v4, 1.0f, width, 60.0f);
-
-        REQUIRE(si_v1.isApprox(si1_v1));
-        REQUIRE(si_v2.isApprox(si1_v2));
-        REQUIRE(si_v3.isApprox(si1_v3));
-        REQUIRE(si_v4.isApprox(si1_v4));
-
-        SECTION("output to image")
+        SECTION("default support")
         {
-            {
-                auto vmax = si_v1.maxCoeff();
-                si_v1 *= 255.0 / vmax;
-                std::string fout(TMP_DIR);
-                fout.append("spinimage1.png");
-                stbi_write_png(fout.c_str(),
-                               width,
-                               width,
-                               1,
-                               &si_v1(0),
-                               width * sizeof(double));
+            const unsigned width = 16;
+            const float angle = 90.0f;
+
+            Euclid::SpinImage<Mesh> si;
+            si.build(mesh);
+
+            Eigen::ArrayXXd si_all;
+            si.compute(si_all, 1.0f, width, angle);
+
+            std::vector<double> distances(si_all.cols());
+            for (size_t i = 0; i < si_all.cols(); ++i) {
+                distances[i] = Euclid::chi2(si_all.col(i), si_all.col(idx1));
             }
-            {
-                auto vmax = si_v2.maxCoeff();
-                si_v2 *= 255.0 / vmax;
-                std::string fout(TMP_DIR);
-                fout.append("spinimage2.png");
-                stbi_write_png(fout.c_str(),
-                               width,
-                               width,
-                               1,
-                               &si_v2(0),
-                               width * sizeof(double));
+            REQUIRE(distances[idx1] == 0);
+            REQUIRE(distances[idx2] < distances[idx4]);
+            REQUIRE(distances[idx3] < distances[idx4]);
+
+            // output spin images
+            _write_spin_image("spinimage1_1.png", si_all.col(idx1), width);
+            _write_spin_image("spinimage1_2.png", si_all.col(idx2), width);
+            _write_spin_image("spinimage1_3.png", si_all.col(idx3), width);
+            _write_spin_image("spinimage1_4.png", si_all.col(idx4), width);
+
+            // output signature distance as mesh colors
+            _write_distances_to_colored_mesh(
+                "spinimage1.ply", positions, indices, distances);
+        }
+
+        SECTION("smaller support")
+        {
+            const unsigned width = 8;
+            const float angle = 60.0f;
+
+            Euclid::SpinImage<Mesh> si;
+            si.build(mesh);
+
+            Eigen::ArrayXXd si_all;
+            si.compute(si_all, 1.0f, width, angle);
+
+            std::vector<double> distances(si_all.cols());
+            for (size_t i = 0; i < si_all.cols(); ++i) {
+                distances[i] = Euclid::chi2(si_all.col(i), si_all.col(idx1));
             }
-            {
-                auto vmax = si_v3.maxCoeff();
-                si_v3 *= 255.0 / vmax;
-                std::string fout(TMP_DIR);
-                fout.append("spinimage3.png");
-                stbi_write_png(fout.c_str(),
-                               width,
-                               width,
-                               1,
-                               &si_v3(0),
-                               width * sizeof(double));
+            REQUIRE(distances[idx1] == 0);
+            REQUIRE(distances[idx2] < distances[idx4]);
+            REQUIRE(distances[idx3] < distances[idx4]);
+
+            // output spin images
+            _write_spin_image("spinimage2_1.png", si_all.col(idx1), width);
+            _write_spin_image("spinimage2_2.png", si_all.col(idx2), width);
+            _write_spin_image("spinimage2_3.png", si_all.col(idx3), width);
+            _write_spin_image("spinimage2_4.png", si_all.col(idx4), width);
+
+            // output signature distance as mesh colors
+            _write_distances_to_colored_mesh(
+                "spinimage2.ply", positions, indices, distances);
+        }
+
+        SECTION("larger support")
+        {
+            const unsigned width = 32;
+            const float angle = 120.0f;
+
+            Euclid::SpinImage<Mesh> si;
+            si.build(mesh);
+
+            Eigen::ArrayXXd si_all;
+            si.compute(si_all, 1.0f, width, angle);
+
+            std::vector<double> distances(si_all.cols());
+            for (size_t i = 0; i < si_all.cols(); ++i) {
+                distances[i] = Euclid::chi2(si_all.col(i), si_all.col(idx1));
             }
-            {
-                auto vmax = si_v4.maxCoeff();
-                si_v4 *= 255.0 / vmax;
-                std::string fout(TMP_DIR);
-                fout.append("spinimage4.png");
-                stbi_write_png(fout.c_str(),
-                               width,
-                               width,
-                               1,
-                               &si_v4(0),
-                               width * sizeof(double));
-            }
+            REQUIRE(distances[idx1] == 0);
+            REQUIRE(distances[idx2] < distances[idx4]);
+            REQUIRE(distances[idx3] < distances[idx4]);
+
+            // output spin images
+            _write_spin_image("spinimage3_1.png", si_all.col(idx1), width);
+            _write_spin_image("spinimage3_2.png", si_all.col(idx2), width);
+            _write_spin_image("spinimage3_3.png", si_all.col(idx3), width);
+            _write_spin_image("spinimage3_4.png", si_all.col(idx4), width);
+
+            // output signature distance as mesh colors
+            _write_distances_to_colored_mesh(
+                "spinimage3.ply", positions, indices, distances);
         }
     }
 
@@ -174,23 +200,8 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
             REQUIRE(distances[idx2] < distances[idx3]);
             REQUIRE(distances[idx3] < distances[idx4]);
 
-            // colorize output
-            std::vector<unsigned char> colors;
-            colors.reserve(hks_all.cols() * 3);
-            auto dmax = std::max_element(distances.begin(), distances.end());
-            auto dmaxid = dmax - distances.begin();
-            for (auto d : distances) {
-                double r, g, b;
-                igl::colormap(
-                    igl::COLOR_MAP_TYPE_JET, (*dmax - d) / *dmax, r, g, b);
-                colors.push_back(static_cast<unsigned char>(r * 255));
-                colors.push_back(static_cast<unsigned char>(g * 255));
-                colors.push_back(static_cast<unsigned char>(b * 255));
-            }
-            std::string fout(TMP_DIR);
-            fout.append("hks1.ply");
-            Euclid::write_ply<3>(
-                fout, positions, nullptr, nullptr, &indices, &colors);
+            _write_distances_to_colored_mesh(
+                "hks1.ply", positions, indices, distances);
         }
 
         SECTION("smaller time range")
@@ -209,23 +220,8 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
             REQUIRE(distances[idx2] < distances[idx3]);
             REQUIRE(distances[idx3] < distances[idx4]);
 
-            // colorize output
-            std::vector<unsigned char> colors;
-            colors.reserve(hks_all.cols() * 3);
-            auto dmax = std::max_element(distances.begin(), distances.end());
-            auto dmaxid = dmax - distances.begin();
-            for (auto d : distances) {
-                double r, g, b;
-                igl::colormap(
-                    igl::COLOR_MAP_TYPE_JET, (*dmax - d) / *dmax, r, g, b);
-                colors.push_back(static_cast<unsigned char>(r * 255));
-                colors.push_back(static_cast<unsigned char>(g * 255));
-                colors.push_back(static_cast<unsigned char>(b * 255));
-            }
-            std::string fout(TMP_DIR);
-            fout.append("hks2.ply");
-            Euclid::write_ply<3>(
-                fout, positions, nullptr, nullptr, &indices, &colors);
+            _write_distances_to_colored_mesh(
+                "hks2.ply", positions, indices, distances);
         }
 
         SECTION("larger time range")
@@ -244,23 +240,8 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
             REQUIRE(distances[idx2] < distances[idx3]);
             REQUIRE(distances[idx3] < distances[idx4]);
 
-            // colorize output
-            std::vector<unsigned char> colors;
-            colors.reserve(hks_all.cols() * 3);
-            auto dmax = std::max_element(distances.begin(), distances.end());
-            auto dmaxid = dmax - distances.begin();
-            for (auto d : distances) {
-                double r, g, b;
-                igl::colormap(
-                    igl::COLOR_MAP_TYPE_JET, (*dmax - d) / *dmax, r, g, b);
-                colors.push_back(static_cast<unsigned char>(r * 255));
-                colors.push_back(static_cast<unsigned char>(g * 255));
-                colors.push_back(static_cast<unsigned char>(b * 255));
-            }
-            std::string fout(TMP_DIR);
-            fout.append("hks3.ply");
-            Euclid::write_ply<3>(
-                fout, positions, nullptr, nullptr, &indices, &colors);
+            _write_distances_to_colored_mesh(
+                "hks3.ply", positions, indices, distances);
         }
     }
 }
