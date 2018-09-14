@@ -121,13 +121,13 @@ int main()
     Mesh mesh;
     Euclid::make_mesh<3>(mesh, positions, indices);
 
-    // Compute gaussian cuvatrues
+    // Compute gaussian curvatures
     std::vector<float> curvatures;
     for (const auto& v : vertices(mesh)) {
         curvatures.push_back(Euclid::gaussian_curvature(v, mesh));
     }
 
-    // Turn cuvatures into colors and output to a file
+    // Turn curvatures into colors and output to a file
     std::vector<unsigned char> colors;
     Euclid::colormap(igl::COLOR_MAP_TYPE_JET, curvatures, colors, true);
     Euclid::write_ply<3>(
