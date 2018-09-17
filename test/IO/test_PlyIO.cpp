@@ -141,6 +141,48 @@ TEST_CASE("IO, PlyIO", "[io][plyio]")
             REQUIRE(colors.size() == new_colors.size());
             REQUIRE(colors[0] == new_colors[0]);
         }
+
+        SECTION("all")
+        {
+            // Read body
+            std::vector<float> positions;
+            std::vector<float> normals;
+            std::vector<float> texcoords;
+            std::vector<unsigned> indices;
+            std::vector<unsigned> colors;
+            Euclid::read_ply<3>(
+                file, positions, &normals, &texcoords, &indices, &colors);
+            REQUIRE(positions.size() == header.element(0).count() * 3);
+
+            // Write file and read back again to test integrity
+            std::string tmp_file(TMP_DIR);
+            tmp_file.append("cube_ascii.ply");
+            Euclid::write_ply<3>(
+                tmp_file, positions, &normals, &texcoords, &indices, &colors);
+
+            std::vector<double> new_positions;
+            std::vector<double> new_normals;
+            std::vector<double> new_texcoords;
+            std::vector<int> new_indices;
+            std::vector<int> new_colors;
+            Euclid::read_ply<3>(tmp_file,
+                                new_positions,
+                                &new_normals,
+                                &new_texcoords,
+                                &new_indices,
+                                &new_colors);
+
+            REQUIRE(positions.size() == new_positions.size());
+            REQUIRE(positions[0] == new_positions[0]);
+            REQUIRE(normals.size() == new_normals.size());
+            REQUIRE(normals[0] == new_normals[0]);
+            REQUIRE(texcoords.size() == new_texcoords.size());
+            REQUIRE(texcoords[0] == new_texcoords[0]);
+            REQUIRE(indices.size() == new_indices.size());
+            REQUIRE(indices[0] == new_indices[0]);
+            REQUIRE(colors.size() == new_colors.size());
+            REQUIRE(colors[0] == new_colors[0]);
+        }
     }
 
     SECTION("binary file")
@@ -293,6 +335,53 @@ TEST_CASE("IO, PlyIO", "[io][plyio]")
 
             REQUIRE(positions.size() == new_positions.size());
             REQUIRE(positions[0] == new_positions[0]);
+            REQUIRE(colors.size() == new_colors.size());
+            REQUIRE(colors[0] == new_colors[0]);
+        }
+
+        SECTION("all")
+        {
+            // Read body
+            std::vector<float> positions;
+            std::vector<float> normals;
+            std::vector<float> texcoords;
+            std::vector<unsigned> indices;
+            std::vector<unsigned> colors;
+            Euclid::read_ply<3>(
+                file, positions, &normals, &texcoords, &indices, &colors);
+            REQUIRE(positions.size() == header.element(0).count() * 3);
+
+            // Write file and read back again to test integrity
+            std::string tmp_file(TMP_DIR);
+            tmp_file.append("cube_binary_big_endian.ply");
+            Euclid::write_ply<3>(tmp_file,
+                                 positions,
+                                 &normals,
+                                 &texcoords,
+                                 &indices,
+                                 &colors,
+                                 Euclid::PlyFormat::binary_big_endian);
+
+            std::vector<double> new_positions;
+            std::vector<double> new_normals;
+            std::vector<double> new_texcoords;
+            std::vector<int> new_indices;
+            std::vector<int> new_colors;
+            Euclid::read_ply<3>(tmp_file,
+                                new_positions,
+                                &new_normals,
+                                &new_texcoords,
+                                &new_indices,
+                                &new_colors);
+
+            REQUIRE(positions.size() == new_positions.size());
+            REQUIRE(positions[0] == new_positions[0]);
+            REQUIRE(normals.size() == new_normals.size());
+            REQUIRE(normals[0] == new_normals[0]);
+            REQUIRE(texcoords.size() == new_texcoords.size());
+            REQUIRE(texcoords[0] == new_texcoords[0]);
+            REQUIRE(indices.size() == new_indices.size());
+            REQUIRE(indices[0] == new_indices[0]);
             REQUIRE(colors.size() == new_colors.size());
             REQUIRE(colors[0] == new_colors[0]);
         }
