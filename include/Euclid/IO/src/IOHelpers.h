@@ -38,14 +38,16 @@ inline std::vector<std::string_view>
 split(std::string_view str, char delim, std::string_view::size_type start = 0)
 {
     std::vector<std::string_view> substrs;
-    std::string_view::size_type beg = start;
-    std::string_view::size_type pos = str.find(delim, beg);
-    while (pos != std::string_view::npos) {
-        substrs.push_back(str.substr(beg, pos - beg));
-        beg = pos + 1;
-        pos = str.find(delim, beg);
+    if (!str.empty()) {
+        std::string_view::size_type beg = start;
+        std::string_view::size_type pos = str.find(delim, beg);
+        while (pos != std::string_view::npos) {
+            if (beg != pos) { substrs.push_back(str.substr(beg, pos - beg)); }
+            beg = pos + 1;
+            pos = str.find(delim, beg);
+        }
+        if (beg < str.size()) { substrs.push_back(str.substr(beg, pos - beg)); }
     }
-    substrs.push_back(str.substr(beg, pos - beg));
     return substrs;
 }
 

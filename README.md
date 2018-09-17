@@ -115,7 +115,7 @@ int main()
     // Read triangle mesh into buffers
     std::vector<float> positions;
     std::vector<unsigned> indices;
-    Euclid::read_off<3>("Euclid_root/data/bumpy.off", positions, indices);
+    Euclid::read_off<3>("Euclid_root/data/bumpy.off", positions, nullptr, &indices, nullptr);
 
     // Generate a CGAL::Surface_mesh
     Mesh mesh;

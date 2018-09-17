@@ -20,7 +20,7 @@ int main()
     std::vector<unsigned> indices;
     std::string fin(DATA_DIR);
     fin.append("bumpy.off");
-    Euclid::read_off<3>(fin, positions, indices);
+    Euclid::read_off<3>(fin, positions, nullptr, &indices, nullptr);
 
     // Generate a CGAL::Surface_mesh
     Mesh mesh;

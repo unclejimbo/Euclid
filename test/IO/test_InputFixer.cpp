@@ -278,7 +278,7 @@ TEST_CASE("IO, InputFixer", "[io][inputfixer]")
         file_name.append("chair.off");
         std::vector<double> positions;
         std::vector<int> indices;
-        Euclid::read_off<3>(file_name, positions, indices);
+        Euclid::read_off<3>(file_name, positions, nullptr, &indices, nullptr);
 
         Euclid::remove_duplicate_vertices<3>(positions, indices);
         Euclid::remove_duplicate_faces<3>(indices);
@@ -287,6 +287,6 @@ TEST_CASE("IO, InputFixer", "[io][inputfixer]")
 
         std::string out_name(TMP_DIR);
         out_name.append("chair_fixed.off");
-        Euclid::write_off<3>(out_name, positions, indices);
+        Euclid::write_off<3>(out_name, positions, nullptr, &indices, nullptr);
     }
 }

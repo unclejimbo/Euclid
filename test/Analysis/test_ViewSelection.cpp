@@ -22,7 +22,7 @@ static void write_view_sphere(const Euclid::ViewSphere<Mesh>& sphere,
     Euclid::extract_mesh<3>(sphere.mesh, spositions, sindices);
     std::string fout(TMP_DIR);
     fout.append(name);
-    Euclid::write_off<3>(fout, spositions, sindices);
+    Euclid::write_off<3>(fout, spositions, nullptr, &sindices, nullptr);
 }
 
 static void write_view_sphere(const Euclid::ViewSphere<Mesh>& sphere,
@@ -46,7 +46,7 @@ TEST_CASE("Analysis, ViewSelection", "[analysis][viewselection]")
     filename.append("bunny.off");
     std::vector<float> positions;
     std::vector<unsigned> indices;
-    Euclid::read_off<3>(filename, positions, indices);
+    Euclid::read_off<3>(filename, positions, nullptr, &indices, nullptr);
     Mesh mesh;
     Euclid::make_mesh<3>(mesh, positions, indices);
 

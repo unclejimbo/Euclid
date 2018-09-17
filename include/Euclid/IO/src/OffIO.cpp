@@ -14,69 +14,139 @@ inline std::tuple<size_t, size_t, size_t> read_header(std::ifstream& stream)
 {
     std::string word;
     stream >> word;
-    if (word != "OFF") { throw std::runtime_error("Bad off file"); }
 
     size_t n_vertices, n_faces, n_edges;
     stream >> n_vertices >> n_faces >> n_edges;
 
+    std::string dummy;
+    std::getline(stream, dummy);
+
     return std::make_tuple(n_vertices, n_faces, n_edges);
 }
 
-template<int N>
-void write_header(std::ofstream& stream, size_t nv, size_t nf)
+inline void write_header(std::ofstream& stream, size_t nv, size_t nf)
 {
     stream << "OFF" << std::endl;
-    if (N != 0 && nf % N != 0) {
-        std::string err_str("Input buffer size is not divisible by ");
-        err_str.append(std::to_string(N));
-        throw std::runtime_error(err_str);
-    }
-    auto n_vertices = nv / 3;
-    auto n_faces = N == 0 ? 0 : nf / N;
-    stream << n_vertices << " " << n_faces << " " << 0 << std::endl;
+    stream << nv << " " << nf << " " << 0 << std::endl;
 }
 
-template<typename T>
-void read_positions(std::ifstream& stream, size_t count, std::vector<T>& buffer)
+template<int N, typename FT, typename IT, typename CT>
+void read_off(const std::string& filename,
+              std::vector<FT>& positions,
+              std::vector<CT>* vcolors,
+              std::vector<IT>* findices,
+              std::vector<CT>* fcolors)
 {
-    buffer.clear();
-    buffer.resize(count * 3);
-    for (size_t i = 0; i < buffer.size(); ++i) {
-        stream >> buffer[i];
-    }
-}
+    std::ifstream stream(filename);
+    check_fstream(stream, filename);
 
-template<int N, typename T>
-void read_indices(std::ifstream& stream, size_t count, std::vector<T>& buffer)
-{
-    buffer.clear();
-    buffer.resize(count * N);
-    for (size_t i = 0; i < buffer.size(); ++i) {
-        if (i % N == 0) {
-            T dummy;
-            stream >> dummy;
+    auto [nvertices, nfaces, nedges] = read_header(stream);
+    positions.resize(nvertices * 3);
+    if (vcolors != nullptr) { vcolors->resize(nvertices * 4); }
+    if (findices != nullptr) { findices->resize(nfaces * N); }
+    if (fcolors != nullptr) { fcolors->resize(nfaces * 4); }
+
+    for (size_t i = 0; i < nvertices; ++i) {
+        std::string line;
+        std::getline(stream, line);
+        auto words = split(line, ' ');
+        if (words.size() != 3 && words.size() != 7) {
+            std::string err("Invalid off file: ");
+            err.append(filename);
+            throw std::runtime_error(err);
         }
-        stream >> buffer[i];
+
+        for (size_t j = 0; j < 3; ++j) {
+            auto p = std::stod(std::string(words[j]));
+            positions[3 * i + j] = static_cast<FT>(p);
+        }
+
+        if (vcolors != nullptr && words.size() == 7) {
+            for (size_t j = 0; j < 4; ++j) {
+                auto c = std::stoi(std::string(words[3 + j]));
+                (*vcolors)[4 * i + j] = static_cast<CT>(c);
+            }
+        }
     }
+    if (findices != nullptr && nfaces != 0) {
+        for (size_t i = 0; i < nfaces; ++i) {
+            std::string line;
+            std::getline(stream, line);
+            auto words = split(line, ' ');
+            if (words.size() != N + 1 && words.size() != N + 5) {
+                std::string err("Invalid off file: ");
+                err.append(filename);
+                throw std::runtime_error(err);
+            }
+            auto n = std::stoi(std::string(words[0]));
+            if (n != N) {
+                std::string err("Invalid off file: ");
+                err.append(filename);
+                throw std::runtime_error(err);
+            }
+
+            for (size_t j = 0; j < N; ++j) {
+                auto idx = std::stoul(std::string(words[j + 1]));
+                (*findices)[N * i + j] = static_cast<IT>(idx);
+            }
+
+            if (fcolors != nullptr && words.size() == N + 5) {
+                for (size_t j = 0; j < 4; ++j) {
+                    auto c = std::stoi(std::string(words[j + 1 + N]));
+                    (*fcolors)[4 * i + j] = static_cast<CT>(c);
+                }
+            }
+        }
+    }
+
+    positions.shrink_to_fit();
+    if (vcolors != nullptr) { vcolors->shrink_to_fit(); }
+    if (findices != nullptr) { findices->shrink_to_fit(); }
+    if (fcolors != nullptr) { fcolors->shrink_to_fit(); }
 }
 
-template<typename T>
-void write_positions(std::ofstream& stream, const std::vector<T>& buffer)
+template<int N, typename FT, typename IT, typename CT>
+void write_off(const std::string& filename,
+               const std::vector<FT>& positions,
+               const std::vector<CT>* vcolors,
+               const std::vector<IT>* findices,
+               const std::vector<CT>* fcolors)
 {
-    for (size_t i = 0; i < buffer.size(); i += 3) {
-        stream << buffer[i] << " " << buffer[i + 1] << " " << buffer[i + 2]
-               << std::endl;
-    }
-}
+    std::ofstream stream(filename);
+    check_fstream(stream, filename);
 
-template<int N, typename T>
-void write_indices(std::ofstream& stream, const std::vector<T>& buffer)
-{
-    for (size_t i = 0; i < buffer.size(); ++i) {
-        if (i % N == 0) { stream << N << " "; }
-        stream << buffer[i];
-        if (N != 0 && i % N < N - 1) { stream << " "; }
-        else {
+    auto nvertices = positions.size() / 3;
+    auto nfaces = 0;
+    if (findices != nullptr && N != 0) { nfaces = findices->size() / N; }
+    write_header(stream, nvertices, nfaces);
+
+    for (size_t i = 0; i < nvertices; ++i) {
+        for (size_t j = 0; j < 3; ++j) {
+            stream << positions[3 * i + j] << " ";
+        }
+
+        if (vcolors != nullptr) {
+            for (size_t j = 0; j < 4; ++j) {
+                stream << static_cast<int>((*vcolors)[4 * i + j]) << " ";
+            }
+        }
+
+        stream << std::endl;
+    }
+    if (findices != nullptr && nfaces != 0) {
+        for (size_t i = 0; i < nfaces; ++i) {
+            stream << N << " ";
+
+            for (size_t j = 0; j < N; ++j) {
+                stream << (*findices)[N * i + j] << " ";
+            }
+
+            if (fcolors != nullptr) {
+                for (size_t j = 0; j < 4; ++j) {
+                    stream << static_cast<int>((*fcolors)[4 * i + j]) << " ";
+                }
+            }
+
             stream << std::endl;
         }
     }
@@ -84,56 +154,122 @@ void write_indices(std::ofstream& stream, const std::vector<T>& buffer)
 
 } // namespace _impl
 
-template<typename T>
-void read_off(const std::string& file_name, std::vector<T>& positions)
+template<typename FT>
+void read_off(const std::string& filename,
+              std::vector<FT>& positions,
+              std::nullptr_t vcolors,
+              std::nullptr_t findices,
+              std::nullptr_t fcolors)
 {
-    std::ifstream stream(file_name);
-    _impl::check_fstream(stream, file_name);
-
-    auto [n_vertices, n_faces, dummy] = _impl::read_header(stream);
-
-    _impl::read_positions(stream, n_vertices, positions);
+    using IT = int;
+    using CT = int;
+    _impl::read_off<0, FT, IT, CT>(
+        filename, positions, vcolors, findices, fcolors);
 }
 
-template<int N, typename T1, typename T2>
-void read_off(const std::string& file_name,
-              std::vector<T1>& positions,
-              std::vector<T2>& indices)
+template<typename FT, typename CT>
+void read_off(const std::string& filename,
+              std::vector<FT>& positions,
+              std::vector<CT>* vcolors,
+              std::nullptr_t findices,
+              std::nullptr_t fcolors)
 {
-    std::ifstream stream(file_name);
-    _impl::check_fstream(stream, file_name);
-
-    auto [n_vertices, n_faces, dummy] = _impl::read_header(stream);
-
-    _impl::read_positions(stream, n_vertices, positions);
-
-    _impl::read_indices<N>(stream, n_faces, indices);
+    using IT = int;
+    _impl::read_off<0, FT, IT, CT>(
+        filename, positions, vcolors, findices, fcolors);
 }
 
-template<typename T>
-void write_off(const std::string& file_name, const std::vector<T>& positions)
+template<int N, typename FT, typename IT>
+void read_off(const std::string& filename,
+              std::vector<FT>& positions,
+              std::nullptr_t vcolors,
+              std::vector<IT>* findices,
+              std::nullptr_t fcolors)
 {
-    std::ofstream stream(file_name);
-    _impl::check_fstream(stream, file_name);
-
-    _impl::write_header<0>(stream, positions.size(), 0);
-
-    _impl::write_positions(stream, positions);
+    using CT = float;
+    _impl::read_off<N, FT, IT, CT>(
+        filename, positions, vcolors, findices, fcolors);
 }
 
-template<int N, typename T1, typename T2>
-void write_off(const std::string& file_name,
-               const std::vector<T1>& positions,
-               const std::vector<T2>& indices)
+template<int N, typename FT, typename IT, typename CT>
+void read_off(const std::string& filename,
+              std::vector<FT>& positions,
+              std::vector<CT>* vcolors,
+              std::vector<IT>* findices,
+              std::nullptr_t fcolors)
 {
-    std::ofstream stream(file_name);
-    _impl::check_fstream(stream, file_name);
+    _impl::read_off<N, FT, IT, CT>(
+        filename, positions, vcolors, findices, fcolors);
+}
 
-    _impl::write_header<N>(stream, positions.size(), indices.size());
+template<int N, typename FT, typename IT, typename CT>
+void read_off(const std::string& filename,
+              std::vector<FT>& positions,
+              std::nullptr_t vcolors,
+              std::vector<IT>* findices,
+              std::vector<CT>* fcolors)
+{
+    _impl::read_off<N, FT, IT, CT>(
+        filename, positions, vcolors, findices, fcolors);
+}
 
-    _impl::write_positions(stream, positions);
+template<typename FT>
+void write_off(const std::string& filename,
+               const std::vector<FT>& positions,
+               std::nullptr_t vcolors,
+               std::nullptr_t findices,
+               std::nullptr_t fcolors)
+{
+    using IT = int;
+    using CT = int;
+    _impl::write_off<0, FT, IT, CT>(
+        filename, positions, vcolors, findices, fcolors);
+}
 
-    _impl::write_indices<N>(stream, indices);
+template<typename FT, typename CT>
+void write_off(const std::string& filename,
+               const std::vector<FT>& positions,
+               const std::vector<CT>* vcolors,
+               std::nullptr_t findices,
+               std::nullptr_t fcolors)
+{
+    using IT = int;
+    _impl::write_off<0, FT, IT, CT>(
+        filename, positions, vcolors, findices, fcolors);
+}
+
+template<int N, typename FT, typename IT>
+void write_off(const std::string& filename,
+               const std::vector<FT>& positions,
+               std::nullptr_t vcolors,
+               const std::vector<IT>* findices,
+               std::nullptr_t fcolors)
+{
+    using CT = float;
+    _impl::write_off<N, FT, IT, CT>(
+        filename, positions, vcolors, findices, fcolors);
+}
+
+template<int N, typename FT, typename IT, typename CT>
+void write_off(const std::string& filename,
+               const std::vector<FT>& positions,
+               const std::vector<CT>* vcolors,
+               const std::vector<IT>* findices,
+               std::nullptr_t fcolors)
+{
+    _impl::write_off<N, FT, IT, CT>(
+        filename, positions, vcolors, findices, fcolors);
+}
+
+template<int N, typename FT, typename IT, typename CT>
+void write_off(const std::string& filename,
+               const std::vector<FT>& positions,
+               std::nullptr_t vcolors,
+               const std::vector<IT>* findices,
+               const std::vector<CT>* fcolors)
+{
+    _impl::write_off<N, FT, IT, CT>(
+        filename, positions, vcolors, findices, fcolors);
 }
 
 } // namespace Euclid

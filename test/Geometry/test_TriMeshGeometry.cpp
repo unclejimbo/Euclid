@@ -37,7 +37,7 @@ TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
     fbumpy.append("bumpy.off");
     std::vector<float> bpositions;
     std::vector<int> bindices;
-    Euclid::read_off<3>(fbumpy, bpositions, bindices);
+    Euclid::read_off<3>(fbumpy, bpositions, nullptr, &bindices, nullptr);
     Mesh bumpy;
     Euclid::make_mesh<3>(bumpy, bpositions, bindices);
     Eigen::MatrixXf bumpy_v;

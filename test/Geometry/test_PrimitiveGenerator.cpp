@@ -27,6 +27,6 @@ TEST_CASE("Geometry, PrimitiveGenerator", "[geometry][primitivegenerator]")
 
         std::string file(TMP_DIR);
         file.append("subdiv_sphere.off");
-        Euclid::write_off<3>(file, positions, indices);
+        Euclid::write_off<3>(file, positions, nullptr, &indices, nullptr);
     }
 }

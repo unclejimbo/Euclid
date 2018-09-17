@@ -21,7 +21,7 @@ TEST_CASE("Geometry, MeshHelpers", "[geometry][meshhelpers]")
     std::vector<unsigned> indices;
     std::string file_name(DATA_DIR);
     file_name.append("bunny.off");
-    Euclid::read_off<3>(file_name, positions, indices);
+    Euclid::read_off<3>(file_name, positions, nullptr, &indices, nullptr);
 
     std::vector<Point_3> points;
     for (size_t i = 0; i < positions.size(); i += 3) {

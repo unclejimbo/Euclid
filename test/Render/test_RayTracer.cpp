@@ -21,7 +21,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
     filename.append("bunny.off");
     std::vector<float> positions;
     std::vector<unsigned> indices;
-    Euclid::read_off<3>(filename, positions, indices);
+    Euclid::read_off<3>(filename, positions, nullptr, &indices, nullptr);
 
     Euclid::AABB<Kernel> aabb(positions);
     Eigen::Vector3f center;
@@ -308,7 +308,7 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
         filename.append("kitten.off");
         std::vector<float> positions;
         std::vector<unsigned> indices;
-        Euclid::read_off<3>(filename, positions, indices);
+        Euclid::read_off<3>(filename, positions, nullptr, &indices, nullptr);
 
         Euclid::AABB<Kernel> aabb(positions);
         Eigen::Vector3f center;
