@@ -1,15 +1,14 @@
-#include <Euclid/Geometry/MeshProperties.h>
-#include <Eigen/SparseCore>
-#include <Eigen/SparseLU>
+#include <algorithm>
+#include <iterator>
+#include <stdexcept>
+#include <vector>
+#include <boost/iterator/counting_iterator.hpp>
 #include <CGAL/Orthogonal_k_neighbor_search.h>
 #include <CGAL/Search_traits_3.h>
 #include <CGAL/Search_traits_adapter.h>
-#include <boost/iterator/counting_iterator.hpp>
-#include <iterator>
-#include <vector>
-#include <tuple>
-#include <algorithm>
-#include <ostream>
+#include <Eigen/SparseCore>
+#include <Eigen/SparseLU>
+#include <Euclid/Geometry/TriMeshGeometry.h>
 
 namespace Euclid
 {
@@ -19,12 +18,14 @@ namespace _impl
 
 // Construct linear system for mesh
 template<typename Mesh, typename FT>
-inline void _construct_equation(const Mesh& mesh,
-                                const std::vector<int>& ids,
-                                Eigen::SparseMatrix<FT>& A,
-                                Eigen::SparseMatrix<FT>& B)
+void construct_equation(const Mesh& mesh,
+                        const std::vector<unsigned>& ids,
+                        Eigen::SparseMatrix<FT>& A,
+                        Eigen::SparseMatrix<FT>& B)
 {
     using SpMat = Eigen::SparseMatrix<FT>;
+    using CRPair = std::pair<unsigned, unsigned>;
+    const auto inv_sigma = static_cast<FT>(1.0); // parameter
 
     auto fimap = get(boost::face_index, mesh);
     auto vpmap = get(boost::vertex_point, mesh);
@@ -42,27 +43,21 @@ inline void _construct_equation(const Mesh& mesh,
     ds.reserve(3 * n_faces);
 
     // Compute the ingredients of the laplacian matrix
-    boost::graph_traits<const Mesh>::face_iterator fa, f_end;
-    std::tie(fa, f_end) = faces(mesh);
-    for (; fa != f_end; ++fa) {
-        auto fa_id = ids[get(fimap, *fa)];
-        auto facet_sum = 0.0;
-        auto na = Euclid::face_normal(*fa, mesh);
+    for (auto fa : faces(mesh)) {
+        auto fa_id = ids[get(fimap, fa)];
+        auto na = Euclid::face_normal(fa, mesh);
 
-        auto fit_end = halfedge(*fa, mesh);
-        auto fit = fit_end;
-        do {
-            auto oppo = opposite(fit, mesh);
-            if (!is_border(oppo, mesh)) { // Non-boundary
-                edge_len.push_back(Euclid::edge_length(fit, mesh));
+        for (auto ha : halfedges_around_face(halfedge(fa, mesh), mesh)) {
+            auto hb = opposite(ha, mesh);
+            if (!is_border(hb, mesh)) { // Non-boundary
 
                 // Determine whether the incident edge is concave or convex
-                auto pa = get(vpmap, target(next(fit, mesh), mesh));
-                auto pb = get(vpmap, target(next(oppo, mesh), mesh));
+                auto pa = get(vpmap, target(next(ha, mesh), mesh));
+                auto pb = get(vpmap, target(next(hb, mesh), mesh));
                 auto p = pb - pa;
                 auto eta = p * na <= 0.0 ? 0.2 : 1.0;
 
-                auto fb = face(oppo, mesh);
+                auto fb = face(hb, mesh);
                 auto fb_id = ids[get(fimap, fb)];
                 auto nb = Euclid::face_normal(fb, mesh);
                 auto diff = 0.5 * eta * (na - nb).squared_length();
@@ -70,28 +65,25 @@ inline void _construct_equation(const Mesh& mesh,
                 cols.push_back(fa_id);
                 rows.push_back(fb_id);
                 ds.push_back(diff);
-                facet_sum += diff;
+                edge_len.push_back(Euclid::edge_length(ha, mesh));
+                sum += diff;
             }
             else { // Placeholder
                 ds.push_back(-1.0);
             }
-            fit = next(fit, mesh);
-        } while (fit != fit_end);
-
-        sum += facet_sum;
+        }
     }
 
     // Normalize
     std::vector<Eigen::Triplet<FT>> values;
     values.reserve(cols.size());
-    const auto inv_sigma = 1.0; // Parameter
     auto inv_avg = edge_len.size() / (sum * 0.5);
     auto d_iter = ds.begin();
     auto e_iter = edge_len.begin();
     auto c_iter = cols.begin();
     auto r_iter = rows.begin();
     while (d_iter != ds.end()) {
-        auto prob_sum = static_cast<FT>(0.0);
+        auto prob_sum = 0.0;
         for (auto j = 0; j < 3; ++j) {
             if (*d_iter != -1.0) {
                 auto prob =
@@ -115,8 +107,7 @@ inline void _construct_equation(const Mesh& mesh,
         }
     }
 
-    for (boost::graph_traits<Mesh>::faces_size_type i = 0; i < num_faces(mesh);
-         ++i) {
+    for (unsigned i = 0; i < num_faces(mesh); ++i) {
         values.emplace_back(i, i, static_cast<FT>(1.0));
     }
 
@@ -135,15 +126,15 @@ template<typename ForwardIterator,
          typename PPMap,
          typename NPMap,
          typename FT>
-inline void _construct_equation(ForwardIterator first,
-                                ForwardIterator beyond,
-                                PPMap point_pmap,
-                                NPMap normal_pmap,
-                                const std::vector<std::vector<int>>& neighbors,
-                                const std::vector<Index>& indices,
-                                const std::vector<int>& ids,
-                                Eigen::SparseMatrix<FT>& A,
-                                Eigen::SparseMatrix<FT>& B)
+void construct_equation(ForwardIterator first,
+                        ForwardIterator beyond,
+                        PPMap point_pmap,
+                        NPMap normal_pmap,
+                        const std::vector<std::vector<int>>& neighbors,
+                        const std::vector<Index>& indices,
+                        const std::vector<int>& ids,
+                        Eigen::SparseMatrix<FT>& A,
+                        Eigen::SparseMatrix<FT>& B)
 {
     using SpMat = Eigen::SparseMatrix<FT>;
 
@@ -261,9 +252,9 @@ private:
 } // namespace _impl
 
 template<typename Mesh>
-inline void random_walk_segmentation(const Mesh& mesh,
-                                     std::vector<int>& seed_indices,
-                                     std::vector<int>& face_class)
+void random_walk_segmentation(const Mesh& mesh,
+                              const std::vector<unsigned>& seeds,
+                              std::vector<unsigned>& segments)
 {
     using VertexPointMap =
         boost::property_map<Mesh, boost::vertex_point_t>::type;
@@ -272,11 +263,12 @@ inline void random_walk_segmentation(const Mesh& mesh,
     using SpMat = Eigen::SparseMatrix<FT>;
 
     // Construct the linear equation
+    auto seed_indices = seeds;
     auto m = static_cast<int>(seed_indices.size()); // Number of seeded
     auto n = static_cast<int>(num_faces(mesh)) - m; // Number of unseeded
     std::sort(seed_indices.begin(), seed_indices.end());
-    std::vector<int> ids(m + n, -1); // ids[FacetID] -> MatrixID
-    int inc = 0;
+    std::vector<unsigned> ids(m + n, -1); // ids[FacetID] -> MatrixID
+    unsigned inc = 0;
     while (inc < seed_indices.size()) {
         ids[seed_indices[inc]] = inc;
         ++inc;
@@ -286,24 +278,23 @@ inline void random_walk_segmentation(const Mesh& mesh,
     }
     SpMat A(n, n);
     SpMat B(n, m);
-    _impl::_construct_equation(mesh, ids, A, B);
+    _impl::construct_equation(mesh, ids, A, B);
 
-    std::vector<int> inv_ids(m + n);
+    std::vector<unsigned> inv_ids(m + n);
     for (auto i = 0; i < m + n; ++i) {
         inv_ids[ids[i]] = i;
     }
 
     // Solve the equation to segment
-    face_class.resize(n + m, 0);
+    segments.resize(n + m, 0);
     for (auto s : seed_indices) {
-        face_class[s] = s;
+        segments[s] = s;
     }
     std::vector<FT> max_probabilities(n, static_cast<FT>(-1.0));
     Eigen::SparseLU<SpMat> solver;
     solver.compute(A);
     if (solver.info() != Eigen::Success) {
-        std::cerr << solver.lastErrorMessage() << std::endl;
-        return;
+        throw std::runtime_error(solver.lastErrorMessage());
     }
     for (auto i = 0; i < m; ++i) {
         Eigen::Matrix<FT, Eigen::Dynamic, 1> b = B.col(i);
@@ -311,114 +302,117 @@ inline void random_walk_segmentation(const Mesh& mesh,
         for (auto j = 0; j < n; ++j) {
             if (x(j, 0) > max_probabilities[j]) {
                 max_probabilities[j] = x(j, 0);
-                face_class[inv_ids[j + m]] = seed_indices[i];
+                segments[inv_ids[j + m]] = seed_indices[i];
             }
         }
     }
 }
 
-template<typename ForwardIterator, typename PPMap, typename NPMap>
-inline void random_walk_segmentation(ForwardIterator first,
-                                     ForwardIterator beyond,
-                                     PPMap point_pmap,
-                                     NPMap normal_pmap,
-                                     std::vector<int>& seed_indices,
-                                     std::vector<int>& point_class)
-{
-    using Index = std::iterator_traits<ForwardIterator>::value_type;
-    using Point_3 = boost::property_traits<PPMap>::value_type;
-    using Vector_3 = boost::property_traits<NPMap>::value_type;
-    using Kernel = CGAL::Kernel_traits<Point_3>::Kernel;
-    using IPMap = _impl::IPMapAdaptor<PPMap>;
-    using BaseTraits = CGAL::Search_traits_3<Kernel>;
-    using KdTreeTraits = CGAL::Search_traits_adapter<int, IPMap, BaseTraits>;
-    using KNN = CGAL::Orthogonal_k_neighbor_search<KdTreeTraits>;
-    using KdTree = typename KNN::Tree;
-    using Splitter = KdTree::Splitter;
-    using Distance = KNN::Distance;
-    using FT = Kernel::FT;
-    using SpMat = Eigen::SparseMatrix<FT>;
-    const int k = 6; // Use 6 neighbors according to Euler formula
+// template<typename ForwardIterator, typename PPMap, typename NPMap>
+// void random_walk_segmentation(ForwardIterator first,
+//                               ForwardIterator beyond,
+//                               PPMap point_pmap,
+//                               NPMap normal_pmap,
+//                               const std::vector<unsigned>& seeds,
+//                               std::vector<unsigned>& segments)
+// {
 
-    // Construct the IPMap
-    std::vector<Index> indices;
-    int n = 0;
-    for (auto iter = first; iter != beyond; ++iter) {
-        indices.push_back(*iter);
-        ++n;
-    }
-    IPMap ipmap(point_pmap, indices);
+//     using Index = std::iterator_traits<ForwardIterator>::value_type;
+//     using Point_3 = boost::property_traits<PPMap>::value_type;
+//     using Vector_3 = boost::property_traits<NPMap>::value_type;
+//     using Kernel = CGAL::Kernel_traits<Point_3>::Kernel;
+//     using IPMap = _impl::IPMapAdaptor<PPMap>;
+//     using BaseTraits = CGAL::Search_traits_3<Kernel>;
+//     using KdTreeTraits = CGAL::Search_traits_adapter<int, IPMap, BaseTraits>;
+//     using KNN = CGAL::Orthogonal_k_neighbor_search<KdTreeTraits>;
+//     using KdTree = typename KNN::Tree;
+//     using Splitter = KdTree::Splitter;
+//     using Distance = KNN::Distance;
+//     using FT = Kernel::FT;
+//     using SpMat = Eigen::SparseMatrix<FT>;
+//     const int k = 6; // Use 6 neighbors according to Euler formula
 
-    // Construct the k-d tree
-    KdTree tree(boost::counting_iterator<int>(0),
-                boost::counting_iterator<int>(n),
-                Splitter(),
-                KdTreeTraits(ipmap));
-    Distance dist(ipmap);
+//     // Construct the IPMap
+//     std::vector<Index> indices;
+//     int n = 0;
+//     for (auto iter = first; iter != beyond; ++iter) {
+//         indices.push_back(*iter);
+//         ++n;
+//     }
+//     IPMap ipmap(point_pmap, indices);
 
-    // Query neighbors for all points and store the neighbors' indices
-    std::vector<std::vector<int>> neighbors;
-    for (auto iter = first; iter < beyond; ++iter) {
-        std::vector<int> neighbors_i;
-        neighbors_i.reserve(k);
+//     // Construct the k-d tree
+//     KdTree tree(boost::counting_iterator<int>(0),
+//                 boost::counting_iterator<int>(n),
+//                 Splitter(),
+//                 KdTreeTraits(ipmap));
+//     Distance dist(ipmap);
 
-        auto p = point_pmap[*iter];
-        KNN knn(tree, p, k + 1, static_cast<FT>(0.00001), true, dist);
+//     // Query neighbors for all points and store the neighbors' indices
+//     std::vector<std::vector<int>> neighbors;
+//     for (auto iter = first; iter < beyond; ++iter) {
+//         std::vector<int> neighbors_i;
+//         neighbors_i.reserve(k);
 
-        auto it = knn.begin();
-        ++it; // The first will always return the identical point
-        for (it; it != knn.end(); ++it) {
-            neighbors_i.push_back(it->first);
-        }
+//         auto p = point_pmap[*iter];
+//         KNN knn(tree, p, k + 1, static_cast<FT>(0.00001), true, dist);
 
-        neighbors.push_back(neighbors_i);
-    }
+//         auto it = knn.begin();
+//         ++it; // The first will always return the identical point
+//         for (it; it != knn.end(); ++it) {
+//             neighbors_i.push_back(it->first);
+//         }
 
-    // Construct the linear equation
-    auto m = static_cast<int>(seed_indices.size()); // Number of seeded
-    n -= m;                                         // Number of unseeded
-    std::sort(seed_indices.begin(), seed_indices.end());
-    SpMat A(n, n);
-    SpMat B(n, m);
-    std::vector<int> ids(m + n, -1); // ids[PointID] -> MatrixID
-    int inc = 0;
-    while (inc < seed_indices.size()) {
-        ids[seed_indices[inc]] = inc;
-        ++inc;
-    }
-    for (auto& id : ids) {
-        if (id == -1) { id = inc++; }
-    }
-    _impl::_construct_equation(
-        first, beyond, point_pmap, normal_pmap, neighbors, indices, ids, A, B);
+//         neighbors.push_back(neighbors_i);
+//     }
 
-    std::vector<int> inv_ids(m + n);
-    for (auto i = 0; i < m + n; ++i) {
-        inv_ids[ids[i]] = i;
-    }
+//     // Construct the linear equation
+//     auto seed_indices = seeds;
+//     auto m = static_cast<int>(seed_indices.size()); // Number of seeded
+//     n -= m;                                         // Number of unseeded
+//     std::sort(seed_indices.begin(), seed_indices.end());
+//     SpMat A(n, n);
+//     SpMat B(n, m);
+//     std::vector<int> ids(m + n, -1); // ids[PointID] -> MatrixID
+//     int inc = 0;
+//     while (inc < seed_indices.size()) {
+//         ids[seed_indices[inc]] = inc;
+//         ++inc;
+//     }
+//     for (auto& id : ids) {
+//         if (id == -1) { id = inc++; }
+//     }
+//     _impl::construct_equation(
+//         first, beyond, point_pmap, normal_pmap, neighbors, indices, ids, A,
+//         B);
 
-    // Solve the equation to segment
-    point_class.resize(n + m, 0);
-    for (auto s : seed_indices) {
-        point_class[s] = s;
-    }
-    std::vector<FT> max_probabilities(n, static_cast<FT>(-1.0));
-    Eigen::SparseLU<SpMat> solver;
-    solver.compute(A);
-    if (solver.info() != Eigen::Success) {
-        std::cerr << solver.lastErrorMessage() << std::endl;
-        return;
-    }
-    for (auto i = 0; i < m; ++i) {
-        Eigen::Matrix<FT, Eigen::Dynamic, 1> b = B.col(i);
-        Eigen::Matrix<FT, Eigen::Dynamic, 1> x = solver.solve(b);
-        for (auto j = 0; j < n; ++j) {
-            if (x(j, 0) > max_probabilities[j]) {
-                max_probabilities[j] = x(j, 0);
-                point_class[inv_ids[j + m]] = seed_indices[i];
-            }
-        }
-    }
-}
+//     std::vector<int> inv_ids(m + n);
+//     for (auto i = 0; i < m + n; ++i) {
+//         inv_ids[ids[i]] = i;
+//     }
+
+//     // Solve the equation to segment
+//     segments.resize(n + m, 0);
+//     for (auto s : seed_indices) {
+//         segments[s] = s;
+//     }
+//     std::vector<FT> max_probabilities(n, static_cast<FT>(-1.0));
+//     Eigen::SparseLU<SpMat> solver;
+//     solver.compute(A);
+//     if (solver.info() != Eigen::Success) {
+//         std::cerr << solver.lastErrorMessage() << std::endl;
+//         return;
+//     }
+//     for (auto i = 0; i < m; ++i) {
+//         Eigen::Matrix<FT, Eigen::Dynamic, 1> b = B.col(i);
+//         Eigen::Matrix<FT, Eigen::Dynamic, 1> x = solver.solve(b);
+//         for (auto j = 0; j < n; ++j) {
+//             if (x(j, 0) > max_probabilities[j]) {
+//                 max_probabilities[j] = x(j, 0);
+//                 segments[inv_ids[j + m]] = seed_indices[i];
+//             }
+//         }
+//     }
+// }
 
 } // namespace Euclid
