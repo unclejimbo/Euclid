@@ -30,6 +30,12 @@
 
 ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spin_images.png)
 
+# Segmentation
+
+**Random walk**
+
+![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/random_walk_segmentation.png)
+
 # Render
 
 **Ray tracer**
