@@ -628,6 +628,7 @@ RayTracer::_select_diffuse_color()
 
 inline Eigen::Array3f RayTracer::_diffuse_material(const RTCHit& hit)
 {
+    (void)hit;
     return _material.diffuse;
 }
 

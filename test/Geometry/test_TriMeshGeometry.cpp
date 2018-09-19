@@ -277,5 +277,6 @@ TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
     {
         auto [adj, degree] = Euclid::adjacency_matrix(bumpy);
         auto laplacian = degree - adj;
+        (void)laplacian;
     }
 }

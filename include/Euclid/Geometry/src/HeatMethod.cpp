@@ -81,7 +81,6 @@ void GeodesicsInHeat<Mesh>::compute(
     auto fimap = get(boost::face_index, *this->mesh);
     const auto zero = static_cast<FT>(0.0);
     const auto half = static_cast<FT>(0.5);
-    const auto one = static_cast<FT>(1.0);
     using Mat = Eigen::Matrix<FT, Eigen::Dynamic, 1>;
 
     // Solve the heat equation

@@ -116,7 +116,7 @@ void write_off(const std::string& filename,
     check_fstream(stream, filename);
 
     auto nvertices = positions.size() / 3;
-    auto nfaces = 0;
+    size_t nfaces = 0;
     if (findices != nullptr && N != 0) { nfaces = findices->size() / N; }
     write_header(stream, nvertices, nfaces);
 

@@ -20,9 +20,6 @@ Vector_3 vertex_normal(
 {
     using face_descriptor =
         typename boost::graph_traits<const Mesh>::face_descriptor;
-    using VPMap =
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type;
-    using Point_3 = typename boost::property_traits<VPMap>::value_type;
     using FNMap = std::unordered_map<face_descriptor, Vector_3>;
     using FaceNormalMap = boost::const_associative_property_map<FNMap>;
 
@@ -244,10 +241,7 @@ template<typename Mesh, typename T>
 std::tuple<Eigen::SparseMatrix<T>, Eigen::SparseMatrix<T>> adjacency_matrix(
     const Mesh& mesh)
 {
-    using vertex_descriptor =
-        typename boost::graph_traits<Mesh>::vertex_descriptor;
     using Triplet = Eigen::Triplet<T>;
-    auto vpmap = get(boost::vertex_point, mesh);
     auto vimap = get(boost::vertex_index, mesh);
     const auto nv = num_vertices(mesh);
 
@@ -275,8 +269,6 @@ std::tuple<Eigen::SparseMatrix<T>, Eigen::SparseMatrix<T>> adjacency_matrix(
 template<typename Mesh, typename T>
 Eigen::SparseMatrix<T> cotangent_matrix(const Mesh& mesh)
 {
-    using vertex_descriptor =
-        typename boost::graph_traits<Mesh>::vertex_descriptor;
     using Triplet = Eigen::Triplet<T>;
     auto vpmap = get(boost::vertex_point, mesh);
     auto vimap = get(boost::vertex_index, mesh);

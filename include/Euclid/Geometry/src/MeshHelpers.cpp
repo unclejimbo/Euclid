@@ -153,8 +153,6 @@ std::enable_if_t<std::is_arithmetic_v<FT>, void> extract_mesh(
     indices.clear();
     positions.reserve(num_vertices(mesh) * 3);
     indices.reserve(num_faces(mesh) * N);
-    using vertex_descriptor =
-        typename boost::graph_traits<Mesh>::vertex_descriptor;
 
     auto vpmap = get(boost::vertex_point, mesh);
     for (auto [beg, end] = vertices(mesh); beg != end; ++beg) {
@@ -191,8 +189,6 @@ std::enable_if_t<!std::is_arithmetic_v<Point_3>, void> extract_mesh(
     indices.clear();
     points.reserve(num_vertices(mesh));
     indices.reserve(num_faces(mesh) * 3);
-    using vertex_descriptor =
-        typename boost::graph_traits<Mesh>::vertex_descriptor;
 
     auto vpmap = get(boost::vertex_point, mesh);
     for (auto [beg, end] = vertices(mesh); beg != end; ++beg) {

@@ -100,7 +100,6 @@ void save(Archive& ar,
 template<typename Archive, typename Scalar, int Options, typename StorageIndex>
 void load(Archive& ar, Eigen::SparseMatrix<Scalar, Options, StorageIndex>& mat)
 {
-    using SpMat = Eigen::SparseMatrix<Scalar, Options, StorageIndex>;
     using Triplet = Eigen::Triplet<Scalar, StorageIndex>;
     StorageIndex rows, cols, size;
     ar(rows, cols, size);

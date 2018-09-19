@@ -53,7 +53,7 @@ void HKS<Mesh>::build(const Mesh& mesh, unsigned k)
                                 Spectra::SparseSymShiftSolve<FT>>
         eigensolver(&op, k, convergence, 0.0f);
     eigensolver.init();
-    auto n = eigensolver.compute(
+    unsigned n = eigensolver.compute(
         1000, static_cast<FT>(1e-10), Spectra::SMALLEST_MAGN);
     if (eigensolver.info() != Spectra::SUCCESSFUL) {
         throw std::runtime_error(
@@ -117,7 +117,7 @@ void HKS<Mesh>::compute(Eigen::ArrayBase<Derived>& hks,
         for (size_t i = 0; i < tscales; ++i) {
             auto t = std::exp(log_tmin + log_tstep * i);
             auto hks_t = static_cast<FT>(0);
-            for (size_t j = 0; j < this->eigenvalues->size(); ++j) {
+            for (int j = 0; j < this->eigenvalues->size(); ++j) {
                 auto eig = this->eigenvalues->coeff(j);
                 auto e = std::exp(-eig * t);
                 auto phi = this->eigenfunctions->coeff(idx, j);

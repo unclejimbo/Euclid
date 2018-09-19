@@ -19,12 +19,11 @@ namespace _impl
 // Construct linear system for mesh
 template<typename Mesh, typename FT>
 void construct_equation(const Mesh& mesh,
-                        const std::vector<unsigned>& ids,
+                        const std::vector<int>& ids,
                         Eigen::SparseMatrix<FT>& A,
                         Eigen::SparseMatrix<FT>& B)
 {
     using SpMat = Eigen::SparseMatrix<FT>;
-    using CRPair = std::pair<unsigned, unsigned>;
     const auto inv_sigma = static_cast<FT>(1.0); // parameter
 
     auto fimap = get(boost::face_index, mesh);
@@ -120,134 +119,134 @@ void construct_equation(const Mesh& mesh,
     B.makeCompressed();
 }
 
-// Construct linear system for point cloud
-template<typename ForwardIterator,
-         typename Index,
-         typename PPMap,
-         typename NPMap,
-         typename FT>
-void construct_equation(ForwardIterator first,
-                        ForwardIterator beyond,
-                        PPMap point_pmap,
-                        NPMap normal_pmap,
-                        const std::vector<std::vector<int>>& neighbors,
-                        const std::vector<Index>& indices,
-                        const std::vector<int>& ids,
-                        Eigen::SparseMatrix<FT>& A,
-                        Eigen::SparseMatrix<FT>& B)
-{
-    using SpMat = Eigen::SparseMatrix<FT>;
+// // Construct linear system for point cloud
+// template<typename ForwardIterator,
+//          typename Index,
+//          typename PPMap,
+//          typename NPMap,
+//          typename FT>
+// void construct_equation(ForwardIterator first,
+//                         ForwardIterator beyond,
+//                         PPMap point_pmap,
+//                         NPMap normal_pmap,
+//                         const std::vector<std::vector<int>>& neighbors,
+//                         const std::vector<Index>& indices,
+//                         const std::vector<int>& ids,
+//                         Eigen::SparseMatrix<FT>& A,
+//                         Eigen::SparseMatrix<FT>& B)
+// {
+//     using SpMat = Eigen::SparseMatrix<FT>;
 
-    const auto inv_sigma1 = 1.0;
-    const auto inv_sigma2 = 1.0;
-    auto m = B.cols();
-    auto n = B.rows();
-    auto n_points = m + n;
-    auto n_neighbors = neighbors[0].size();
-    std::vector<int> rows;
-    std::vector<int> cols;
-    std::vector<FT> d1s;
-    std::vector<FT> d2s;
-    rows.reserve(n_points * n_neighbors);
-    cols.reserve(n_points * n_neighbors);
-    d1s.reserve(n_points * n_neighbors);
-    d2s.reserve(n_points * n_neighbors);
-    auto d2_sum = 0.0;
+//     const auto inv_sigma1 = 1.0;
+//     const auto inv_sigma2 = 1.0;
+//     auto m = B.cols();
+//     auto n = B.rows();
+//     auto n_points = m + n;
+//     auto n_neighbors = neighbors[0].size();
+//     std::vector<int> rows;
+//     std::vector<int> cols;
+//     std::vector<FT> d1s;
+//     std::vector<FT> d2s;
+//     rows.reserve(n_points * n_neighbors);
+//     cols.reserve(n_points * n_neighbors);
+//     d1s.reserve(n_points * n_neighbors);
+//     d2s.reserve(n_points * n_neighbors);
+//     auto d2_sum = 0.0;
 
-    // Compute the ingredients of the laplacian matrix
-    auto i = 0;
-    for (auto iter = first; iter != beyond; ++iter, ++i) {
-        auto pi = get(point_pmap, *iter);
-        auto ni = get(normal_pmap, *iter);
-        auto d1_sum = 0.0;
+//     // Compute the ingredients of the laplacian matrix
+//     auto i = 0;
+//     for (auto iter = first; iter != beyond; ++iter, ++i) {
+//         auto pi = get(point_pmap, *iter);
+//         auto ni = get(normal_pmap, *iter);
+//         auto d1_sum = 0.0;
 
-        for (auto j = 0; j < n_neighbors; ++j) {
-            auto neighbor = neighbors[i][j];
-            cols.push_back(ids[i]);
-            rows.push_back(ids[neighbor]);
+//         for (auto j = 0; j < n_neighbors; ++j) {
+//             auto neighbor = neighbors[i][j];
+//             cols.push_back(ids[i]);
+//             rows.push_back(ids[neighbor]);
 
-            auto pj = get(point_pmap, indices[neighbor]);
-            auto nj = get(normal_pmap, indices[neighbor]);
-            auto eta = ((pj - pi) - ((pj - pi) * ni) * ni) * nj >= 0.0
-                           ? 0.2
-                           : 1.0; // convex : concave
+//             auto pj = get(point_pmap, indices[neighbor]);
+//             auto nj = get(normal_pmap, indices[neighbor]);
+//             auto eta = ((pj - pi) - ((pj - pi) * ni) * ni) * nj >= 0.0
+//                            ? 0.2
+//                            : 1.0; // convex : concave
 
-            auto d1 = (pi - pj).squared_length();
-            d1s.push_back(d1);
-            d1_sum += d1;
-            auto d2 = 0.5 * eta * (ni - nj).squared_length();
-            d2s.push_back(d2);
-            d2_sum += d2;
-        }
+//             auto d1 = (pi - pj).squared_length();
+//             d1s.push_back(d1);
+//             d1_sum += d1;
+//             auto d2 = 0.5 * eta * (ni - nj).squared_length();
+//             d2s.push_back(d2);
+//             d2_sum += d2;
+//         }
 
-        auto d1_inv_avg = n_neighbors / d1_sum;
-        for (auto j = 0; j < n_neighbors; ++j) {
-            auto idx = i * n_neighbors + j;
-            d1s[idx] = std::exp(-d1s[idx] * d1_inv_avg * inv_sigma1);
-        }
-    }
+//         auto d1_inv_avg = n_neighbors / d1_sum;
+//         for (auto j = 0; j < n_neighbors; ++j) {
+//             auto idx = i * n_neighbors + j;
+//             d1s[idx] = std::exp(-d1s[idx] * d1_inv_avg * inv_sigma1);
+//         }
+//     }
 
-    auto d2_inv_avg = (n_points * n_neighbors) / d2_sum;
-    for (auto& d2 : d2s) {
-        d2 = std::exp(-d2 * d2_inv_avg * inv_sigma2);
-    }
+//     auto d2_inv_avg = (n_points * n_neighbors) / d2_sum;
+//     for (auto& d2 : d2s) {
+//         d2 = std::exp(-d2 * d2_inv_avg * inv_sigma2);
+//     }
 
-    // Normalize
-    std::vector<Eigen::Triplet<FT>> values;
-    values.reserve(n_points * (n_neighbors + 1));
-    for (auto i = 0; i < n_points; ++i) {
-        std::vector<FT> ds(n_neighbors);
-        FT sum = 0.0;
-        for (auto j = 0; j < n_neighbors; ++j) {
-            auto idx = i * n_neighbors + j;
-            ds[j] = d1s[idx] * d2s[idx];
-            sum += ds[j];
-        }
-        FT inv_sum = 1.0 / sum;
-        for (auto j = 0; j < n_neighbors; ++j) {
-            auto idx = i * n_neighbors + j;
-            values.emplace_back(cols[idx], rows[idx], -ds[j] * inv_sum);
-        }
-        values.emplace_back(i, i, static_cast<FT>(1.0));
-    }
+//     // Normalize
+//     std::vector<Eigen::Triplet<FT>> values;
+//     values.reserve(n_points * (n_neighbors + 1));
+//     for (auto i = 0; i < n_points; ++i) {
+//         std::vector<FT> ds(n_neighbors);
+//         FT sum = 0.0;
+//         for (auto j = 0; j < n_neighbors; ++j) {
+//             auto idx = i * n_neighbors + j;
+//             ds[j] = d1s[idx] * d2s[idx];
+//             sum += ds[j];
+//         }
+//         FT inv_sum = 1.0 / sum;
+//         for (auto j = 0; j < n_neighbors; ++j) {
+//             auto idx = i * n_neighbors + j;
+//             values.emplace_back(cols[idx], rows[idx], -ds[j] * inv_sum);
+//         }
+//         values.emplace_back(i, i, static_cast<FT>(1.0));
+//     }
 
-    // Fill in the matrix
-    SpMat L(m + n, m + n);
-    L.setFromTriplets(values.begin(), values.end());
-    A = L.bottomRightCorner(n, n);
-    B = -L.bottomLeftCorner(n, m);
-    A.makeCompressed();
-    B.makeCompressed();
-}
+//     // Fill in the matrix
+//     SpMat L(m + n, m + n);
+//     L.setFromTriplets(values.begin(), values.end());
+//     A = L.bottomRightCorner(n, n);
+//     B = -L.bottomLeftCorner(n, m);
+//     A.makeCompressed();
+//     B.makeCompressed();
+// }
 
-// Adapt PointPropertyMap to take in integer as key type
-template<typename PPMap>
-class IPMapAdaptor
-{
-    using PointKey = typename boost::property_traits<PPMap>::key_type;
-    using Point_3 = typename boost::property_traits<PPMap>::value_type;
+// // Adapt PointPropertyMap to take in integer as key type
+// template<typename PPMap>
+// class IPMapAdaptor
+// {
+//     using PointKey = typename boost::property_traits<PPMap>::key_type;
+//     using Point_3 = typename boost::property_traits<PPMap>::value_type;
 
-public:
-    using value_type = Point_3;
-    using reference = const value_type&;
-    using key_type = int;
-    using category = boost::lvalue_property_map_tag;
+// public:
+//     using value_type = Point_3;
+//     using reference = const value_type&;
+//     using key_type = int;
+//     using category = boost::lvalue_property_map_tag;
 
-    IPMapAdaptor(PPMap ppmap, const std::vector<PointKey>& pks)
-        : _ppmap(ppmap), _pks(pks)
-    {}
+//     IPMapAdaptor(PPMap ppmap, const std::vector<PointKey>& pks)
+//         : _ppmap(ppmap), _pks(pks)
+//     {}
 
-    reference operator[](key_type key) const { return _ppmap[_pks[key]]; }
+//     reference operator[](key_type key) const { return _ppmap[_pks[key]]; }
 
-    friend reference get(IPMapAdaptor ipmap, key_type key)
-    {
-        return ipmap[key];
-    }
+//     friend reference get(IPMapAdaptor ipmap, key_type key)
+//     {
+//         return ipmap[key];
+//     }
 
-private:
-    PPMap _ppmap;
-    const std::vector<PointKey>& _pks;
-};
+// private:
+//     PPMap _ppmap;
+//     const std::vector<PointKey>& _pks;
+// };
 
 } // namespace _impl
 
@@ -267,8 +266,8 @@ void random_walk_segmentation(const Mesh& mesh,
     auto m = static_cast<int>(seed_indices.size()); // Number of seeded
     auto n = static_cast<int>(num_faces(mesh)) - m; // Number of unseeded
     std::sort(seed_indices.begin(), seed_indices.end());
-    std::vector<unsigned> ids(m + n, -1); // ids[FacetID] -> MatrixID
-    unsigned inc = 0;
+    std::vector<int> ids(m + n, -1); // ids[FacetID] -> MatrixID
+    size_t inc = 0;
     while (inc < seed_indices.size()) {
         ids[seed_indices[inc]] = inc;
         ++inc;
@@ -280,7 +279,7 @@ void random_walk_segmentation(const Mesh& mesh,
     SpMat B(n, m);
     _impl::construct_equation(mesh, ids, A, B);
 
-    std::vector<unsigned> inv_ids(m + n);
+    std::vector<int> inv_ids(m + n);
     for (auto i = 0; i < m + n; ++i) {
         inv_ids[ids[i]] = i;
     }

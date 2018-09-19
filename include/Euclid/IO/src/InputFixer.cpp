@@ -150,8 +150,8 @@ size_t remove_duplicate_vertices(std::vector<T1>& positions,
     // Now fix indices
     for (auto& i : indices) {
         auto new_idx = index_map[i];
-        EASSERT(index_map[i] < (positions.size() / 3 - marks.size()));
-        i = static_cast<T2>(index_map[i]);
+        EASSERT(new_idx < (positions.size() / 3 - marks.size()));
+        i = static_cast<T2>(new_idx);
     }
 
     // Now erase garbage values at the tail of the vector

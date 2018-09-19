@@ -55,14 +55,10 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
     Mesh mesh;
     Euclid::make_mesh<3>(mesh, positions, indices);
 
-    auto idx1 = 21785;
-    auto v1 = Vertex(idx1); // left-front foot
-    auto idx2 = 24103;
-    auto v2 = Vertex(idx2); // vertex nearby
-    auto idx3 = 36874;
-    auto v3 = Vertex(idx3); // right-front foot
-    auto idx4 = 16807;
-    auto v4 = Vertex(idx4); // back
+    auto idx1 = 21785; // left-front foot
+    auto idx2 = 24103; // nearby point
+    auto idx3 = 36874; // right-front foot
+    auto idx4 = 16807; // far away
 
     SECTION("spin images")
     {
@@ -78,7 +74,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
             si.compute(si_all, 1.0f, width, angle);
 
             std::vector<double> distances(si_all.cols());
-            for (size_t i = 0; i < si_all.cols(); ++i) {
+            for (int i = 0; i < si_all.cols(); ++i) {
                 distances[i] = Euclid::chi2(si_all.col(i), si_all.col(idx1));
             }
             REQUIRE(distances[idx1] == 0);
@@ -108,7 +104,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
             si.compute(si_all, 1.0f, width, angle);
 
             std::vector<double> distances(si_all.cols());
-            for (size_t i = 0; i < si_all.cols(); ++i) {
+            for (int i = 0; i < si_all.cols(); ++i) {
                 distances[i] = Euclid::chi2(si_all.col(i), si_all.col(idx1));
             }
             REQUIRE(distances[idx1] == 0);
@@ -138,7 +134,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
             si.compute(si_all, 1.0f, width, angle);
 
             std::vector<double> distances(si_all.cols());
-            for (size_t i = 0; i < si_all.cols(); ++i) {
+            for (int i = 0; i < si_all.cols(); ++i) {
                 distances[i] = Euclid::chi2(si_all.col(i), si_all.col(idx1));
             }
             REQUIRE(distances[idx1] == 0);
@@ -169,7 +165,8 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
             Euclid::deserialize(fcereal, eigenvalues, eigenfunctions);
             if (eigenvalues.rows() != ne ||
                 eigenvalues.rows() != eigenfunctions.cols() ||
-                eigenfunctions.rows() != positions.size() / 3) {
+                eigenfunctions.rows() !=
+                    static_cast<int>(positions.size()) / 3) {
                 throw std::runtime_error("Need to be build again.");
             }
             hks.build(mesh, &eigenvalues, &eigenfunctions);
@@ -185,7 +182,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
             hks.compute(hks_all);
 
             std::vector<double> distances(hks_all.cols());
-            for (size_t i = 0; i < hks_all.cols(); ++i) {
+            for (int i = 0; i < hks_all.cols(); ++i) {
                 distances[i] = Euclid::chi2(hks_all.col(i), hks_all.col(idx1));
             }
             REQUIRE(distances[idx1] == 0);
@@ -205,7 +202,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
             hks.compute(hks_all, 100, tmin, tmax);
 
             std::vector<double> distances(hks_all.cols());
-            for (size_t i = 0; i < hks_all.cols(); ++i) {
+            for (int i = 0; i < hks_all.cols(); ++i) {
                 distances[i] = Euclid::chi2(hks_all.col(i), hks_all.col(idx1));
             }
             REQUIRE(distances[idx1] == 0);
@@ -225,7 +222,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
             hks.compute(hks_all, 100, tmin, tmax);
 
             std::vector<double> distances(hks_all.cols());
-            for (size_t i = 0; i < hks_all.cols(); ++i) {
+            for (int i = 0; i < hks_all.cols(); ++i) {
                 distances[i] = Euclid::chi2(hks_all.col(i), hks_all.col(idx1));
             }
             REQUIRE(distances[idx1] == 0);

@@ -16,7 +16,7 @@ namespace Euclid
  *
  *  @param mesh Input mesh.
  *  @param seeds The indices of seed faces.
- *  @param segments. The output segments for each face.
+ *  @param segments The output segments for each face.
  *
  *  **Reference**
  *
