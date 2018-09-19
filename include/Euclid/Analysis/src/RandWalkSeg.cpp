@@ -257,9 +257,9 @@ void random_walk_segmentation(const Mesh& mesh,
                               std::vector<unsigned>& segments)
 {
     using VertexPointMap =
-        boost::property_map<Mesh, boost::vertex_point_t>::type;
-    using Point_3 = boost::property_traits<VertexPointMap>::value_type;
-    using FT = CGAL::Kernel_traits<Point_3>::Kernel::FT;
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type;
+    using Point_3 = typename boost::property_traits<VertexPointMap>::value_type;
+    using FT = typename CGAL::Kernel_traits<Point_3>::Kernel::FT;
     using SpMat = Eigen::SparseMatrix<FT>;
 
     // Construct the linear equation

@@ -18,7 +18,7 @@ void SpinImage<Mesh>::build(const Mesh& mesh,
 
     if (vnormals != nullptr) { this->vnormals.reset(vnormals, false); }
     else {
-        using Face = boost::graph_traits<Mesh>::face_descriptor;
+        using Face = typename boost::graph_traits<Mesh>::face_descriptor;
         using FNMap = std::unordered_map<Face, Vector_3>;
         FNMap fnmap;
         fnmap.reserve(num_faces(mesh));

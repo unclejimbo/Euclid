@@ -85,7 +85,7 @@ void save(Archive& ar,
     auto size = static_cast<StorageIndex>(mat.nonZeros());
     ar(rows, cols, size);
     for (StorageIndex i = 0; i < mat.outerSize(); ++i) {
-        for (SpMat::InnerIterator it(mat, i); it; ++it) {
+        for (typename SpMat::InnerIterator it(mat, i); it; ++it) {
             auto row = static_cast<StorageIndex>(it.row());
             auto col = static_cast<StorageIndex>(it.col());
             auto value = it.value();

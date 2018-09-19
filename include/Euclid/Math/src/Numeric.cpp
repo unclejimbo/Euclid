@@ -7,7 +7,7 @@ namespace Euclid
 namespace _impl
 {
 
-#include "../3rdparty/AlmostEquals.h"
+#include <Euclid/3rdparty/AlmostEquals.h>
 
 } // namespace _impl
 

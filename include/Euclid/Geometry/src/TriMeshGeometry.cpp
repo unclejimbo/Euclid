@@ -216,7 +216,7 @@ Point_3 barycenter(typename boost::graph_traits<const Mesh>::face_descriptor f,
                    const Mesh& mesh)
 {
     auto vpmap = get(boost::vertex_point, mesh);
-    auto [vbeg, vend] = CGAL::vertices_around_face(halfedge(f, mesh), mesh);
+    auto [vbeg, vend] = vertices_around_face(halfedge(f, mesh), mesh);
     auto p0 = get(vpmap, *vbeg++);
     auto p1 = get(vpmap, *vbeg++);
     auto p2 = get(vpmap, *vbeg);
