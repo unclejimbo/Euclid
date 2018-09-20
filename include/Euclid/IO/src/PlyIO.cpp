@@ -1199,13 +1199,12 @@ inline void read_ply(const std::string& filename, PlyReader& reader)
 }
 
 template<int VN, typename FloatType>
-void read_ply(
-    const std::string& filename,
-    std::vector<FloatType>& positions,
-    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
-    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
-    std::nullptr_t indices,
-    std::nullptr_t colors)
+void read_ply(const std::string& filename,
+              std::vector<FloatType>& positions,
+              std::enable_if_t<true, std::vector<FloatType>*> normals,
+              std::enable_if_t<true, std::vector<FloatType>*> texcoords,
+              std::nullptr_t indices,
+              std::nullptr_t colors)
 {
     using DummyT = int;
     CommonPlyReader<VN, FloatType, DummyT, DummyT> reader(
@@ -1214,13 +1213,12 @@ void read_ply(
 }
 
 template<int VN, typename FloatType, typename IndexType>
-void read_ply(
-    const std::string& filename,
-    std::vector<FloatType>& positions,
-    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
-    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
-    std::vector<IndexType>* indices,
-    std::nullptr_t colors)
+void read_ply(const std::string& filename,
+              std::vector<FloatType>& positions,
+              std::enable_if_t<true, std::vector<FloatType>*> normals,
+              std::enable_if_t<true, std::vector<FloatType>*> texcoords,
+              std::vector<IndexType>* indices,
+              std::nullptr_t colors)
 {
     using DummyT = int;
     CommonPlyReader<VN, FloatType, IndexType, DummyT> reader(
@@ -1229,13 +1227,12 @@ void read_ply(
 }
 
 template<int VN, typename FloatType, typename ColorType>
-void read_ply(
-    const std::string& filename,
-    std::vector<FloatType>& positions,
-    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
-    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
-    std::nullptr_t indices,
-    std::vector<ColorType>* colors)
+void read_ply(const std::string& filename,
+              std::vector<FloatType>& positions,
+              std::enable_if_t<true, std::vector<FloatType>*> normals,
+              std::enable_if_t<true, std::vector<FloatType>*> texcoords,
+              std::nullptr_t indices,
+              std::vector<ColorType>* colors)
 {
     using DummyT = int;
     CommonPlyReader<VN, FloatType, DummyT, ColorType> reader(
@@ -1244,13 +1241,12 @@ void read_ply(
 }
 
 template<int VN, typename FloatType, typename IndexType, typename ColorType>
-void read_ply(
-    const std::string& filename,
-    std::vector<FloatType>& positions,
-    typename std::enable_if<true, std::vector<FloatType>*>::type normals,
-    typename std::enable_if<true, std::vector<FloatType>*>::type texcoords,
-    std::vector<IndexType>* indices,
-    std::vector<ColorType>* colors)
+void read_ply(const std::string& filename,
+              std::vector<FloatType>& positions,
+              std::enable_if_t<true, std::vector<FloatType>*> normals,
+              std::enable_if_t<true, std::vector<FloatType>*> texcoords,
+              std::vector<IndexType>* indices,
+              std::vector<ColorType>* colors)
 {
     CommonPlyReader<VN, FloatType, IndexType, ColorType> reader(
         positions, normals, texcoords, indices, colors);
@@ -1289,15 +1285,13 @@ inline void write_ply(const std::string& filename,
 }
 
 template<int VN, typename FloatType>
-void write_ply(
-    const std::string& filename,
-    const std::vector<FloatType>& positions,
-    typename std::enable_if<true, const std::vector<FloatType>*>::type normals,
-    typename std::enable_if<true, const std::vector<FloatType>*>::type
-        texcoords,
-    std::nullptr_t indices,
-    std::nullptr_t colors,
-    PlyFormat format = PlyFormat::ascii)
+void write_ply(const std::string& filename,
+               const std::vector<FloatType>& positions,
+               std::enable_if_t<true, const std::vector<FloatType>*> normals,
+               std::enable_if_t<true, const std::vector<FloatType>*> texcoords,
+               std::nullptr_t indices,
+               std::nullptr_t colors,
+               PlyFormat format = PlyFormat::ascii)
 {
     using DummyT = int;
     CommonPlyWriter<VN, FloatType, DummyT, DummyT> writer(
@@ -1306,15 +1300,13 @@ void write_ply(
 }
 
 template<int VN, typename FloatType, typename IndexType>
-void write_ply(
-    const std::string& filename,
-    const std::vector<FloatType>& positions,
-    typename std::enable_if<true, const std::vector<FloatType>*>::type normals,
-    typename std::enable_if<true, const std::vector<FloatType>*>::type
-        texcoords,
-    const std::vector<IndexType>* indices,
-    std::nullptr_t colors,
-    PlyFormat format = PlyFormat::ascii)
+void write_ply(const std::string& filename,
+               const std::vector<FloatType>& positions,
+               std::enable_if_t<true, const std::vector<FloatType>*> normals,
+               std::enable_if_t<true, const std::vector<FloatType>*> texcoords,
+               const std::vector<IndexType>* indices,
+               std::nullptr_t colors,
+               PlyFormat format = PlyFormat::ascii)
 {
     using DummyT = int;
     CommonPlyWriter<VN, FloatType, IndexType, DummyT> writer(
@@ -1323,15 +1315,13 @@ void write_ply(
 }
 
 template<int VN, typename FloatType, typename ColorType>
-void write_ply(
-    const std::string& filename,
-    const std::vector<FloatType>& positions,
-    typename std::enable_if<true, const std::vector<FloatType>*>::type normals,
-    typename std::enable_if<true, const std::vector<FloatType>*>::type
-        texcoords,
-    std::nullptr_t indices,
-    const std::vector<ColorType>* colors,
-    PlyFormat format = PlyFormat::ascii)
+void write_ply(const std::string& filename,
+               const std::vector<FloatType>& positions,
+               std::enable_if_t<true, const std::vector<FloatType>*> normals,
+               std::enable_if_t<true, const std::vector<FloatType>*> texcoords,
+               std::nullptr_t indices,
+               const std::vector<ColorType>* colors,
+               PlyFormat format = PlyFormat::ascii)
 {
     using DummyT = int;
     CommonPlyWriter<VN, FloatType, DummyT, ColorType> writer(
@@ -1340,15 +1330,13 @@ void write_ply(
 }
 
 template<int VN, typename FloatType, typename IndexType, typename ColorType>
-void write_ply(
-    const std::string& filename,
-    const std::vector<FloatType>& positions,
-    typename std::enable_if<true, const std::vector<FloatType>*>::type normals,
-    typename std::enable_if<true, const std::vector<FloatType>*>::type
-        texcoords,
-    const std::vector<IndexType>* indices,
-    const std::vector<ColorType>* colors,
-    PlyFormat format = PlyFormat::ascii)
+void write_ply(const std::string& filename,
+               const std::vector<FloatType>& positions,
+               std::enable_if_t<true, const std::vector<FloatType>*> normals,
+               std::enable_if_t<true, const std::vector<FloatType>*> texcoords,
+               const std::vector<IndexType>* indices,
+               const std::vector<ColorType>* colors,
+               PlyFormat format = PlyFormat::ascii)
 {
     CommonPlyWriter<VN, FloatType, IndexType, ColorType> writer(
         positions, normals, texcoords, indices, colors);

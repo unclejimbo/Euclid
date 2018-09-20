@@ -1084,6 +1084,7 @@ void read_ply(const std::string& filename, PlyReader& reader);
  *  @tparam FloatType Type of floating point value.
  *  @tparam IndexType Type of index value.
  *  @tparam ColorType Type of color value.
+ *  @tparam Interface User should never specify the type for it.
  *
  *  @param filename Input file name.
  *  @param positions Vertex positions.
@@ -1106,7 +1107,7 @@ template<int VN,
          typename FloatType,
          typename IndexType,
          typename ColorType,
-         typename Interface = std::enable_if_t<false>>
+         typename Interface>
 void read_ply(const std::string& filename,
               std::vector<FloatType>& positions,
               std::vector<FloatType>* normals,
@@ -1150,6 +1151,7 @@ void write_ply(const std::string& filename,
  *  @tparam FloatType Type of floating point value.
  *  @tparam IndexType Type of index value.
  *  @tparam ColorType Type of color value.
+ *  @tparam Interface User should never specify the type for it.
  *
  *  @param filename Output file name.
  *  @param positions Vertex positions.
@@ -1174,7 +1176,7 @@ template<int VN,
          typename FloatType,
          typename IndexType,
          typename ColorType,
-         typename Interface = std::enable_if_t<false>>
+         typename Interface>
 void write_ply(const std::string& filename,
                const std::vector<FloatType>& positions,
                const std::vector<FloatType>* normals,

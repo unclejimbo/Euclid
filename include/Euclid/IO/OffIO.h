@@ -26,6 +26,7 @@ namespace Euclid
  *  @tparam FT Type of floating point value.
  *  @tparam IT Type of index value.
  *  @tparam CT Type of color value.
+ *  @tparam Interface User should never specify the type for it.
  *
  *  @param filename Input file name.
  *  @param positions Vertex positions.
@@ -40,11 +41,7 @@ namespace Euclid
  *  Proper overloading functions are implemented so that it's not necessary to
  *  provide template parameters even if nullptr is used.
  */
-template<int N,
-         typename FT,
-         typename IT,
-         typename CT,
-         typename Interface = std::enable_if_t<false>>
+template<int N, typename FT, typename IT, typename CT, typename Interface>
 void read_off(const std::string& filename,
               std::vector<FT>& positions,
               std::vector<CT>* vcolors,
@@ -62,6 +59,7 @@ void read_off(const std::string& filename,
  *  @tparam FT Type of floating point value.
  *  @tparam IT Type of index value.
  *  @tparam CT Type of color value.
+ *  @tparam Interface User should never specify the type for it.
  *
  *  @param filename Input file name.
  *  @param positions Vertex positions.
@@ -76,11 +74,7 @@ void read_off(const std::string& filename,
  *  Proper overloading functions are implemented so that it's not necessary to
  *  provide template parameters even if nullptr is used.
  */
-template<int N,
-         typename FT,
-         typename IT,
-         typename CT,
-         typename Interface = std::enable_if_t<false>>
+template<int N, typename FT, typename IT, typename CT, typename Interface>
 void write_off(const std::string& filename,
                const std::vector<FT>& positions,
                const std::vector<CT>* vcolors,
