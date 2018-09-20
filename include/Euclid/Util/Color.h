@@ -12,6 +12,7 @@
 
 namespace Euclid
 {
+/**@{*/
 
 /** Color map.
  *
@@ -43,6 +44,7 @@ void colormap(const igl::ColorMapType& cm,
 template<typename T>
 void rnd_colors(unsigned n, std::vector<T>& colors, bool to255 = false);
 
+/**@}*/
 } // namespace Euclid
 
 #include "src/Color.cpp"
