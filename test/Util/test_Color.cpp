@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <Euclid/IO/OffIO.h>
 #include <Euclid/IO/PlyIO.h>
 #include <Euclid/Render/RayTracer.h>
 
@@ -31,7 +32,7 @@ TEST_CASE("Util, Color", "[util][color]")
         {
             std::vector<uint8_t> colors;
             Euclid::colormap(
-                igl::COLOR_MAP_TYPE_PLASMA, x, colors, true, false);
+                igl::COLOR_MAP_TYPE_PLASMA, x, colors, true, false, false);
 
             REQUIRE(colors.size() == positions.size());
             auto [cmin, cmax] =
@@ -40,15 +41,33 @@ TEST_CASE("Util, Color", "[util][color]")
             REQUIRE(*cmax <= 255);
 
             std::string fout(TMP_DIR);
-            fout.append("colormap1.ply");
+            fout.append("colormap.ply");
             Euclid::write_ply<3>(
                 fout, positions, nullptr, nullptr, &indices, &colors);
+        }
+
+        SECTION("range [0, 255], alpha")
+        {
+            std::vector<uint8_t> colors;
+            Euclid::colormap(
+                igl::COLOR_MAP_TYPE_PLASMA, x, colors, true, true, false);
+
+            REQUIRE(colors.size() == positions.size() * 4 / 3);
+            auto [cmin, cmax] =
+                std::minmax_element(colors.begin(), colors.end());
+            REQUIRE(*cmin >= 0);
+            REQUIRE(*cmax <= 255);
+
+            std::string fout(TMP_DIR);
+            fout.append("colormap.off");
+            Euclid::write_off<3>(fout, positions, &colors, &indices, nullptr);
         }
 
         SECTION("range [0, 255], inverse color")
         {
             std::vector<uint8_t> colors;
-            Euclid::colormap(igl::COLOR_MAP_TYPE_PLASMA, x, colors, true, true);
+            Euclid::colormap(
+                igl::COLOR_MAP_TYPE_PLASMA, x, colors, true, false, true);
 
             REQUIRE(colors.size() == positions.size());
             auto [cmin, cmax] =
@@ -57,7 +76,7 @@ TEST_CASE("Util, Color", "[util][color]")
             REQUIRE(*cmax <= 255);
 
             std::string fout(TMP_DIR);
-            fout.append("colormap2.ply");
+            fout.append("colormap_inverse.ply");
             Euclid::write_ply<3>(
                 fout, positions, nullptr, nullptr, &indices, &colors);
         }
@@ -102,7 +121,7 @@ TEST_CASE("Util, Color", "[util][color]")
         SECTION("range [0, 255]")
         {
             std::vector<uint8_t> colors;
-            Euclid::rnd_colors(positions.size() / 3, colors, true);
+            Euclid::rnd_colors(positions.size() / 3, colors, true, false);
 
             REQUIRE(colors.size() == positions.size());
             auto [cmin, cmax] =
@@ -114,6 +133,22 @@ TEST_CASE("Util, Color", "[util][color]")
             fout.append("rnd_colors.ply");
             Euclid::write_ply<3>(
                 fout, positions, nullptr, nullptr, &indices, &colors);
+        }
+
+        SECTION("range [0, 255], alpha")
+        {
+            std::vector<uint8_t> colors;
+            Euclid::rnd_colors(positions.size() / 3, colors, true, true);
+
+            REQUIRE(colors.size() == positions.size() * 4 / 3);
+            auto [cmin, cmax] =
+                std::minmax_element(colors.begin(), colors.end());
+            REQUIRE(*cmin >= 0);
+            REQUIRE(*cmax <= 255);
+
+            std::string fout(TMP_DIR);
+            fout.append("rnd_colors.off");
+            Euclid::write_off<3>(fout, positions, &colors, &indices, nullptr);
         }
 
         SECTION("range [0, 1]")
