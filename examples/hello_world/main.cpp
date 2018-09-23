@@ -36,6 +36,6 @@ int main()
     std::vector<unsigned char> colors;
     Euclid::colormap(igl::COLOR_MAP_TYPE_JET, curvatures, colors, true);
     std::string fout(TMP_DIR);
-    fout.append("hello_world/bumpy.ply");
+    fout.append("bumpy_gaussian.ply");
     Euclid::write_ply<3>(fout, positions, nullptr, nullptr, &indices, &colors);
 }

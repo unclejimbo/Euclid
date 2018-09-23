@@ -26,5 +26,5 @@ target_link_libraries(hello_world PRIVATE
 )
 
 set_target_properties(hello_world PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/hello_world
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples
 )
