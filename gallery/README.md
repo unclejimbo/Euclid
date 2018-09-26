@@ -1,34 +1,27 @@
 # Differential geometry
 
-**Gaussian curvatures**
+| **Gaussian curvatures**                                                                      | **Mean curvatures**                                                                      | **Vertex normals**                                                                      |
+| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/gaussian_curvatures.png) | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/mean_curvatures.png) | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/vertex_normals.png) |
 
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/gaussian_curvatures.png)
+**Spectral embedding and reconstruction**
 
-**Mean curvatures**
-
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/mean_curvatures.png)
-
-**Vertex normals**
-
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/vertex_normals.png)
+| 5                                                                                   | 20                                                                                   | 50                                                                                   | 100                                                                                  |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spectral_5.png) | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spectral_20.png) | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spectral_50.png) | [](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spectral_100.png) |
 
 # Geodesics
 
-**Geodesics in heat**
-
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/geodesics_heat_1.png)
-
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/geodesics_heat_2.png)
+|                       |                                                                                           |                                                                                           |
+| --------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Geodesics in heat** | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/geodesics_heat_1.png) | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/geodesics_heat_2.png) |
 
 # Descriptors
 
-**Heat kernel signatures**
-
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/heat_kernel_signatures.png)
-
-**Spin images**
-
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spin_images.png)
+|                            |
+| -------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Heat kernel signatures** | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/heat_kernel_signatures.png) |
+| **Spin images**            | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spin_images.png)            |
 
 # Segmentation
 
@@ -38,18 +31,12 @@
 
 # Render
 
-**Ray tracer**
-
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/raytracer_background.png)
-
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/raytracer_ortho_cam.png)
-
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/raytracer_face_color.png)
-
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/raytracer_vertex_color.png)
-
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/raytracer_face_mask.png)
-
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/raytracer_depth.png)
-
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/raytracer_silhouette.png)
+|                       | **Ray tracer**                                                                                  |
+| --------------------- | ----------------------------------------------------------------------------------------------- |
+| background            | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/raytracer_background.png)   |
+| orthographical camera | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/raytracer_ortho_cam.png)    |
+| per-face color        | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/raytracer_face_color.png)   |
+| per-vertex color      | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/raytracer_vertex_color.png) |
+| face mask             | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/raytracer_face_mask.png)    |
+| depth                 | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/raytracer_depth.png)        |
+| silhouette            | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/raytracer_silhouette.png)   |

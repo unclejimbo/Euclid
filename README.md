@@ -137,13 +137,13 @@ int main()
 
 And here's the result rendered using MeshLab.
 
-![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/gaussian_curvatures.png)
+<img src="https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/gaussian_curvatures.png" width="512">
 
 See source code [here](https://github.com/unclejimbo/Euclid/blob/dev/examples/hello_world/main.cpp).
 
 ## Examples
 
-Various examples on how to use the packages in Euclid are still missing. However, you could check the [test cases](https://github.com/unclejimbo/Euclid/tree/dev/test) to see the usage of most functions and classes. For more information on how to run the tests, see [here](https://codedocs.xyz/unclejimbo/Euclid/md_docs_runtest.html).
+See the [examples](https://github.com/unclejimbo/Euclid/tree/dev/examples) folder for more tutorials. However, many modules are not covered yet. For a more complete example, you could check the [test cases](https://github.com/unclejimbo/Euclid/tree/dev/test) to see the usage of most functions and classes. More information on how to run the tests could be found [here](https://codedocs.xyz/unclejimbo/Euclid/md_docs_runtest.html).
 
 ## License
 
