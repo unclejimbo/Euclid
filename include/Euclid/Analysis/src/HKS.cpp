@@ -12,18 +12,6 @@
 namespace Euclid
 {
 
-namespace _impl
-{
-
-template<typename T>
-class SqrtRcpr
-{
-public:
-    T operator()(T value) { return value == 0 ? 0 : 1 / std::sqrt(value); }
-};
-
-} // namespace _impl
-
 template<typename Mesh>
 void HKS<Mesh>::build(const Mesh& mesh, unsigned k)
 {
@@ -42,8 +30,9 @@ void HKS<Mesh>::build(const Mesh& mesh, unsigned k)
     // Construct a symmetric Laplacian matrix
     SpMat cot_mat = Euclid::cotangent_matrix(mesh);
     SpMat mass_mat = Euclid::mass_matrix(mesh);
-    mass_mat.unaryExpr(_impl::SqrtRcpr<FT>());
-    SpMat laplacian = mass_mat * cot_mat * mass_mat;
+    SpMat m_mat =
+        mass_mat.unaryExpr([](FT v) { return v == 0 ? 0 : 1 / std::sqrt(v); });
+    SpMat laplacian = m_mat * cot_mat * m_mat;
 
     // Eigen decomposition of the Laplacian matrix
     auto convergence = std::min(2 * k + 1, num_vertices(mesh));
@@ -72,8 +61,8 @@ void HKS<Mesh>::build(const Mesh& mesh, unsigned k)
     this->mesh = &mesh;
     this->eigenvalues.reset(new Vec(eigensolver.eigenvalues()), true);
     EASSERT(this->eigenvalues->rows() == n);
-    this->eigenfunctions.reset(new Mat(mass_mat * eigensolver.eigenvectors()),
-                               true);
+    Mat eigenvectors = m_mat * eigensolver.eigenvectors();
+    this->eigenfunctions.reset(new Mat(eigenvectors), true);
     EASSERT(this->eigenfunctions->cols() == n);
     EASSERT(this->eigenfunctions->rows() == num_vertices(mesh));
 }

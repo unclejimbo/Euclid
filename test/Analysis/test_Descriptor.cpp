@@ -18,7 +18,7 @@ using Vector_3 = Kernel::Vector_3;
 using Mesh = CGAL::Surface_mesh<Kernel::Point_3>;
 using Vertex = Mesh::Vertex_index;
 
-void _write_spin_image(const std::string& f,
+static void _write_spin_image(const std::string& f,
                        const Eigen::ArrayXd& si,
                        int width)
 {
@@ -31,13 +31,15 @@ void _write_spin_image(const std::string& f,
         fout.c_str(), width, width, 1, &sig(0), width * sizeof(double));
 }
 
-void _write_distances_to_colored_mesh(const std::string& f,
+static void _write_distances_to_colored_mesh(
+    const std::string& f,
                                       const std::vector<double>& positions,
                                       const std::vector<unsigned>& indices,
                                       const std::vector<double>& distances)
 {
     std::vector<unsigned char> colors;
-    Euclid::colormap(igl::COLOR_MAP_TYPE_JET, distances, colors, true, true);
+    Euclid::colormap(
+        igl::COLOR_MAP_TYPE_JET, distances, colors, true, false, true);
     std::string fout(TMP_DIR);
     fout.append(f);
     Euclid::write_ply<3>(fout, positions, nullptr, nullptr, &indices, &colors);
@@ -155,7 +157,7 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
 
     SECTION("heat kernel signature")
     {
-        constexpr const int ne = 100;
+        constexpr const int ne = 300;
         std::string fcereal(TMP_DIR);
         fcereal.append("hks.cereal");
         Euclid::HKS<Mesh> hks;
