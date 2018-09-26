@@ -6,9 +6,9 @@
 
 **Spectral embedding and reconstruction**
 
-| 5                                                                                   | 20                                                                                   | 50                                                                                   | 100                                                                                  |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spectral_5.png) | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spectral_20.png) | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spectral_50.png) | [](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spectral_100.png) |
+| 5                                                                                   | 20                                                                                   | 50                                                                                   | 100                                                                                   |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spectral_5.png) | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spectral_20.png) | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spectral_50.png) | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spectral_100.png) |
 
 # Geodesics
 
@@ -18,7 +18,7 @@
 
 # Descriptors
 
-|                            |
+|                            |                                                                                                 |
 | -------------------------- | ----------------------------------------------------------------------------------------------- |
 | **Heat kernel signatures** | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/heat_kernel_signatures.png) |
 | **Spin images**            | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spin_images.png)            |
