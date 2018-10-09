@@ -8,6 +8,7 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_Geodesics.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_MeshHelpers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_PrimitiveGenerator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_Spectral.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_TriMeshGeometry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IO/test_ObjIO.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IO/test_OffIO.cpp

@@ -4,8 +4,7 @@
 #include <string>
 
 #include <Eigen/SparseCore>
-#include <MatOp/SparseSymShiftSolve.h>
-#include <SymEigsShiftSolver.h>
+#include <Euclid/Geometry/Spectral.h>
 #include <Euclid/Geometry/TriMeshGeometry.h>
 #include <Euclid/Util/Assert.h>
 
@@ -15,56 +14,12 @@ namespace Euclid
 template<typename Mesh>
 void HKS<Mesh>::build(const Mesh& mesh, unsigned k)
 {
-    using SpMat = Eigen::SparseMatrix<FT>;
-
-    if (k > num_vertices(mesh)) {
-        std::string err("You've requested ");
-        err.append(std::to_string(k));
-        err.append(" eigen values but there are only ");
-        err.append(std::to_string(num_vertices(mesh)));
-        err.append(" vertices in your mesh.");
-        EWARNING(err);
-        k = num_vertices(mesh);
-    }
-
-    // Construct a symmetric Laplacian matrix
-    SpMat cot_mat = Euclid::cotangent_matrix(mesh);
-    SpMat mass_mat = Euclid::mass_matrix(mesh);
-    SpMat m_mat =
-        mass_mat.unaryExpr([](FT v) { return v == 0 ? 0 : 1 / std::sqrt(v); });
-    SpMat laplacian = m_mat * cot_mat * m_mat;
-
-    // Eigen decomposition of the Laplacian matrix
-    auto convergence = std::min(2 * k + 1, num_vertices(mesh));
-    Spectra::SparseSymShiftSolve<FT> op(laplacian);
-    Spectra::SymEigsShiftSolver<FT,
-                                Spectra::LARGEST_MAGN,
-                                Spectra::SparseSymShiftSolve<FT>>
-        eigensolver(&op, k, convergence, 0.0f);
-    eigensolver.init();
-    unsigned n = eigensolver.compute(
-        1000, static_cast<FT>(1e-10), Spectra::SMALLEST_MAGN);
-    if (eigensolver.info() != Spectra::SUCCESSFUL) {
-        throw std::runtime_error(
-            "Unable to compute eigen values of the Laplacian matrix.");
-    }
-    EASSERT(eigensolver.eigenvalues()(1) > 0.0);
-    EASSERT(eigensolver.eigenvalues()(2) > eigensolver.eigenvalues()(1));
-    if (n < k) {
-        auto str = std::to_string(k);
-        str.append(" eigen values are requested, but only ");
-        str.append(std::to_string(n));
-        str.append(" values converged in computation.");
-        EWARNING(str);
-    }
-
+    Vec lambdas;
+    Mat phis;
+    spectrum(mesh, k, lambdas, phis);
     this->mesh = &mesh;
-    this->eigenvalues.reset(new Vec(eigensolver.eigenvalues()), true);
-    EASSERT(this->eigenvalues->rows() == n);
-    Mat eigenvectors = m_mat * eigensolver.eigenvectors();
-    this->eigenfunctions.reset(new Mat(eigenvectors), true);
-    EASSERT(this->eigenfunctions->cols() == n);
-    EASSERT(this->eigenfunctions->rows() == num_vertices(mesh));
+    this->eigenvalues.reset(new Vec(lambdas), true);
+    this->eigenfunctions.reset(new Mat(phis), true);
 }
 
 template<typename Mesh>
