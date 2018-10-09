@@ -33,6 +33,7 @@ The purpose of Euclid is not to replace any of the above packages, but to glue t
 - Generate common mesh primitives.
 - Discrete differential and geometric properties.
 - Geodesic distance.
+- Spectral shape analysis.
 
 ### Analysis
 
