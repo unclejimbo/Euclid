@@ -250,7 +250,7 @@ TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
             fout, bpositions, nullptr, nullptr, &bindices, &colors);
     }
 
-    SECTION("mean curvature w/ laplacian beltrami operator")
+    SECTION("mean curvature w/ laplace beltrami operator")
     {
         auto laplacian = Euclid::cotangent_matrix(bumpy);
         auto mass = Euclid::mass_matrix(bumpy);
@@ -268,15 +268,31 @@ TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
             mean_curvatures[i * 3 + 2] = 0.0f;
         }
         std::string fout(TMP_DIR);
-        fout.append("bumpy_mean_curvature.ply");
+        fout.append("bumpy_mean_curvature_lbo.ply");
         Euclid::write_ply<3>(
             fout, bpositions, nullptr, nullptr, &bindices, &mean_curvatures);
     }
 
-    SECTION("graph laplacian")
+    SECTION("mean curvature w/ graph laplacian operator")
     {
         auto [adj, degree] = Euclid::adjacency_matrix(bumpy);
         auto laplacian = degree - adj;
-        (void)laplacian;
+        Eigen::SparseMatrix<float> inv_degree;
+        igl::invert_diag(degree, inv_degree);
+        Eigen::MatrixXf hn = inv_degree * laplacian * bumpy_v;
+        Eigen::VectorXf norms = hn.rowwise().norm();
+
+        std::vector<float> mean_curvatures(hn.rows() * 3);
+        auto nmax = norms.maxCoeff();
+        nmax = 255.0 / nmax;
+        for (int i = 0; i < hn.rows(); ++i) {
+            mean_curvatures[i * 3 + 0] = norms(i) * nmax;
+            mean_curvatures[i * 3 + 1] = 0.0f;
+            mean_curvatures[i * 3 + 2] = 0.0f;
+        }
+        std::string fout(TMP_DIR);
+        fout.append("bumpy_mean_curvature_gl.ply");
+        Euclid::write_ply<3>(
+            fout, bpositions, nullptr, nullptr, &bindices, &mean_curvatures);
     }
 }

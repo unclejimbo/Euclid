@@ -252,7 +252,7 @@ std::tuple<Eigen::SparseMatrix<T>, Eigen::SparseMatrix<T>> adjacency_matrix(
         for (const auto& he : halfedges_around_target(vi, mesh)) {
             auto vj = source(he, mesh);
             int j = get(vimap, vj);
-            adj.emplace_back(i, j, -1);
+            adj.emplace_back(i, j, 1);
             ++d;
         }
         degree.emplace_back(i, i, d);
