@@ -1,6 +1,6 @@
 /** Shape descriptors.
  *
- *  This package contain functions to compute shape descriptors.
+ *  This package contains functions to compute shape descriptors.
  *  @defgroup PkgDescriptor Descriptor
  *  @ingroup PkgAnalysis
  */
@@ -151,21 +151,12 @@ public:
                  float tmin = -1.0f,
                  float tmax = -1.0f);
 
-public:
-    /** The mesh being processed.
-     *
-     */
-    const Mesh* mesh;
-
-    /** The eigenvalues.
-     *
-     */
-    ProPtr<const Vec> eigenvalues;
-
-    /** The eigenfunctions.
-     *
-     */
-    ProPtr<const Mat> eigenfunctions;
+private:
+    const Mesh* _mesh;
+    Mat _phi2;     // @f$\phi * \phi@f$.
+    Vec _emlambda; // @f$e^{-\lambda}@f$.
+    FT _lambda_max;
+    FT _lambda_min;
 };
 
 /** @}*/

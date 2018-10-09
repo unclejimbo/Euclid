@@ -1,12 +1,8 @@
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
-#include <string>
 
-#include <Eigen/SparseCore>
 #include <Euclid/Geometry/Spectral.h>
-#include <Euclid/Geometry/TriMeshGeometry.h>
-#include <Euclid/Util/Assert.h>
 
 namespace Euclid
 {
@@ -14,12 +10,12 @@ namespace Euclid
 template<typename Mesh>
 void HKS<Mesh>::build(const Mesh& mesh, unsigned k)
 {
-    Vec lambdas;
-    Mat phis;
-    spectrum(mesh, k, lambdas, phis);
-    this->mesh = &mesh;
-    this->eigenvalues.reset(new Vec(lambdas), true);
-    this->eigenfunctions.reset(new Mat(phis), true);
+    _mesh = &mesh;
+    auto n = spectrum(mesh, k, _emlambda, _phi2);
+    _lambda_max = _emlambda(n - 1);
+    _lambda_min = std::abs(_emlambda(1)); // abs fix numerical error
+    _emlambda = (-_emlambda).array().exp().matrix().eval();
+    _phi2 = _phi2.array().square().matrix().eval();
 }
 
 template<typename Mesh>
@@ -27,9 +23,11 @@ void HKS<Mesh>::build(const Mesh& mesh,
                       const Vec* eigenvalues,
                       const Mat* eigenfunctions)
 {
-    this->mesh = &mesh;
-    this->eigenvalues.reset(eigenvalues);
-    this->eigenfunctions.reset(eigenfunctions);
+    _mesh = &mesh;
+    _lambda_max = eigenvalues->coeff(eigenvalues->size() - 1);
+    _lambda_min = std::abs(eigenvalues->coeff(1)); // abs fix numerical error
+    _emlambda = (-*eigenvalues).array().exp().matrix().eval();
+    _phi2 = (*eigenfunctions).array().square().matrix().eval();
 }
 
 template<typename Mesh>
@@ -46,26 +44,23 @@ void HKS<Mesh>::compute(Eigen::ArrayBase<Derived>& hks,
     }
     else {
         auto c = static_cast<FT>(4.0 * std::log(10.0));
-        tmin = c / this->eigenvalues->coeff(this->eigenvalues->size() - 1);
-        tmax = c / this->eigenvalues->coeff(1);
+        tmin = c / _lambda_max;
+        tmax = c / _lambda_min;
     }
     auto log_tmin = std::log(tmin);
     auto log_tmax = std::log(tmax);
     auto log_tstep = (log_tmax - log_tmin) / tscales;
-    auto vimap = get(boost::vertex_index, *this->mesh);
-    auto nv = num_vertices(*this->mesh);
+    auto vimap = get(boost::vertex_index, *_mesh);
+    auto nv = num_vertices(*_mesh);
     hks.derived().resize(tscales, nv);
 
-    for (auto v : vertices(*this->mesh)) {
+    for (auto v : vertices(*_mesh)) {
         auto idx = get(vimap, v);
         for (size_t i = 0; i < tscales; ++i) {
             auto t = std::exp(log_tmin + log_tstep * i);
             auto hks_t = static_cast<FT>(0);
-            for (int j = 0; j < this->eigenvalues->size(); ++j) {
-                auto eig = this->eigenvalues->coeff(j);
-                auto e = std::exp(-eig * t);
-                auto phi = this->eigenfunctions->coeff(idx, j);
-                hks_t += e * phi * phi;
+            for (int j = 0; j < _emlambda.size(); ++j) {
+                hks_t += std::pow(_emlambda(j), t) * _phi2(idx, j);
             }
             hks(i, idx) = hks_t;
         }

@@ -5,6 +5,7 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
 #include <Euclid/Geometry/MeshHelpers.h>
+#include <Euclid/Geometry/Spectral.h>
 #include <Euclid/IO/PlyIO.h>
 #include <Euclid/Math/Distance.h>
 #include <Euclid/Util/Color.h>
@@ -19,8 +20,8 @@ using Mesh = CGAL::Surface_mesh<Kernel::Point_3>;
 using Vertex = Mesh::Vertex_index;
 
 static void _write_spin_image(const std::string& f,
-                       const Eigen::ArrayXd& si,
-                       int width)
+                              const Eigen::ArrayXd& si,
+                              int width)
 {
     auto vmax = si.maxCoeff();
     Eigen::ArrayXd sig = si;
@@ -33,9 +34,9 @@ static void _write_spin_image(const std::string& f,
 
 static void _write_distances_to_colored_mesh(
     const std::string& f,
-                                      const std::vector<double>& positions,
-                                      const std::vector<unsigned>& indices,
-                                      const std::vector<double>& distances)
+    const std::vector<double>& positions,
+    const std::vector<unsigned>& indices,
+    const std::vector<double>& distances)
 {
     std::vector<unsigned char> colors;
     Euclid::colormap(
@@ -155,12 +156,11 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
         }
     }
 
-    SECTION("heat kernel signature")
+    SECTION("spectral descriptors")
     {
         constexpr const int ne = 300;
         std::string fcereal(TMP_DIR);
-        fcereal.append("hks.cereal");
-        Euclid::HKS<Mesh> hks;
+        fcereal.append("dragon_eigs.cereal");
         Eigen::VectorXd eigenvalues;
         Eigen::MatrixXd eigenfunctions;
         try {
@@ -169,70 +169,78 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
                 eigenvalues.rows() != eigenfunctions.cols() ||
                 eigenfunctions.rows() !=
                     static_cast<int>(positions.size()) / 3) {
-                throw std::runtime_error("Need to be build again.");
+                throw std::runtime_error("Need to be solved again.");
             }
-            hks.build(mesh, &eigenvalues, &eigenfunctions);
         }
         catch (const std::exception& e) {
-            hks.build(mesh, ne);
-            Euclid::serialize(fcereal, *hks.eigenvalues, *hks.eigenfunctions);
+            Euclid::spectrum(mesh, ne, eigenvalues, eigenfunctions);
+            Euclid::serialize(fcereal, eigenvalues, eigenfunctions);
         }
 
-        SECTION("default time range")
+        SECTION("heat kernel signature")
         {
-            Eigen::ArrayXXd hks_all;
-            hks.compute(hks_all);
+            Euclid::HKS<Mesh> hks;
+            hks.build(mesh, &eigenvalues, &eigenfunctions);
 
-            std::vector<double> distances(hks_all.cols());
-            for (int i = 0; i < hks_all.cols(); ++i) {
-                distances[i] = Euclid::chi2(hks_all.col(i), hks_all.col(idx1));
+            SECTION("default time range")
+            {
+                Eigen::ArrayXXd hks_all;
+                hks.compute(hks_all);
+
+                std::vector<double> distances(hks_all.cols());
+                for (int i = 0; i < hks_all.cols(); ++i) {
+                    distances[i] =
+                        Euclid::chi2(hks_all.col(i), hks_all.col(idx1));
+                }
+                REQUIRE(distances[idx1] == 0);
+                REQUIRE(distances[idx2] < distances[idx3]);
+                REQUIRE(distances[idx3] < distances[idx4]);
+
+                _write_distances_to_colored_mesh(
+                    "hks1.ply", positions, indices, distances);
             }
-            REQUIRE(distances[idx1] == 0);
-            REQUIRE(distances[idx2] < distances[idx3]);
-            REQUIRE(distances[idx3] < distances[idx4]);
 
-            _write_distances_to_colored_mesh(
-                "hks1.ply", positions, indices, distances);
-        }
+            SECTION("smaller time range")
+            {
+                auto c = std::log(10.0);
+                auto tmin = c / eigenvalues(eigenvalues.size() - 1);
+                auto tmax = c / eigenvalues(1);
+                Eigen::ArrayXXd hks_all;
+                hks.compute(hks_all, 100, tmin, tmax);
 
-        SECTION("smaller time range")
-        {
-            auto c = std::log(10.0);
-            auto tmin = c / hks.eigenvalues->coeff(hks.eigenvalues->size() - 1);
-            auto tmax = c / hks.eigenvalues->coeff(1);
-            Eigen::ArrayXXd hks_all;
-            hks.compute(hks_all, 100, tmin, tmax);
+                std::vector<double> distances(hks_all.cols());
+                for (int i = 0; i < hks_all.cols(); ++i) {
+                    distances[i] =
+                        Euclid::chi2(hks_all.col(i), hks_all.col(idx1));
+                }
+                REQUIRE(distances[idx1] == 0);
+                REQUIRE(distances[idx2] < distances[idx3]);
+                REQUIRE(distances[idx3] < distances[idx4]);
 
-            std::vector<double> distances(hks_all.cols());
-            for (int i = 0; i < hks_all.cols(); ++i) {
-                distances[i] = Euclid::chi2(hks_all.col(i), hks_all.col(idx1));
+                _write_distances_to_colored_mesh(
+                    "hks2.ply", positions, indices, distances);
             }
-            REQUIRE(distances[idx1] == 0);
-            REQUIRE(distances[idx2] < distances[idx3]);
-            REQUIRE(distances[idx3] < distances[idx4]);
 
-            _write_distances_to_colored_mesh(
-                "hks2.ply", positions, indices, distances);
-        }
+            SECTION("larger time range")
+            {
+                auto c = 12 * std::log(10.0);
+                auto tmin = c / eigenvalues(eigenvalues.size() - 1);
+                auto tmax = c / eigenvalues(1);
+                Eigen::ArrayXXd hks_all;
+                hks.compute(hks_all, 100, tmin, tmax);
 
-        SECTION("larger time range")
-        {
-            auto c = 12 * std::log(10.0);
-            auto tmin = c / hks.eigenvalues->coeff(hks.eigenvalues->size() - 1);
-            auto tmax = c / hks.eigenvalues->coeff(1);
-            Eigen::ArrayXXd hks_all;
-            hks.compute(hks_all, 100, tmin, tmax);
+                std::vector<double> distances(hks_all.cols());
+                for (int i = 0; i < hks_all.cols(); ++i) {
+                    distances[i] =
+                        Euclid::chi2(hks_all.col(i), hks_all.col(idx1));
+                }
+                REQUIRE(distances[idx1] == 0);
+                REQUIRE(distances[idx2] < distances[idx3]);
+                REQUIRE(distances[idx3] < distances[idx4]);
 
-            std::vector<double> distances(hks_all.cols());
-            for (int i = 0; i < hks_all.cols(); ++i) {
-                distances[i] = Euclid::chi2(hks_all.col(i), hks_all.col(idx1));
+                _write_distances_to_colored_mesh(
+                    "hks3.ply", positions, indices, distances);
             }
-            REQUIRE(distances[idx1] == 0);
-            REQUIRE(distances[idx2] < distances[idx3]);
-            REQUIRE(distances[idx3] < distances[idx4]);
-
-            _write_distances_to_colored_mesh(
-                "hks3.ply", positions, indices, distances);
         }
     }
 }
