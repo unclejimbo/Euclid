@@ -242,5 +242,85 @@ TEST_CASE("Analysis, Descriptor", "[analysis][descriptor]")
                     "hks3.ply", positions, indices, distances);
             }
         }
+
+        SECTION("wave kernel signature")
+        {
+            Euclid::WKS<Mesh> wks;
+            wks.build(mesh, &eigenvalues, &eigenfunctions);
+
+            SECTION("default energy range")
+            {
+                Eigen::ArrayXXd wks_all;
+                wks.compute(wks_all);
+
+                std::vector<double> distances(wks_all.cols());
+                for (int i = 0; i < wks_all.cols(); ++i) {
+                    distances[i] =
+                        Euclid::chi2(wks_all.col(i), wks_all.col(idx1));
+                }
+                REQUIRE(distances[idx1] == 0);
+                REQUIRE(distances[idx2] < distances[idx3]);
+                REQUIRE(distances[idx3] < distances[idx4]);
+
+                _write_distances_to_colored_mesh(
+                    "wks1.ply", positions, indices, distances);
+            }
+
+            SECTION("smaller energy range")
+            {
+                Eigen::Matrix3f A;
+                Eigen::Vector3f B;
+                A << 1.0f, 0.0f, -2.0f, 0.0f, 1.0f, 2.0f, 7.0f, -7.0f, 100.0f;
+                B << std::log(std::abs(eigenvalues(1))),
+                    std::log(eigenvalues(eigenvalues.size() - 1)), 0.0f;
+                Eigen::Vector3f x = A.colPivHouseholderQr().solve(B);
+                float emin = x(0);
+                float emax = x(1) - 0.95f * (x(1) - x(0));
+                float sigma = x(2);
+
+                Eigen::ArrayXXd wks_all;
+                wks.compute(wks_all, 100, emin, emax, sigma);
+
+                std::vector<double> distances(wks_all.cols());
+                for (int i = 0; i < wks_all.cols(); ++i) {
+                    distances[i] =
+                        Euclid::chi2(wks_all.col(i), wks_all.col(idx1));
+                }
+                REQUIRE(distances[idx1] == 0);
+                REQUIRE(distances[idx2] < distances[idx3]);
+                REQUIRE(distances[idx3] < distances[idx4]);
+
+                _write_distances_to_colored_mesh(
+                    "wks2.ply", positions, indices, distances);
+            }
+
+            SECTION("larger energy range")
+            {
+                Eigen::Matrix3f A;
+                Eigen::Vector3f B;
+                A << 1.0f, 0.0f, -2.0f, 0.0f, 1.0f, 2.0f, 7.0f, -7.0f, 100.0f;
+                B << std::log(std::abs(eigenvalues(1))),
+                    std::log(eigenvalues(eigenvalues.size() - 1)), 0.0f;
+                Eigen::Vector3f x = A.colPivHouseholderQr().solve(B);
+                float emin = x(0);
+                float emax = x(1) + 2.0f * (x(1) - x(0));
+                float sigma = x(2);
+
+                Eigen::ArrayXXd wks_all;
+                wks.compute(wks_all, 100, emin, emax, sigma);
+
+                std::vector<double> distances(wks_all.cols());
+                for (int i = 0; i < wks_all.cols(); ++i) {
+                    distances[i] =
+                        Euclid::chi2(wks_all.col(i), wks_all.col(idx1));
+                }
+                REQUIRE(distances[idx1] == 0);
+                REQUIRE(distances[idx2] < distances[idx3]);
+                REQUIRE(distances[idx3] < distances[idx4]);
+
+                _write_distances_to_colored_mesh(
+                    "wks3.ply", positions, indices, distances);
+            }
+        }
     }
 }

@@ -18,10 +18,11 @@
 
 # Descriptors
 
-|                            |                                                                                                 |
-| -------------------------- | ----------------------------------------------------------------------------------------------- |
-| **Heat kernel signatures** | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/heat_kernel_signatures.png) |
-| **Spin images**            | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spin_images.png)            |
+|                                                                                      |                                                                                                 |                                                                                                 |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Spin images**                                                                      | **Heat kernel signatures**                                                                      | **Wave Kernel signature**                                                                       |
+| ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spin_images.png) | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/heat_kernel_signatures.png) | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/wave_kernel_signatures.png) |
+
 
 # Segmentation
 
