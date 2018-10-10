@@ -20,7 +20,7 @@
 
 |                                                                                      |                                                                                                 |                                                                                                 |
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| **Spin images**                                                                      | **Heat kernel signatures**                                                                      | **Wave Kernel signature**                                                                       |
+| **Spin images**                                                                      | **Heat kernel signatures**                                                                      | **Wave kernel signatures**                                                                      |
 | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/spin_images.png) | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/heat_kernel_signatures.png) | ![](https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/wave_kernel_signatures.png) |
 
 
