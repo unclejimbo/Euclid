@@ -4,6 +4,17 @@
  *  given shape by computing the eigenvalues and eigenvectors of the Laplacian
  *  matrix. It provides the basis for various spectral shape processing
  *  algorithms.
+ *
+ *  **References**
+ *
+ *  [1] Zhang, H., Van Kaick, O., Dyer, R.
+ *  Spectral Mesh Processing.
+ *  Computer Graphics Forum, 2010.
+ *
+ *  [2] Vallet, B., Levy, B.
+ *  Spectral Geometry Processing with Manifold Harmonics.
+ *  Computer Graphics Forum, 2008.
+ *
  *  @defgroup PkgSpectral Spectral
  *  @ingroup PkgGeometry
  */
