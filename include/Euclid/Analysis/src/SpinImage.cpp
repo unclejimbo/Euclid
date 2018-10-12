@@ -18,19 +18,16 @@ void SpinImage<Mesh>::build(const Mesh& mesh,
 
     if (vnormals != nullptr) { this->vnormals.reset(vnormals, false); }
     else {
-        using Face = typename boost::graph_traits<Mesh>::face_descriptor;
-        using FNMap = std::unordered_map<Face, Vector_3>;
-        FNMap fnmap;
-        fnmap.reserve(num_faces(mesh));
+        std::vector<Vector_3> fnormals;
+        fnormals.reserve(num_faces(mesh));
         for (auto f : faces(mesh)) {
-            fnmap.insert({ f, Euclid::face_normal(f, mesh) });
+            fnormals.push_back(  Euclid::face_normal(f, mesh) );
         }
-        auto fn_map = boost::make_assoc_property_map(fnmap);
 
         std::vector<Vector_3>* vertex_normals = new std::vector<Vector_3>;
         vertex_normals->reserve(num_vertices(mesh));
         for (auto v : vertices(mesh)) {
-            vertex_normals->push_back(Euclid::vertex_normal(v, mesh, fn_map));
+            vertex_normals->push_back(Euclid::vertex_normal(v, mesh, fnormals));
         }
         this->vnormals.reset(vertex_normals, true);
     }

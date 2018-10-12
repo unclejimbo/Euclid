@@ -18,42 +18,48 @@ Vector_3 vertex_normal(
     const Mesh& mesh,
     const VertexNormal& weight)
 {
-    using face_descriptor =
-        typename boost::graph_traits<const Mesh>::face_descriptor;
-    using FNMap = std::unordered_map<face_descriptor, Vector_3>;
-    using FaceNormalMap = boost::const_associative_property_map<FNMap>;
-
     auto vpmap = get(boost::vertex_point, mesh);
-    FNMap fnmap;
-    for (const auto& he : halfedges_around_source(v, mesh)) {
-        auto he0 = he;
-        auto he1 = next(he0, mesh);
-        auto v0 = source(he0, mesh);
-        auto v1 = target(he0, mesh);
-        auto v2 = target(he1, mesh);
-        auto f = face(he0, mesh);
-        auto e0 = get(vpmap, v1) - get(vpmap, v0);
-        auto e1 = get(vpmap, v2) - get(vpmap, v1);
-        auto n = normalized(CGAL::cross_product(e0, e1));
-        fnmap.insert({ f, n });
-    }
-    FaceNormalMap map(fnmap);
+    Vector_3 normal(0.0, 0.0, 0.0);
+    for (auto he : halfedges_around_source(v, mesh)) {
+        auto f = face(he, mesh);
+        auto fn = face_normal(f, mesh);
 
-    return vertex_normal<Mesh, FaceNormalMap>(v, mesh, map, weight);
+        if (weight == VertexNormal::uniform) { normal += fn; }
+        else if (weight == VertexNormal::face_area) {
+            auto area = face_area(f, mesh);
+            normal += area * fn;
+        }
+        else { // incident_angle
+            auto he_next = next(he, mesh);
+            auto t = target(he, mesh);
+            auto s1 = source(he, mesh);
+            auto s2 = target(he_next, mesh);
+            auto pt = get(vpmap, t);
+            auto ps1 = get(vpmap, s1);
+            auto ps2 = get(vpmap, s2);
+            auto vec1 = normalized(ps1 - pt);
+            auto vec2 = normalized(ps2 - pt);
+            auto angle = std::acos(vec1 * vec2);
+            normal += angle * fn;
+        }
+    }
+    return Euclid::normalized(normal);
 }
 
-template<typename Mesh, typename FaceNormalMap, typename Vector_3>
+template<typename Mesh, typename Vector_3>
 Vector_3 vertex_normal(
     typename boost::graph_traits<const Mesh>::vertex_descriptor v,
     const Mesh& mesh,
-    const FaceNormalMap& fnmap,
+    const std::vector<Vector_3>& face_normals,
     const VertexNormal& weight)
 {
     auto vpmap = get(boost::vertex_point, mesh);
+    auto fimap = get(boost::face_index, mesh);
     Vector_3 normal(0.0, 0.0, 0.0);
-    for (const auto& he : halfedges_around_source(v, mesh)) {
+    for (auto he : halfedges_around_source(v, mesh)) {
         auto f = face(he, mesh);
-        auto fn = get(fnmap, f);
+        auto fi = get(fimap, f);
+        auto fn = face_normals[fi];
 
         if (weight == VertexNormal::uniform) { normal += fn; }
         else if (weight == VertexNormal::face_area) {
@@ -86,7 +92,7 @@ T vertex_area(typename boost::graph_traits<const Mesh>::vertex_descriptor v,
     auto va = T(0);
     if (method == VertexArea::barycentric) {
         const auto one_third = boost::math::constants::third<T>();
-        for (const auto& he : halfedges_around_target(v, mesh)) {
+        for (auto he : halfedges_around_target(v, mesh)) {
             auto p1 = get(vpmap, source(he, mesh));
             auto p2 = get(vpmap, target(he, mesh));
             auto p3 = get(vpmap, target(next(he, mesh), mesh));
@@ -228,7 +234,7 @@ T gaussian_curvature(
     auto vpmap = get(boost::vertex_point, mesh);
 
     T angle_defect = boost::math::constants::two_pi<T>();
-    for (const auto& he : halfedges_around_target(v, mesh)) {
+    for (auto he : halfedges_around_target(v, mesh)) {
         auto vp = source(he, mesh);
         auto vq = target(next(he, mesh), mesh);
         angle_defect -=
@@ -246,10 +252,10 @@ std::tuple<Eigen::SparseMatrix<T>, Eigen::SparseMatrix<T>> adjacency_matrix(
     const auto nv = num_vertices(mesh);
 
     std::vector<Triplet> adj, degree;
-    for (const auto& vi : vertices(mesh)) {
+    for (auto vi : vertices(mesh)) {
         int i = get(vimap, vi);
         int d = 0;
-        for (const auto& he : halfedges_around_target(vi, mesh)) {
+        for (auto he : halfedges_around_target(vi, mesh)) {
             auto vj = source(he, mesh);
             int j = get(vimap, vj);
             adj.emplace_back(i, j, 1);
@@ -286,10 +292,10 @@ Eigen::SparseMatrix<T> cotangent_matrix(const Mesh& mesh)
     std::unordered_set<Triplet, decltype(hash_fcn), decltype(eq_fcn)> values(
         nv, hash_fcn, eq_fcn);
 
-    for (const auto& vi : vertices(mesh)) {
+    for (auto vi : vertices(mesh)) {
         int i = get(vimap, vi);
         T row_sum = 0.0;
-        for (const auto& he : halfedges_around_target(vi, mesh)) {
+        for (auto he : halfedges_around_target(vi, mesh)) {
             auto vj = source(he, mesh);
             int j = get(vimap, vj);
             auto existing = values.find(Triplet(j, i, 0.0));
@@ -326,7 +332,7 @@ Eigen::SparseMatrix<T> mass_matrix(const Mesh& mesh, const VertexArea& method)
     std::vector<Eigen::Triplet<T>> values;
 
     int i = 0;
-    for (const auto& v : vertices(mesh)) {
+    for (auto v : vertices(mesh)) {
         auto area = vertex_area(v, mesh, method);
         values.emplace_back(i, i, area);
         ++i;

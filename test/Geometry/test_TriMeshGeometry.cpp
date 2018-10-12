@@ -47,7 +47,7 @@ TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
     SECTION("vertex normal using uniform weight")
     {
         std::vector<float> vertex_normals;
-        for (const auto& v : vertices(bumpy)) {
+        for (auto v : vertices(bumpy)) {
             auto vn =
                 Euclid::vertex_normal(v, bumpy, Euclid::VertexNormal::uniform);
             vertex_normals.push_back(vn.x());
@@ -66,7 +66,7 @@ TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
     SECTION("vertex normal using face area as weight")
     {
         std::vector<float> vertex_normals;
-        for (const auto& v : vertices(bumpy)) {
+        for (auto v : vertices(bumpy)) {
             auto vn = Euclid::vertex_normal(
                 v, bumpy, Euclid::VertexNormal::face_area);
             vertex_normals.push_back(vn.x());
@@ -85,7 +85,7 @@ TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
     SECTION("vertex normal using incident angle as weight")
     {
         std::vector<float> vertex_normals;
-        for (const auto& v : vertices(bumpy)) {
+        for (auto v : vertices(bumpy)) {
             auto vn = Euclid::vertex_normal(
                 v, bumpy, Euclid::VertexNormal::incident_angle);
             vertex_normals.push_back(vn.x());
@@ -104,7 +104,7 @@ TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
     SECTION("vertex area using barycentric method")
     {
         std::vector<float> vertex_areas;
-        for (const auto& v : vertices(bumpy)) {
+        for (auto v : vertices(bumpy)) {
             auto va =
                 Euclid::vertex_area(v, bumpy, Euclid::VertexArea::barycentric);
             vertex_areas.push_back(va);
@@ -125,7 +125,7 @@ TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
     SECTION("vertex area using voronoi method")
     {
         std::vector<float> vertex_areas;
-        for (const auto& v : vertices(bumpy)) {
+        for (auto v : vertices(bumpy)) {
             auto va =
                 Euclid::vertex_area(v, bumpy, Euclid::VertexArea::voronoi);
             vertex_areas.push_back(va);
@@ -146,7 +146,7 @@ TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
     SECTION("vertex area using mixed method")
     {
         std::vector<float> vertex_areas;
-        for (const auto& v : vertices(bumpy)) {
+        for (auto v : vertices(bumpy)) {
             auto va = Euclid::vertex_area(
                 v, bumpy, Euclid::VertexArea::mixed_voronoi);
             vertex_areas.push_back(va);
@@ -191,15 +191,13 @@ TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
 
     SECTION("vertex normal using pre-computed face normals")
     {
-        using FNMap = std::unordered_map<Mesh::Face_index, Vector_3>;
-        FNMap fnmap;
-        for (const auto& f : faces(bumpy)) {
-            fnmap.insert({ f, Euclid::face_normal(f, bumpy) });
+        std::vector<Vector_3> fnormals;
+        for (auto f : faces(bumpy)) {
+            fnormals.push_back(Euclid::face_normal(f, bumpy));
         }
 
-        for (const auto& v : vertices(bumpy)) {
-            Euclid::vertex_normal(
-                v, bumpy, boost::make_assoc_property_map(fnmap));
+        for (auto v : vertices(bumpy)) {
+            Euclid::vertex_normal(v, bumpy, fnormals);
         }
     }
 
@@ -216,7 +214,7 @@ TEST_CASE("Geometry, TriMeshGeometry", "[geometry][trimeshgeometry]")
     SECTION("gaussian curvature")
     {
         std::vector<float> gaussian_curvatures;
-        for (const auto& v : vertices(bumpy)) {
+        for (auto v : vertices(bumpy)) {
             auto c = Euclid::gaussian_curvature(v, bumpy);
             gaussian_curvatures.push_back(c);
         }

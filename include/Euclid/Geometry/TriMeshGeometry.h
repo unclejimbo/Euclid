@@ -5,18 +5,18 @@
  *
  *  **References**
  *
- *  [1] Botsch M, Kobbelt L, Pauly M, et al.
+ *  [1] Botsch, M., Kobbelt L., Pauly M., et al.
  *  Polygon Mesh Processing.
  *  CRC press, 2010.
  *
- *  [2] Crane K.
+ *  [2] Crane, K.
  *  Discrete Differential Geometry: an Applied Introduction.
  *
- *  [3] Meyer M, Schroder P, Barrr A H.
+ *  [3] Meyer, M., Schroder, P., Barrr, A. H.
  *  Discrete Differential-Geometry Operators for Triangulated 2-Manifolds.
  *  Visualization and Mathematics III, 2003.
  *
- *  [4] Zhang H, Van Kaick O, Dyer R.
+ *  [4] Zhang, H., Van Kaick, O., Dyer, R.
  *  Spectral Mesh Processing.
  *  Computer Graphics Forum, 2010.
  *
@@ -86,19 +86,19 @@ Vector_3 vertex_normal(
  *  Choose a weighting strategy of face normals from VertexNormal.
  *
  *  @tparam Mesh Mesh type.
- *  @tparam FaceNormalMap A property map.
  *  @tparam Vector_3 Optional, derived from Mesh.
  *
  *  @sa VertexNormal
  */
 template<typename Mesh,
-         typename FaceNormalMap,
          typename Vector_3 =
-             typename boost::property_traits<FaceNormalMap>::value_type>
+             typename CGAL::Kernel_traits<typename boost::property_traits<
+                 typename boost::property_map<Mesh, boost::vertex_point_t>::
+                     type>::value_type>::Kernel::Vector_3>
 Vector_3 vertex_normal(
     typename boost::graph_traits<const Mesh>::vertex_descriptor v,
     const Mesh& mesh,
-    const FaceNormalMap& fnmap,
+    const std::vector<Vector_3>& face_normals,
     const VertexNormal& weight = VertexNormal::incident_angle);
 
 /** Strategies to compute vertex area.
