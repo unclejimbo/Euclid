@@ -83,6 +83,19 @@ Vector_3 vertex_normal(
     return Euclid::normalized(normal);
 }
 
+template<typename Mesh, typename Vector_3>
+std::vector<Vector_3> vertex_normals(const Mesh& mesh,
+                                     const std::vector<Vector_3>& face_normals,
+                                     const VertexNormal& weight)
+{
+    std::vector<Vector_3> vnormals;
+    vnormals.reserve(num_vertices(mesh));
+    for (auto v : vertices(mesh)) {
+        vnormals.push_back(vertex_normal(v, mesh, face_normals, weight));
+    }
+    return vnormals;
+}
+
 template<typename Mesh, typename T>
 T vertex_area(typename boost::graph_traits<const Mesh>::vertex_descriptor v,
               const Mesh& mesh,
@@ -143,6 +156,17 @@ T vertex_area(typename boost::graph_traits<const Mesh>::vertex_descriptor v,
 }
 
 template<typename Mesh, typename T>
+std::vector<T> vertex_areas(const Mesh& mesh, const VertexArea& method)
+{
+    std::vector<T> vareas;
+    vareas.reserve(num_vertices(mesh));
+    for (auto v : vertices(mesh)) {
+        vareas.push_back(vertex_area(v, mesh, method));
+    }
+    return vareas;
+}
+
+template<typename Mesh, typename T>
 T edge_length(typename boost::graph_traits<const Mesh>::halfedge_descriptor he,
               const Mesh& mesh)
 {
@@ -158,6 +182,17 @@ T edge_length(typename boost::graph_traits<const Mesh>::edge_descriptor e,
 {
     auto he = halfedge(e, mesh);
     return edge_length(he, mesh);
+}
+
+template<typename Mesh, typename T>
+std::vector<T> edge_lengths(const Mesh& mesh)
+{
+    std::vector<T> elens;
+    elens.reserve(num_edges(mesh));
+    for (auto he : edges(mesh)) {
+        elens.push_back(edge_length(he, mesh));
+    }
+    return elens;
 }
 
 template<typename Mesh, typename T>
@@ -178,6 +213,17 @@ T squared_edge_length(
 {
     auto he = halfedge(e, mesh);
     return squared_edge_length(he, mesh);
+}
+
+template<typename Mesh, typename T>
+std::vector<T> squared_edge_lengths(const Mesh& mesh)
+{
+    std::vector<T> elens;
+    elens.reserve(num_edges(mesh));
+    for (auto he : edges(mesh)) {
+        elens.push_back(squared_edge_length(he, mesh));
+    }
+    return elens;
 }
 
 template<typename Mesh, typename Vector_3>
@@ -202,6 +248,17 @@ Vector_3 face_normal(
     return result;
 }
 
+template<typename Mesh, typename Vector_3>
+std::vector<Vector_3> face_normals(const Mesh& mesh)
+{
+    std::vector<Vector_3> fnormals;
+    fnormals.reserve(num_faces(mesh));
+    for (auto f : faces(mesh)) {
+        fnormals.push_back(face_normal(f, mesh));
+    }
+    return fnormals;
+}
+
 template<typename Mesh, typename T>
 T face_area(typename boost::graph_traits<const Mesh>::face_descriptor f,
             const Mesh& mesh)
@@ -214,6 +271,17 @@ T face_area(typename boost::graph_traits<const Mesh>::face_descriptor f,
     return area(p1, p2, p3);
 }
 
+template<typename Mesh, typename T>
+std::vector<T> face_areas(const Mesh& mesh)
+{
+    std::vector<T> fareas;
+    fareas.reserve(num_faces(mesh));
+    for (auto f : faces(mesh)) {
+        fareas.push_back(face_area(f, mesh));
+    }
+    return fareas;
+}
+
 template<typename Mesh, typename Point_3>
 Point_3 barycenter(typename boost::graph_traits<const Mesh>::face_descriptor f,
                    const Mesh& mesh)
@@ -224,6 +292,17 @@ Point_3 barycenter(typename boost::graph_traits<const Mesh>::face_descriptor f,
     auto p1 = get(vpmap, *vbeg++);
     auto p2 = get(vpmap, *vbeg);
     return CGAL::centroid(p0, p1, p2);
+}
+
+template<typename Mesh, typename Point_3>
+std::vector<Point_3> barycenters(const Mesh& mesh)
+{
+    std::vector<Point_3> centroids;
+    centroids.reserve(num_faces(mesh));
+    for (auto f : faces(mesh)) {
+        centroids.push_back(barycenter(f, mesh));
+    }
+    return centroids;
 }
 
 template<typename Mesh, typename T>
@@ -241,6 +320,17 @@ T gaussian_curvature(
             std::acos(cosine(get(vpmap, vp), get(vpmap, v), get(vpmap, vq)));
     }
     return angle_defect / vertex_area(v, mesh);
+}
+
+template<typename Mesh, typename T>
+std::vector<T> gaussian_curvatures(const Mesh& mesh)
+{
+    std::vector<T> curvatures;
+    curvatures.reserve(num_vertices(mesh));
+    for (auto v : vertices(mesh)) {
+        curvatures.push_back(gaussian_curvature(v, mesh));
+    }
+    return curvatures;
 }
 
 template<typename Mesh, typename T>

@@ -101,6 +101,26 @@ Vector_3 vertex_normal(
     const std::vector<Vector_3>& face_normals,
     const VertexNormal& weight = VertexNormal::incident_angle);
 
+/** Normal vectors of all vertices on the mesh.
+ *
+ *  Compute vertex normal from the incident face normals.
+ *  Choose a weighting strategy of face normals from VertexNormal.
+ *
+ *  @tparam Mesh Mesh type.
+ *  @tparam Vector_3 Optional, derived from Mesh.
+ *
+ *  @sa VertexNormal
+ */
+template<typename Mesh,
+         typename Vector_3 =
+             typename CGAL::Kernel_traits<typename boost::property_traits<
+                 typename boost::property_map<Mesh, boost::vertex_point_t>::
+                     type>::value_type>::Kernel::Vector_3>
+std::vector<Vector_3> vertex_normals(
+    const Mesh& mesh,
+    const std::vector<Vector_3>& face_normals,
+    const VertexNormal& weight = VertexNormal::incident_angle);
+
 /** Strategies to compute vertex area.
  *
  *  @sa vertex_area()
@@ -154,6 +174,29 @@ T vertex_area(typename boost::graph_traits<const Mesh>::vertex_descriptor v,
               const Mesh& mesh,
               const VertexArea& method = VertexArea::mixed_voronoi);
 
+/** Areas of all vertices on the mesh.
+ *
+ *  Compute a small area around the vertex as the local average of the
+ *  integral of the differential area dA.
+ *  In the discrete settings, this involves constructing a small cell
+ *  around the vertex and use its area as the local averaging region.
+ *  Choose one type of region as specified in VertexArea.
+ *  Only 1-ring neighborhood is considered in this function.
+ *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
+ *
+ *  @sa VertexArea
+ */
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+std::vector<T> vertex_areas(
+    const Mesh& mesh,
+    const VertexArea& method = VertexArea::mixed_voronoi);
+
 /** Edge length.
  *
  *  @tparam Mesh Mesh type.
@@ -179,6 +222,18 @@ template<
                                                   value_type>::Kernel::FT>
 T edge_length(typename boost::graph_traits<const Mesh>::edge_descriptor e,
               const Mesh& mesh);
+
+/** Edge lengths.
+ *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
+ */
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+std::vector<T> edge_lengths(const Mesh& mesh);
 
 /** Squared edge length.
  *
@@ -208,6 +263,18 @@ T squared_edge_length(
     typename boost::graph_traits<const Mesh>::edge_descriptor e,
     const Mesh& mesh);
 
+/** Squared edge lengths.
+ *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
+ */
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+std::vector<T> squared_edge_lengths(const Mesh& mesh);
+
 /** Normal of a face on the mesh.
  *
  *  @tparam Mesh Mesh type.
@@ -222,6 +289,18 @@ Vector_3 face_normal(
     typename boost::graph_traits<const Mesh>::face_descriptor f,
     const Mesh& mesh);
 
+/** Normals of all faces on the mesh.
+ *
+ *  @tparam Mesh Mesh type.
+ *  @tparam Vector_3 Optional, derived from Mesh.
+ */
+template<typename Mesh,
+         typename Vector_3 =
+             typename CGAL::Kernel_traits<typename boost::property_traits<
+                 typename boost::property_map<Mesh, boost::vertex_point_t>::
+                     type>::value_type>::Kernel::Vector_3>
+std::vector<Vector_3> face_normals(const Mesh& mesh);
+
 /** Area of a face on the mesh.
  *
  *  @tparam Mesh Mesh type.
@@ -235,6 +314,18 @@ template<
 T face_area(typename boost::graph_traits<const Mesh>::face_descriptor f,
             const Mesh& mesh);
 
+/** Areas of all faces on the mesh.
+ *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
+ */
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+std::vector<T> face_areas(const Mesh& mesh);
+
 /** Barycenter/centroid of a face on the mesh.
  *
  *  @tparam Mesh Mesh type.
@@ -246,6 +337,17 @@ template<typename Mesh,
              value_type>
 Point_3 barycenter(typename boost::graph_traits<const Mesh>::face_descriptor,
                    const Mesh& mesh);
+
+/** Barycenters/centroids of all faces on the mesh.
+ *
+ *  @tparam Mesh Mesh type.
+ *  @tparam Point_3 Optional, derived from Mesh.
+ */
+template<typename Mesh,
+         typename Point_3 = typename boost::property_traits<
+             typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+             value_type>
+std::vector<Point_3> barycenters(const Mesh& mesh);
 
 /** Gaussian curvature of a vertex on the mesh.
  *
@@ -262,6 +364,20 @@ template<
 T gaussian_curvature(
     typename boost::graph_traits<const Mesh>::vertex_descriptor v,
     const Mesh& mesh);
+
+/** Gaussian curvatures of all vertices on the mesh.
+ *
+ *  Discrete Gaussian curvature using the angle deficit method.
+ *
+ *  @tparam Mesh Mesh type.
+ *  @tparam T Optional, derived from Mesh.
+ */
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+std::vector<T> gaussian_curvatures(const Mesh& mesh);
 
 /** Adjacency matrix of the mesh.
  *
