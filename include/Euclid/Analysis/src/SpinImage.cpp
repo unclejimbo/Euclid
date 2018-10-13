@@ -18,18 +18,9 @@ void SpinImage<Mesh>::build(const Mesh& mesh,
 
     if (vnormals != nullptr) { this->vnormals.reset(vnormals, false); }
     else {
-        std::vector<Vector_3> fnormals;
-        fnormals.reserve(num_faces(mesh));
-        for (auto f : faces(mesh)) {
-            fnormals.push_back(  Euclid::face_normal(f, mesh) );
-        }
-
-        std::vector<Vector_3>* vertex_normals = new std::vector<Vector_3>;
-        vertex_normals->reserve(num_vertices(mesh));
-        for (auto v : vertices(mesh)) {
-            vertex_normals->push_back(Euclid::vertex_normal(v, mesh, fnormals));
-        }
-        this->vnormals.reset(vertex_normals, true);
+        auto face_normals = Euclid::face_normals(mesh);
+        auto vert_normals = Euclid::vertex_normals(mesh, face_normals);
+        this->vnormals.reset(new std::vector<Vector_3>(vert_normals), true);
     }
 
     if (resolution != 0.0) { this->resolution = resolution; }
