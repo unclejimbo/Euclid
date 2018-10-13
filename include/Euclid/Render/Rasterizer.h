@@ -9,10 +9,12 @@
 #pragma once
 
 #include <Euclid/Render/RenderCore.h>
-
+#include <config.h>
 namespace Euclid
 {
-/** @{*/
+/** The film plane.
+ *
+ */
 
 /** A camera model used for rasterization.
  *
@@ -23,7 +25,7 @@ public:
     /** Create a RasCamera.
      *
      */
-    RasCamera() = default;
+    RasCamera() : Camera(){};
 
     /** Create a RasCamera.
      *
@@ -31,9 +33,9 @@ public:
      *  @param focus Focus.
      *  @param up Rough up direction.
      */
-    RasCamera(const Vec3& position,
-              const Vec3& focus = Eigen::Vector3f::Zero(),
-              const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f));
+    RasCamera(const Eigen::Vector3f& position,
+              const Eigen::Vector3f& focus = Eigen::Vector3f::Zero(),
+              const Eigen::Vector3f& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f));
 
     virtual ~RasCamera() = default;
 
@@ -46,6 +48,13 @@ public:
      *
      */
     virtual Eigen::Matrix4f projection() const = 0;
+
+    struct Film
+    {
+        float width = 0.0f;
+        float height = 0.0f;
+    };
+    Film film;
 };
 
 /** A RasCamera using perspective projection.
@@ -59,7 +68,7 @@ public:
     /** Create a PerspRasCamera using default parameters.
      *
      */
-    PerspRasCamera() = default;
+    PerspRasCamera() : RasCamera(){};
 
     /** Create a PerspRasCamera.
      *
@@ -73,9 +82,15 @@ public:
      *  @param vfov Vertical field of view in degrees.
      *  @param aspect Aspect ratio.
      */
-    PerspRasCamera(const Vec3& position,
-                   const Vec3& focus = Eigen::Vector3f::Zero(),
-                   const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
+
+    void set_near(float near_set);
+    void set_far(float far_set);
+
+    PerspRasCamera(const Eigen::Vector3f& position,
+                   const Eigen::Vector3f& focus = Eigen::Vector3f::Zero(),
+                   const Eigen::Vector3f& up = Eigen::Vector3f(0.0f,
+                                                               1.0f,
+                                                               0.0f),
                    float vfov = 90.0f,
                    float aspect = 1.0f);
 
@@ -92,9 +107,11 @@ public:
      *  @param width Width of the image.
      *  @param height Height of the image.
      */
-    PerspRasCamera(const Vec3& position,
-                   const Vec3& focus = Eigen::Vector3f::Zero(),
-                   const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
+    PerspRasCamera(const Eigen::Vector3f& position,
+                   const Eigen::Vector3f& focus = Eigen::Vector3f::Zero(),
+                   const Eigen::Vector3f& up = Eigen::Vector3f(0.0f,
+                                                               1.0f,
+                                                               0.0f),
                    float vfov = 90.0f,
                    unsigned width = 256,
                    unsigned height = 256);
@@ -118,6 +135,10 @@ public:
      *
      */
     virtual Eigen::Matrix4f projection() const override;
+
+private:
+    float _near_persp = 0.001f;
+    float _far_persp = 10.0f;
 };
 
 /** A RasCamera using orthographic projection.
@@ -131,7 +152,7 @@ public:
     /** Create an OrthoRasCamera using default parameters.
      *
      */
-    OrthoRasCamera() = default;
+    OrthoRasCamera() : RasCamera(){};
 
     /** Create an OrthoRasCamera.
      *
@@ -144,9 +165,11 @@ public:
      *  @param xextent Width of the film plane in world space.
      *  @param yextent Height of the film plane in world space.
      */
-    OrthoRasCamera(const Vec3& position,
-                   const Vec3& focus = Eigen::Vector3f::Zero(),
-                   const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
+    OrthoRasCamera(const Eigen::Vector3f& position,
+                   const Eigen::Vector3f& focus = Eigen::Vector3f::Zero(),
+                   const Eigen::Vector3f& up = Eigen::Vector3f(0.0f,
+                                                               1.0f,
+                                                               0.0f),
                    float xextent = 1.0f,
                    float yextent = 1.0f);
 
@@ -202,8 +225,7 @@ public:
      *  @param vertex_color True for vertex color and false for face color.
      *  Default to false.
      */
-    void attach_color_buffer(const std::vector<float>* colors,
-                             bool vertex_color = false);
+    void attach_color_buffer(const float* colors, bool vertex_color = false);
 
     /** Attach a face maks buffer to the rasterizer.
      *
@@ -214,7 +236,7 @@ public:
      *  face i in intersection, otherwise it will be ignored. Set mask to
      *  nullptr to disable masking.
      */
-    void attach_face_mask_buffer(const std::vector<uint8_t>* mask);
+    void attach_face_mask_buffer(const uint8_t* mask);
 
     /** Release all associated buffers.
      *
@@ -360,6 +382,24 @@ public:
                       const RasCamera& camera,
                       int width,
                       int height);
+
+    void disable_color();
+    void disable_face_mask();
+    void enable_index();
+    void disable_index();
+
+private:
+    Material __material;
+    Eigen::Array3f _background = Eigen::Array3f::Zero();
+
+    const float* _face_colors;
+    bool render_with_color_buffer = false;
+    bool render_with_index = false;
+    bool _lighting = true;
+    bool _vertex_color = false;
+    const uint8_t* _face_mask = nullptr;
+    const uint32_t* _index_color = nullptr;
+    
 };
 
 /** @}*/
