@@ -111,8 +111,8 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
         for (auto& color : rd_colors) {
             color = rd_number(rd_gen);
         }
-        rasterizer.attach_color_buffer(&rd_colors);
-
+        rasterizer.attach_color_buffer(rd_colors.data());
+        rasterizer.attach_geometry_buffers(positions, indices);   //需要重新绑定
         std::vector<uint8_t> pixels(3 * width * height);
         rasterizer.render_shaded(pixels, cam, width, height);
 
@@ -131,8 +131,8 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
         for (auto& color : rd_colors) {
             color = rd_number(rd_gen);
         }
-        rasterizer.attach_color_buffer(&rd_colors, true);
-
+        rasterizer.attach_color_buffer(rd_colors.data(), true);
+        rasterizer.attach_geometry_buffers(positions, indices);  //这里还需要修改
         std::vector<uint8_t> pixels(3 * width * height);
         rasterizer.render_shaded(pixels, cam, width, height);
 
@@ -156,75 +156,26 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
 
     SECTION("depth")
     {
-        std::vector<uint8_t> pixels(width * height);
+        //std::vector<uint8_t> pixels(width * height);
+        std::vector<uint8_t> pixels(3 * width * height);
         rasterizer.render_depth(pixels, cam, width, height);
 
         std::string outfile(TMP_DIR);
         outfile.append("rasterizer_depth.png");
-        stbi_write_png(outfile.c_str(), width, height, 1, pixels.data(), width);
+        //stbi_write_png(outfile.c_str(), width, height, 1, pixels.data(), width);
+        stbi_write_png(
+            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
     }
 
     SECTION("silhouette")
     {
-        std::vector<uint8_t> pixels(width * height);
+        //std::vector<uint8_t> pixels(width * height);
+        std::vector<uint8_t> pixels(3 * width * height);
         rasterizer.render_silhouette(pixels, cam, width, height);
 
         std::string outfile(TMP_DIR);
         outfile.append("rasterizer_sillouette.png");
-        stbi_write_png(outfile.c_str(), width, height, 1, pixels.data(), width);
-    }
-
-    SECTION("face index color")
-    {
-        std::vector<uint8_t> pixels(3 * width * height);
-        rasterizer.render_index(pixels, cam, width, height);
-
-        std::string outfile(TMP_DIR);
-        outfile.append("rasterizer_fidx1.png");
-        stbi_write_png(
-            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
-    }
-
-    SECTION("face index")
-    {
-        std::vector<uint32_t> indices(width * height);
-        rasterizer.render_index(indices, cam, width, height);
-
-        std::vector<uint8_t> pixels(3 * width * height);
-        for (size_t i = 0; i < indices.size(); ++i) {
-            pixels[3 * i + 0] = indices[i] & 0xFF;
-            pixels[3 * i + 1] = (indices[i] >> 8) & 0xFF;
-            pixels[3 * i + 2] = (indices[i] >> 16) & 0xFF;
-        }
-        std::string outfile(TMP_DIR);
-        outfile.append("rasterizer_fidx2.png");
-        stbi_write_png(
-            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
-    }
-
-    SECTION("face index using face color")
-    {
-        std::vector<float> colors(indices.size());
-        for (unsigned i = 0; i < indices.size() / 3; ++i) {
-            uint8_t r = (i + 1) & 0x000000FF;
-            uint8_t g = ((i + 1) >> 8) & 0x000000FF;
-            uint8_t b = ((i + 1) >> 16) & 0x000000FF;
-            colors[3 * i + 0] = r / 255.0f;
-            colors[3 * i + 1] = g / 255.0f;
-            colors[3 * i + 2] = b / 255.0f;
-        }
-        rasterizer.attach_color_buffer(&colors);
-        Euclid::Material material;
-        material.ambient << 0.0f, 0.0f, 0.0f;
-        material.diffuse << 0.0f, 0.0f, 0.0f;
-        rasterizer.set_material(material);
-        rasterizer.enable_light(false);
-
-        std::vector<uint8_t> pixels(3 * width * height);
-        rasterizer.render_shaded(pixels, cam, width, height);
-
-        std::string outfile(TMP_DIR);
-        outfile.append("rasterizer_fidx3.png");
+        //stbi_write_png(outfile.c_str(), width, height, 1, pixels.data(), width);
         stbi_write_png(
             outfile.c_str(), width, height, 3, pixels.data(), width * 3);
     }
@@ -243,8 +194,10 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
                 mask[i / 3] = 1;
             }
         }
-        rasterizer.attach_face_mask_buffer(&mask);
-
+        rasterizer.disable_color();
+        rasterizer.disable_index();
+        rasterizer.attach_face_mask_buffer(mask.data());
+        rasterizer.attach_geometry_buffers(positions, indices);
         std::vector<uint8_t> pixels(3 * width * height);
         rasterizer.render_shaded(pixels, cam, width, height);
 
@@ -253,6 +206,68 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
         stbi_write_png(
             outfile.c_str(), width, height, 3, pixels.data(), width * 3);
     }
+
+    SECTION("face index color")
+    {
+        std::vector<uint8_t> pixels(3 * width * height);
+        rasterizer.enable_index();
+        rasterizer.attach_geometry_buffers(positions, indices);
+        rasterizer.render_index(pixels, cam, width, height);
+        rasterizer.disable_index();
+        std::string outfile(TMP_DIR);
+        outfile.append("rasterizer_fidx1.png");
+        stbi_write_png(
+            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
+    }
+    
+    SECTION("face index")
+    {
+        std::vector<uint32_t> indices_fidx(width * height);
+        rasterizer.enable_index();
+        rasterizer.attach_geometry_buffers(positions, indices);
+        rasterizer.render_index(indices_fidx, cam, width, height);
+        rasterizer.disable_index();
+        std::vector<uint8_t> pixels(3 * width * height);
+        for (size_t i = 0; i < indices_fidx.size(); ++i) {
+            pixels[3 * i + 0] = indices_fidx[i] & 0xFF;
+            pixels[3 * i + 1] = (indices_fidx[i] >> 8) & 0xFF;
+            pixels[3 * i + 2] = (indices_fidx[i] >> 16) & 0xFF;
+        }
+        std::string outfile(TMP_DIR);
+        outfile.append("rasterizer_fidx2.png");
+        stbi_write_png(
+            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
+    }
+
+    SECTION("face index using face color")
+    {
+        std::vector<float> colors(indices.size());
+        for (unsigned i = 0; i < indices.size() / 3; ++i) {
+            uint8_t r = (i + 1) & 0x000000FF;
+            uint8_t g = ((i + 1) >> 8) & 0x000000FF;
+            uint8_t b = ((i + 1) >> 16) & 0x000000FF;
+            colors[3 * i + 0] = r / 255.0f;
+            colors[3 * i + 1] = g / 255.0f;
+            colors[3 * i + 2] = b / 255.0f;
+        }
+        rasterizer.attach_color_buffer(colors.data());
+        rasterizer.attach_geometry_buffers(positions, indices);
+        //Euclid::Material material;
+        //material.ambient << 0.0f, 0.0f, 0.0f;
+        //material.diffuse << 0.0f, 0.0f, 0.0f;
+        //rasterizer.set_material(material);
+        //rasterizer.enable_light(false);
+
+        std::vector<uint8_t> pixels(3 * width * height);
+        rasterizer.render_shaded(pixels, cam, width, height);
+
+        std::string outfile(TMP_DIR);
+        outfile.append("rasterizer_fidx3.png");
+        stbi_write_png(
+            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
+    }
+
+
 
     SECTION("change geometry")
     {
@@ -271,6 +286,22 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
         Eigen::Vector3f up = Eigen::Vector3f(0.0f, 1.0f, 0.0f);
 
         positions.push_back(0.0f);
+
+		for (int i = 0; i < positions.size(); i++) {      //必须保证坐标值在0.0f-1.0f的范围内
+            positions[i] /= 100.0f;
+        }
+        center[0] /= 100.0f;
+        center[1] /= 100.0f;
+        center[2] /= 100.0f;
+        view[0] /= 100.0f;
+        view[1] /= 100.0f;
+        view[2] /= 100.0f;
+        up[0] /= 100.0f;
+        up[1] /= 100.0f;
+        up[2] /= 100.0f;
+
+
+
         rasterizer.attach_geometry_buffers(positions, indices);
 
         std::vector<uint8_t> pixels(3 * width * height);
