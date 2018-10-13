@@ -6,6 +6,7 @@
 
 #include <boost/functional/hash.hpp>
 #include <boost/math/constants/constants.hpp>
+#include <CGAL/boost/graph/helpers.h>
 #include <Euclid/Math/Vector.h>
 #include <Euclid/Util/Assert.h>
 
@@ -21,26 +22,28 @@ Vector_3 vertex_normal(
     auto vpmap = get(boost::vertex_point, mesh);
     Vector_3 normal(0.0, 0.0, 0.0);
     for (auto he : halfedges_around_source(v, mesh)) {
-        auto f = face(he, mesh);
-        auto fn = face_normal(f, mesh);
+        if (!CGAL::is_border(he, mesh)) {
+            auto f = face(he, mesh);
+            auto fn = face_normal(f, mesh);
 
-        if (weight == VertexNormal::uniform) { normal += fn; }
-        else if (weight == VertexNormal::face_area) {
-            auto area = face_area(f, mesh);
-            normal += area * fn;
-        }
-        else { // incident_angle
-            auto he_next = next(he, mesh);
-            auto t = target(he, mesh);
-            auto s1 = source(he, mesh);
-            auto s2 = target(he_next, mesh);
-            auto pt = get(vpmap, t);
-            auto ps1 = get(vpmap, s1);
-            auto ps2 = get(vpmap, s2);
-            auto vec1 = normalized(ps1 - pt);
-            auto vec2 = normalized(ps2 - pt);
-            auto angle = std::acos(vec1 * vec2);
-            normal += angle * fn;
+            if (weight == VertexNormal::uniform) { normal += fn; }
+            else if (weight == VertexNormal::face_area) {
+                auto area = face_area(f, mesh);
+                normal += area * fn;
+            }
+            else { // incident_angle
+                auto he_next = next(he, mesh);
+                auto t = target(he, mesh);
+                auto s1 = source(he, mesh);
+                auto s2 = target(he_next, mesh);
+                auto pt = get(vpmap, t);
+                auto ps1 = get(vpmap, s1);
+                auto ps2 = get(vpmap, s2);
+                auto vec1 = normalized(ps1 - pt);
+                auto vec2 = normalized(ps2 - pt);
+                auto angle = std::acos(vec1 * vec2);
+                normal += angle * fn;
+            }
         }
     }
     return Euclid::normalized(normal);
@@ -57,27 +60,29 @@ Vector_3 vertex_normal(
     auto fimap = get(boost::face_index, mesh);
     Vector_3 normal(0.0, 0.0, 0.0);
     for (auto he : halfedges_around_source(v, mesh)) {
-        auto f = face(he, mesh);
-        auto fi = get(fimap, f);
-        auto fn = face_normals[fi];
+        if (!CGAL::is_border(he, mesh)) {
+            auto f = face(he, mesh);
+            auto fi = get(fimap, f);
+            auto fn = face_normals[fi];
 
-        if (weight == VertexNormal::uniform) { normal += fn; }
-        else if (weight == VertexNormal::face_area) {
-            auto area = face_area(f, mesh);
-            normal += area * fn;
-        }
-        else { // incident_angle
-            auto he_next = next(he, mesh);
-            auto t = target(he, mesh);
-            auto s1 = source(he, mesh);
-            auto s2 = target(he_next, mesh);
-            auto pt = get(vpmap, t);
-            auto ps1 = get(vpmap, s1);
-            auto ps2 = get(vpmap, s2);
-            auto vec1 = normalized(ps1 - pt);
-            auto vec2 = normalized(ps2 - pt);
-            auto angle = std::acos(vec1 * vec2);
-            normal += angle * fn;
+            if (weight == VertexNormal::uniform) { normal += fn; }
+            else if (weight == VertexNormal::face_area) {
+                auto area = face_area(f, mesh);
+                normal += area * fn;
+            }
+            else { // incident_angle
+                auto he_next = next(he, mesh);
+                auto t = target(he, mesh);
+                auto s1 = source(he, mesh);
+                auto s2 = target(he_next, mesh);
+                auto pt = get(vpmap, t);
+                auto ps1 = get(vpmap, s1);
+                auto ps2 = get(vpmap, s2);
+                auto vec1 = normalized(ps1 - pt);
+                auto vec2 = normalized(ps2 - pt);
+                auto angle = std::acos(vec1 * vec2);
+                normal += angle * fn;
+            }
         }
     }
     return Euclid::normalized(normal);
@@ -106,49 +111,55 @@ T vertex_area(typename boost::graph_traits<const Mesh>::vertex_descriptor v,
     if (method == VertexArea::barycentric) {
         const auto one_third = boost::math::constants::third<T>();
         for (auto he : halfedges_around_target(v, mesh)) {
-            auto p1 = get(vpmap, source(he, mesh));
-            auto p2 = get(vpmap, target(he, mesh));
-            auto p3 = get(vpmap, target(next(he, mesh), mesh));
-            va += area(p1, p2, p3);
+            if (!CGAL::is_border(he, mesh)) {
+                auto p1 = get(vpmap, source(he, mesh));
+                auto p2 = get(vpmap, target(he, mesh));
+                auto p3 = get(vpmap, target(next(he, mesh), mesh));
+                va += area(p1, p2, p3);
+            }
         }
         va *= one_third;
     }
     else if (method == VertexArea::voronoi) {
         for (auto he : halfedges_around_target(v, mesh)) {
-            auto p1 = get(vpmap, source(he, mesh));
-            auto p2 = get(vpmap, target(he, mesh));
-            auto p3 = get(vpmap, target(next(he, mesh), mesh));
-            auto mid1 = CGAL::midpoint(p2, p1);
-            auto mid2 = CGAL::midpoint(p2, p3);
-            auto center = CGAL::circumcenter(p1, p2, p3);
-            if (CGAL::angle(p2, p1, p3) == CGAL::OBTUSE) {
-                va += area(mid1, p2, center) - area(mid2, center, p2);
-            }
-            else if (CGAL::angle(p2, p3, p1) == CGAL::OBTUSE) {
-                va += area(mid2, center, p2) - area(mid1, p2, center);
-            }
-            else {
-                va += area(mid1, p2, center) + area(mid2, center, p2);
+            if (!CGAL::is_border(he, mesh)) {
+                auto p1 = get(vpmap, source(he, mesh));
+                auto p2 = get(vpmap, target(he, mesh));
+                auto p3 = get(vpmap, target(next(he, mesh), mesh));
+                auto mid1 = CGAL::midpoint(p2, p1);
+                auto mid2 = CGAL::midpoint(p2, p3);
+                auto center = CGAL::circumcenter(p1, p2, p3);
+                if (CGAL::angle(p2, p1, p3) == CGAL::OBTUSE) {
+                    va += area(mid1, p2, center) - area(mid2, center, p2);
+                }
+                else if (CGAL::angle(p2, p3, p1) == CGAL::OBTUSE) {
+                    va += area(mid2, center, p2) - area(mid1, p2, center);
+                }
+                else {
+                    va += area(mid1, p2, center) + area(mid2, center, p2);
+                }
             }
         }
     }
     else { // method == VertexArea::mixed_voronoi
         for (auto he : halfedges_around_target(v, mesh)) {
-            auto p1 = get(vpmap, source(he, mesh));
-            auto p2 = get(vpmap, target(he, mesh));
-            auto p3 = get(vpmap, target(next(he, mesh), mesh));
-            if (CGAL::angle(p1, p2, p3) == CGAL::OBTUSE) {
-                va += area(p1, p2, p3) * 0.5;
-            }
-            else if (CGAL::angle(p3, p1, p2) == CGAL::OBTUSE ||
-                     CGAL::angle(p1, p3, p2) == CGAL::OBTUSE) {
-                va += area(p1, p2, p3) * 0.25;
-            }
-            else { // triangle is acute or right
-                auto mid1 = CGAL::midpoint(p2, p1);
-                auto mid2 = CGAL::midpoint(p2, p3);
-                auto center = CGAL::circumcenter(p1, p2, p3);
-                va += area(mid1, p2, center) + area(mid2, center, p2);
+            if (!CGAL::is_border(he, mesh)) {
+                auto p1 = get(vpmap, source(he, mesh));
+                auto p2 = get(vpmap, target(he, mesh));
+                auto p3 = get(vpmap, target(next(he, mesh), mesh));
+                if (CGAL::angle(p1, p2, p3) == CGAL::OBTUSE) {
+                    va += area(p1, p2, p3) * 0.5;
+                }
+                else if (CGAL::angle(p3, p1, p2) == CGAL::OBTUSE ||
+                         CGAL::angle(p1, p3, p2) == CGAL::OBTUSE) {
+                    va += area(p1, p2, p3) * 0.25;
+                }
+                else { // triangle is acute or right
+                    auto mid1 = CGAL::midpoint(p2, p1);
+                    auto mid2 = CGAL::midpoint(p2, p3);
+                    auto center = CGAL::circumcenter(p1, p2, p3);
+                    va += area(mid1, p2, center) + area(mid2, center, p2);
+                }
             }
         }
     }
@@ -314,10 +325,12 @@ T gaussian_curvature(
 
     T angle_defect = boost::math::constants::two_pi<T>();
     for (auto he : halfedges_around_target(v, mesh)) {
-        auto vp = source(he, mesh);
-        auto vq = target(next(he, mesh), mesh);
-        angle_defect -=
-            std::acos(cosine(get(vpmap, vp), get(vpmap, v), get(vpmap, vq)));
+        if (!CGAL::is_border(he, mesh)) {
+            auto vp = source(he, mesh);
+            auto vq = target(next(he, mesh), mesh);
+            angle_defect -= std::acos(
+                cosine(get(vpmap, vp), get(vpmap, v), get(vpmap, vq)));
+        }
     }
     return angle_defect / vertex_area(v, mesh);
 }
