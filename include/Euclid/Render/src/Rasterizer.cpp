@@ -1,7 +1,7 @@
 #define DEBUG (!NDEBUG)
 #define BUFFER_ELEMENTS 32
 #define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+//#include <GLFW/glfw3.h>
 #include <iostream>
 #include <fstream>
 #include <config.h>
