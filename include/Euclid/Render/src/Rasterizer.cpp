@@ -1,14 +1,10 @@
-#define DEBUG (!NDEBUG)
-#define BUFFER_ELEMENTS 32
-#define GLFW_INCLUDE_VULKAN
-//#include <GLFW/glfw3.h>
-#include <iostream>
 #include <fstream>
-#include <config.h>
+#include <iostream>
 #include <boost/math/constants/constants.hpp>
 
 namespace Euclid
 {
+
 namespace _impl
 {
 /*some functions*/
@@ -430,7 +426,7 @@ inline Euclid::Rasterizer::Rasterizer()
     const char* validationLayers[] = { "VK_LAYER_LUNARG_standard_validation" };
     layerCount = 1;
 
-#if DEBUG
+#ifndef NDEBUG
     // Check if layers are available
     uint32_t instanceLayerCount;
     vkEnumerateInstanceLayerProperties(&instanceLayerCount, nullptr);
@@ -467,7 +463,7 @@ inline Euclid::Rasterizer::Rasterizer()
     }
     // create instance done
 
-#if DEBUG
+#ifndef NDEBUG
     if (layersAvailable) {
         VkDebugReportCallbackCreateInfoEXT debugReportCreateInfo = {};
         debugReportCreateInfo.sType =
@@ -475,7 +471,7 @@ inline Euclid::Rasterizer::Rasterizer()
         debugReportCreateInfo.flags =
             VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
         debugReportCreateInfo.pfnCallback =
-            (PFN_vkDebugReportCallbackEXT)debugMessageCallback;
+            (PFN_vkDebugReportCallbackEXT)_impl::debugMessageCallback;
 
         // We have to explicitly load this function.
         PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT =
