@@ -11,6 +11,7 @@ find_dependency(Eigen3)
 find_dependency(Spectra)
 find_dependency(Libigl)
 find_dependency(Embree 3.0)
+find_dependency(Vulkan)
 find_dependency(CGAL)
 find_dependency(cereal)
 

@@ -16,6 +16,7 @@ find_package(Eigen3)
 find_package(Spectra)
 find_package(Libigl)
 find_package(Embree 3.0)
+find_package(Vulkan)
 find_package(CGAL)
 find_package(cereal)
 
@@ -54,6 +55,7 @@ target_link_libraries(Euclid INTERFACE
     Eigen3::Eigen
     CGAL::CGAL
     cereal
+    Vulkan::Vulkan
     ${EMBREE_LIBRARIES}
     $<$<AND:$<BOOL:${USE_BLAS}>,$<BOOL:${BLAS_FOUND}>>:${BLAS_LIBRARIES}>
     $<$<AND:$<BOOL:${USE_LAPACK}>,$<BOOL:${LAPACK_FOUND}>>:${LAPACK_LIBRARIES}>

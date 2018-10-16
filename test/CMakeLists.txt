@@ -38,6 +38,7 @@ find_package(Boost REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Libigl REQUIRED)
 find_package(Embree 3.0 REQUIRED)
+find_package(Vulkan REQUIRED)
 find_package(CGAL REQUIRED)
 find_package(cereal REQUIRED)
 
