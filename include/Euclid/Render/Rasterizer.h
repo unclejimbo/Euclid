@@ -7,7 +7,8 @@
  *  @ingroup PkgRender
  */
 #pragma once
-
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 #include <Euclid/Render/RenderCore.h>
 #include <config.h>
 namespace Euclid
@@ -382,9 +383,6 @@ public:
                       const RasCamera& camera,
                       int width,
                       int height);
-
-    void disable_color();
-    void disable_face_mask();
     void enable_index();
     void disable_index();
 
@@ -399,7 +397,70 @@ private:
     bool _vertex_color = false;
     const uint8_t* _face_mask = nullptr;
     const uint32_t* _index_color = nullptr;
-    
+    int index_size = 0;
+
+    struct Vertex
+    {
+        float position[3];
+        // float color[3];
+        float normal[3];
+    };
+
+    struct Vertex_Color
+    {
+        float position[3];
+        float normal[3];
+        float color[3];
+    };
+
+    struct Vertex_Index // do not need the normal vector anymore when using the
+                        // render_index method
+    {
+        float position[3];
+        float color[3];
+    };
+
+    struct Vertex_Silhouette
+    {
+        float position[3];
+    };
+
+    struct
+    {
+        VkImage image;
+        VkDeviceMemory mem;
+        VkImageView view;
+    } depthStencil;
+
+    VkInstance instance;
+    VkPhysicalDevice physicalDevice;
+    VkDevice device;
+    uint32_t queueFamilyIndex;
+    VkPipelineCache pipelineCache;
+    VkQueue queue;
+    VkCommandPool commandPool;
+    VkCommandBuffer commandBuffer;
+    VkDescriptorSetLayout descriptorSetLayout;
+    VkPipelineLayout pipelineLayout;
+    VkPipeline pipeline;
+    std::vector<VkShaderModule> shaderModules;
+    VkBuffer vertexBuffer, indexBuffer;
+    VkDeviceMemory vertexMemory, indexMemory;
+
+    struct FrameBufferAttachment
+    {
+        VkImage image;
+        VkDeviceMemory memory;
+        VkImageView view;
+    };
+    int32_t width, height;
+    VkFramebuffer framebuffer;
+    FrameBufferAttachment colorAttachment, depthAttachment;
+
+    FrameBufferAttachment dstAttachment;
+    VkRenderPass renderPass;
+
+    VkDebugReportCallbackEXT debugReportCallback{};
 };
 
 /** @}*/
