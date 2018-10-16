@@ -21,7 +21,7 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
     filename.append("bunny.off");
     std::vector<float> positions;
     std::vector<unsigned> indices;
-    Euclid::read_off<3>(filename, positions, indices);
+    Euclid::read_off<3>(filename, positions, nullptr, &indices, nullptr);
 
     Euclid::AABB<Kernel> aabb(positions);
     Eigen::Vector3f center;
@@ -112,7 +112,7 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
             color = rd_number(rd_gen);
         }
         rasterizer.attach_color_buffer(rd_colors.data());
-        rasterizer.attach_geometry_buffers(positions, indices); //需要重新绑定
+        rasterizer.attach_geometry_buffers(positions, indices);
         std::vector<uint8_t> pixels(3 * width * height);
         rasterizer.render_shaded(pixels, cam, width, height);
 
@@ -132,7 +132,8 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
             color = rd_number(rd_gen);
         }
         rasterizer.attach_color_buffer(rd_colors.data(), true);
-        rasterizer.attach_geometry_buffers(positions, indices); //这里还需要修改
+        rasterizer.attach_geometry_buffers(
+            positions, indices); //锟斤拷锟斤还锟斤拷要锟睫革拷
         std::vector<uint8_t> pixels(3 * width * height);
         rasterizer.render_shaded(pixels, cam, width, height);
 
@@ -272,7 +273,7 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
         filename.append("kitten.off");
         std::vector<float> positions;
         std::vector<unsigned> indices;
-        Euclid::read_off<3>(filename, positions, indices);
+        Euclid::read_off<3>(filename, positions, nullptr, &indices, nullptr);
 
         Euclid::AABB<Kernel> aabb(positions);
         Eigen::Vector3f center;
@@ -284,8 +285,7 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
 
         positions.push_back(0.0f);
 
-        for (int i = 0; i < positions.size();
-             i++) { //必须保证坐标值在0.0f-1.0f的范围内
+        for (int i = 0; i < positions.size(); i++) {
             positions[i] /= 100.0f;
         }
         center[0] /= 100.0f;

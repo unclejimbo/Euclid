@@ -102,7 +102,7 @@ TEST_CASE("Util, Color", "[util][color]")
             Eigen::Vector3f view(1.5f, 1.5f, 1.5f);
             Eigen::Vector3f focus(0.0f, 0.0f, 0.0f);
             Eigen::Vector3f up(0.0f, 1.0f, 0.0f);
-            Euclid::PerspectiveCamera cam;
+            Euclid::PerspRayCamera cam;
             cam.lookat(view, focus, up);
             cam.set_fov(60.0f);
             cam.set_aspect(width, height);
@@ -172,7 +172,7 @@ TEST_CASE("Util, Color", "[util][color]")
             Eigen::Vector3f view(1.5f, 1.5f, 1.5f);
             Eigen::Vector3f focus(0.0f, 0.0f, 0.0f);
             Eigen::Vector3f up(0.0f, 1.0f, 0.0f);
-            Euclid::PerspectiveCamera cam;
+            Euclid::PerspRayCamera cam;
             cam.lookat(view, focus, up);
             cam.set_fov(60.0f);
             cam.set_aspect(width, height);
