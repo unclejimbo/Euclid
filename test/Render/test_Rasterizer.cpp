@@ -112,7 +112,7 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
             color = rd_number(rd_gen);
         }
         rasterizer.attach_color_buffer(rd_colors.data());
-        rasterizer.attach_geometry_buffers(positions, indices);   //需要重新绑定
+        rasterizer.attach_geometry_buffers(positions, indices); //需要重新绑定
         std::vector<uint8_t> pixels(3 * width * height);
         rasterizer.render_shaded(pixels, cam, width, height);
 
@@ -132,7 +132,7 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
             color = rd_number(rd_gen);
         }
         rasterizer.attach_color_buffer(rd_colors.data(), true);
-        rasterizer.attach_geometry_buffers(positions, indices);  //这里还需要修改
+        rasterizer.attach_geometry_buffers(positions, indices); //这里还需要修改
         std::vector<uint8_t> pixels(3 * width * height);
         rasterizer.render_shaded(pixels, cam, width, height);
 
@@ -156,53 +156,28 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
 
     SECTION("depth")
     {
-        //std::vector<uint8_t> pixels(width * height);
+        // std::vector<uint8_t> pixels(width * height);
         std::vector<uint8_t> pixels(3 * width * height);
         rasterizer.render_depth(pixels, cam, width, height);
 
         std::string outfile(TMP_DIR);
         outfile.append("rasterizer_depth.png");
-        //stbi_write_png(outfile.c_str(), width, height, 1, pixels.data(), width);
+        // stbi_write_png(outfile.c_str(), width, height, 1, pixels.data(),
+        // width);
         stbi_write_png(
             outfile.c_str(), width, height, 3, pixels.data(), width * 3);
     }
 
     SECTION("silhouette")
     {
-        //std::vector<uint8_t> pixels(width * height);
+        // std::vector<uint8_t> pixels(width * height);
         std::vector<uint8_t> pixels(3 * width * height);
         rasterizer.render_silhouette(pixels, cam, width, height);
 
         std::string outfile(TMP_DIR);
         outfile.append("rasterizer_sillouette.png");
-        //stbi_write_png(outfile.c_str(), width, height, 1, pixels.data(), width);
-        stbi_write_png(
-            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
-    }
-
-    SECTION("face mask")
-    {
-        std::vector<uint8_t> mask(indices.size() / 3);
-        for (size_t i = 0; i < indices.size(); i += 3) {
-            auto y0 = positions[3 * indices[i + 0] + 1];
-            auto y1 = positions[3 * indices[i + 1] + 1];
-            auto y2 = positions[3 * indices[i + 2] + 1];
-            if (y0 < center[1] && y1 < center[1] && y2 < center[1]) {
-                mask[i / 3] = 0;
-            }
-            else {
-                mask[i / 3] = 1;
-            }
-        }
-        rasterizer.disable_color();
-        rasterizer.disable_index();
-        rasterizer.attach_face_mask_buffer(mask.data());
-        rasterizer.attach_geometry_buffers(positions, indices);
-        std::vector<uint8_t> pixels(3 * width * height);
-        rasterizer.render_shaded(pixels, cam, width, height);
-
-        std::string outfile(TMP_DIR);
-        outfile.append("rasterizer_face_mask.png");
+        // stbi_write_png(outfile.c_str(), width, height, 1, pixels.data(),
+        // width);
         stbi_write_png(
             outfile.c_str(), width, height, 3, pixels.data(), width * 3);
     }
@@ -219,7 +194,7 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
         stbi_write_png(
             outfile.c_str(), width, height, 3, pixels.data(), width * 3);
     }
-    
+
     SECTION("face index")
     {
         std::vector<uint32_t> indices_fidx(width * height);
@@ -238,7 +213,31 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
         stbi_write_png(
             outfile.c_str(), width, height, 3, pixels.data(), width * 3);
     }
+    SECTION("face mask")
+    {
+        std::vector<uint8_t> mask(indices.size() / 3);
+        for (size_t i = 0; i < indices.size(); i += 3) {
+            auto y0 = positions[3 * indices[i + 0] + 1];
+            auto y1 = positions[3 * indices[i + 1] + 1];
+            auto y2 = positions[3 * indices[i + 2] + 1];
+            if (y0 < center[1] && y1 < center[1] && y2 < center[1]) {
+                mask[i / 3] = 0;
+            }
+            else {
+                mask[i / 3] = 1;
+            }
+        }
+        rasterizer.disable_index();
+        rasterizer.attach_face_mask_buffer(mask.data());
+        rasterizer.attach_geometry_buffers(positions, indices);
+        std::vector<uint8_t> pixels(3 * width * height);
+        rasterizer.render_shaded(pixels, cam, width, height);
 
+        std::string outfile(TMP_DIR);
+        outfile.append("rasterizer_face_mask.png");
+        stbi_write_png(
+            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
+    }
     SECTION("face index using face color")
     {
         std::vector<float> colors(indices.size());
@@ -252,11 +251,11 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
         }
         rasterizer.attach_color_buffer(colors.data());
         rasterizer.attach_geometry_buffers(positions, indices);
-        //Euclid::Material material;
-        //material.ambient << 0.0f, 0.0f, 0.0f;
-        //material.diffuse << 0.0f, 0.0f, 0.0f;
-        //rasterizer.set_material(material);
-        //rasterizer.enable_light(false);
+        // Euclid::Material material;
+        // material.ambient << 0.0f, 0.0f, 0.0f;
+        // material.diffuse << 0.0f, 0.0f, 0.0f;
+        // rasterizer.set_material(material);
+        // rasterizer.enable_light(false);
 
         std::vector<uint8_t> pixels(3 * width * height);
         rasterizer.render_shaded(pixels, cam, width, height);
@@ -266,8 +265,6 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
         stbi_write_png(
             outfile.c_str(), width, height, 3, pixels.data(), width * 3);
     }
-
-
 
     SECTION("change geometry")
     {
@@ -287,7 +284,8 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
 
         positions.push_back(0.0f);
 
-		for (int i = 0; i < positions.size(); i++) {      //必须保证坐标值在0.0f-1.0f的范围内
+        for (int i = 0; i < positions.size();
+             i++) { //必须保证坐标值在0.0f-1.0f的范围内
             positions[i] /= 100.0f;
         }
         center[0] /= 100.0f;
@@ -299,8 +297,6 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
         up[0] /= 100.0f;
         up[1] /= 100.0f;
         up[2] /= 100.0f;
-
-
 
         rasterizer.attach_geometry_buffers(positions, indices);
 
