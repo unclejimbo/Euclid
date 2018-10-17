@@ -402,6 +402,122 @@ debugMessageCallback(VkDebugReportFlagsEXT flags,
 
 } // namespace _impl
 
+/********************** RasCamera **********************/
+
+inline Euclid::RasCamera::RasCamera(const Eigen::Vector3f& position,
+                                    const Eigen::Vector3f& focus,
+                                    const Eigen::Vector3f& up)
+    : Camera(position, focus, up)
+{}
+
+inline Eigen::Matrix4f Euclid::RasCamera::view() const
+{
+    Eigen::Matrix3f v;
+    v.col(0) = this->u;
+    v.col(1) = this->v;
+    v.col(2) = this->dir;
+
+    Eigen::Matrix4f view_mat;
+    view_mat.setZero();
+    view_mat.topLeftCorner<3, 3>() = v.transpose();
+    view_mat.topRightCorner<3, 1>() = -v.transpose() * this->pos;
+    view_mat(3, 3) = 1.0f;
+
+    return view_mat;
+}
+
+inline Euclid::PerspRasCamera::PerspRasCamera(const Eigen::Vector3f& position,
+                                              const Eigen::Vector3f& focus,
+                                              const Eigen::Vector3f& up,
+                                              float vfov,
+                                              float aspect)
+    : RasCamera(position, focus, up)
+{
+    _vfov = vfov * boost::math::float_constants::degree;
+    _aspect = aspect;
+}
+
+inline Euclid::PerspRasCamera::PerspRasCamera(const Eigen::Vector3f& position,
+                                              const Eigen::Vector3f& focus,
+                                              const Eigen::Vector3f& up,
+                                              float vfov,
+                                              unsigned width,
+                                              unsigned height)
+    : RasCamera(position, focus, up)
+{
+    _vfov = vfov * boost::math::float_constants::degree;
+    _aspect = static_cast<float>(width) / height;
+}
+
+inline void Euclid::PerspRasCamera::set_aspect(float aspect)
+{
+    _aspect = aspect;
+}
+
+inline void Euclid::PerspRasCamera::set_aspect(unsigned width, unsigned height)
+{
+    _aspect = static_cast<float>(width) / height;
+}
+
+inline void Euclid::PerspRasCamera::set_fov(float vfov)
+{
+    _vfov = vfov * boost::math::float_constants::degree;
+}
+
+inline void Euclid::PerspRasCamera::set_range(float tnear, float tfar)
+{
+    _tnear = tnear;
+    _tfar = tfar;
+}
+
+inline Eigen::Matrix4f Euclid::PerspRasCamera::projection() const
+{
+    auto yscale = std::tan(0.5f * _vfov);
+    auto xscale = yscale * _aspect;
+    auto d = 1.0f / (_tfar - _tnear);
+
+    Eigen::Matrix4f proj_mat;
+    proj_mat.setZero();
+    proj_mat(0, 0) = 1.0f / xscale;
+    proj_mat(1, 1) = 1.0f / yscale;
+    proj_mat(2, 2) = -(_tfar + _tnear) * d;
+    proj_mat(2, 3) = -2.0f * _tfar * _tnear * d;
+    proj_mat(3, 2) = -1.0f;
+
+    return proj_mat;
+}
+
+inline Euclid::OrthoRasCamera::OrthoRasCamera(const Eigen::Vector3f& position,
+                                              const Eigen::Vector3f& focus,
+                                              const Eigen::Vector3f& up,
+                                              float xextent,
+                                              float yextent)
+    : RasCamera(position, focus, up)
+{
+    _x = 2.0f / xextent;
+    _y = 2.0f / yextent;
+}
+
+inline void Euclid::OrthoRasCamera::set_extent(float width, float height)
+{
+    _x = 2.0f / width;
+    _y = 2.0f / height;
+}
+
+inline Eigen::Matrix4f Euclid::OrthoRasCamera::projection() const
+{
+    Eigen::Matrix4f proj_mat;
+    proj_mat.setZero();
+    proj_mat(0, 0) = _x;
+    proj_mat(1, 1) = _y;
+    proj_mat(2, 2) = -1.0f;
+    proj_mat(3, 3) = 1.0f;
+
+    return proj_mat;
+}
+
+/************************ Rsterizer *************************/
+
 inline Euclid::Rasterizer::Rasterizer()
 {
     /********  set meterial   ******/
@@ -5464,176 +5580,6 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     vkDestroyImage(device, dstImage, nullptr);
 
     vkQueueWaitIdle(queue);
-}
-
-/********************** RasCamera settings  **********************/
-inline Euclid::RasCamera::RasCamera(const Eigen::Vector3f& position,
-                                    const Eigen::Vector3f& focus,
-                                    const Eigen::Vector3f& up)
-    : Camera(position, focus, up)
-{
-    pos = position;
-    dir = (position - focus).normalized();
-    u = up.cross(dir).normalized();
-    v = dir.cross(u);
-}
-
-inline Euclid::PerspRasCamera::PerspRasCamera(const Eigen::Vector3f& position,
-                                              const Eigen::Vector3f& focus,
-                                              const Eigen::Vector3f& up,
-                                              float vfov,
-                                              float aspect)
-    : RasCamera(position, focus, up)
-{
-    auto fov = vfov * boost::math::float_constants::degree;
-    film.height = 2.0f * std::tan(fov * 0.5f);
-    film.width = aspect * film.height;
-}
-
-inline Euclid::PerspRasCamera::PerspRasCamera(const Eigen::Vector3f& position,
-                                              const Eigen::Vector3f& focus,
-                                              const Eigen::Vector3f& up,
-                                              float vfov,
-                                              unsigned width,
-                                              unsigned height)
-    : RasCamera(position, focus, up)
-{
-    auto fov = vfov * boost::math::float_constants::degree;
-    auto aspect = static_cast<float>(width) / height;
-    film.height = 2.0f * std::tan(fov * 0.5f);
-    film.width = aspect * film.height;
-}
-
-inline void Euclid::PerspRasCamera::set_near(float near_set)
-{
-    _near_persp = near_set;
-}
-
-inline void Euclid::PerspRasCamera::set_far(float far_set)
-{
-    _far_persp = far_set;
-}
-
-inline void Euclid::PerspRasCamera::set_aspect(float aspect)
-{
-    film.width = aspect * film.height;
-}
-
-inline void Euclid::PerspRasCamera::set_aspect(unsigned width, unsigned height)
-{
-    auto aspect = static_cast<float>(width) / height;
-    film.width = aspect * film.height;
-}
-
-inline void Euclid::PerspRasCamera::set_fov(float vfov)
-{
-    auto fov = vfov * boost::math::float_constants::degree;
-    auto aspect = film.width / film.height;
-    film.height = 2.0f * std::tan(fov * 0.5f);
-    film.width = aspect * film.height;
-}
-
-inline Euclid::OrthoRasCamera::OrthoRasCamera(const Eigen::Vector3f& position,
-                                              const Eigen::Vector3f& focus,
-                                              const Eigen::Vector3f& up,
-                                              float xextent,
-                                              float yextent)
-    : RasCamera(position, focus, up)
-{
-    film.width = xextent;
-    film.height = yextent;
-}
-
-inline void Euclid::OrthoRasCamera::set_extent(float width, float height)
-{
-    film.width = width;
-    film.height = height;
-}
-
-inline Eigen::Matrix4f Euclid::OrthoRasCamera::projection() const
-{
-    Eigen::Matrix4f result = Eigen::Matrix4f();
-
-    float r = film.width / 2;
-    float l = -r;
-    float t = film.height / 2;
-    float b = -t;
-    result(0, 0) = 2 / film.width;
-    result(1, 1) = 2 / film.height;
-    result(2, 2) = -1.0f;
-
-    result(0, 1) = 0.0f;
-    result(0, 2) = 0.0f;
-    result(0, 3) = 0.0f;
-    result(1, 0) = 0.0f;
-    result(1, 2) = 0.0f;
-    result(1, 3) = 0.0f;
-    result(2, 0) = 0.0f;
-    result(2, 1) = 0.0f;
-    result(2, 3) = 0.0f;
-    result(3, 0) = 0.0f;
-    result(3, 1) = 0.0f;
-    result(3, 2) = 0.0f;
-    result(3, 3) = 1.0f;
-    return result;
-}
-
-inline Eigen::Matrix4f Euclid::RasCamera::view() const
-{
-
-    Eigen::Matrix4f result = {};
-    // Eigen::Vector3f f = (-dir - pos).normalized();
-    // Eigen::Vector3f s = f.cross(v).normalized();
-    Eigen::Vector3f f = -dir.normalized();
-    Eigen::Vector3f s = u;
-    Eigen::Vector3f u = s.cross(f).normalized();
-
-    result(0, 0) = s.x();
-    result(0, 1) = s.y();
-    result(0, 2) = s.z();
-    result(1, 0) = u.x();
-    result(1, 1) = u.y();
-    result(1, 2) = u.z();
-    result(2, 0) = -f.x();
-    result(2, 1) = -f.y();
-    result(2, 2) = -f.z();
-    result(0, 3) = -s.dot(pos);
-    result(1, 3) = -u.dot(pos);
-    result(2, 3) = f.dot(pos);
-    result(3, 0) = 0.0f;
-    result(3, 1) = 0.0f;
-    result(3, 2) = 0.0f;
-    result(3, 3) = 1.0f;
-    return result;
-}
-inline Eigen::Matrix4f Euclid::PerspRasCamera::projection() const
-{
-    Eigen::Matrix4f result, result1;
-
-    auto halftanfov = film.height / 2;
-    auto aspect = film.width / film.height;
-
-    float scale = 1 / halftanfov;
-    float n = _near_persp;
-    float f = _far_persp;
-
-    result(0, 0) = scale / aspect;
-    result(0, 1) = 0.0f;
-    result(0, 2) = 0.0f;
-    result(0, 3) = 0.0f;
-    result(1, 0) = 0.0f;
-    result(1, 1) = scale;
-    result(1, 2) = 0.0f;
-    result(1, 3) = 0.0f;
-    result(2, 0) = 0.0f;
-    result(2, 1) = 0.0f;
-    result(2, 2) = -(f + n) / (f - n);
-    result(3, 2) = -1.0f;
-    result(3, 0) = 0.0f;
-    result(3, 1) = 0.0f;
-    result(2, 3) = -(f * n * 2) / (f - n);
-    result(3, 3) = 0.0f;
-    return result;
 }
 
 inline void Euclid::Rasterizer::enable_index()

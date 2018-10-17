@@ -14,10 +14,6 @@
 
 namespace Euclid
 {
-/** The film plane.
- *
- */
-
 /** A camera model used for rasterization.
  *
  */
@@ -27,7 +23,7 @@ public:
     /** Create a RasCamera.
      *
      */
-    RasCamera() : Camera(){};
+    RasCamera() = default;
 
     /** Create a RasCamera.
      *
@@ -50,13 +46,6 @@ public:
      *
      */
     virtual Eigen::Matrix4f projection() const = 0;
-
-    struct Film
-    {
-        float width = 0.0f;
-        float height = 0.0f;
-    };
-    Film film;
 };
 
 /** A RasCamera using perspective projection.
@@ -84,10 +73,6 @@ public:
      *  @param vfov Vertical field of view in degrees.
      *  @param aspect Aspect ratio.
      */
-
-    void set_near(float near_set);
-    void set_far(float far_set);
-
     PerspRasCamera(const Eigen::Vector3f& position,
                    const Eigen::Vector3f& focus = Eigen::Vector3f::Zero(),
                    const Eigen::Vector3f& up = Eigen::Vector3f(0.0f,
@@ -133,14 +118,21 @@ public:
      */
     void set_fov(float vfov);
 
+    /** Set the near and far plane.
+     *
+     */
+    void set_range(float tnear, float tfar);
+
     /** Return the projection matrix.
      *
      */
     virtual Eigen::Matrix4f projection() const override;
 
 private:
-    float _near_persp = 0.001f;
-    float _far_persp = 10.0f;
+    float _vfov;
+    float _aspect;
+    float _tnear = 0.001f;
+    float _tfar = 1000.0f;
 };
 
 /** A RasCamera using orthographic projection.
@@ -184,6 +176,10 @@ public:
      *
      */
     virtual Eigen::Matrix4f projection() const override;
+
+private:
+    float _x;
+    float _y;
 };
 
 /** A simple rasterizer.
