@@ -37,7 +37,8 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
     const int width = 800;
     const int height = 600;
 
-    Euclid::PerspRasCamera cam(view, center, up, 60.0f, width, height);
+    Euclid::PerspRasCamera cam(
+        view, center, up, 60.0f, width, height, 0.01f, 100.0f);
 
     SECTION("perspective camera")
     {
@@ -301,7 +302,8 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
         rasterizer.attach_geometry_buffers(positions, indices);
 
         std::vector<uint8_t> pixels(3 * width * height);
-        Euclid::PerspRasCamera cam(view, center, up, 60.0f, width, height);
+        Euclid::PerspRasCamera cam(
+            view, center, up, 60.0f, width, height, 0.1f, 100.0f);
         rasterizer.render_shaded(pixels, cam, width, height);
 
         std::string outfile(TMP_DIR);

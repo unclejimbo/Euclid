@@ -114,10 +114,10 @@ public:
      *  @param aspect Aspect ratio.
      */
     PerspRayCamera(const Vec3& position,
-                   const Vec3& focus = Eigen::Vector3f::Zero(),
-                   const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
-                   float vfov = 90.0f,
-                   float aspect = 1.0f);
+                   const Vec3& focus,
+                   const Vec3& up,
+                   float vfov,
+                   float aspect);
 
     /** Create a PerspRayCamera.
      *
@@ -133,11 +133,11 @@ public:
      *  @param height Height of the image.
      */
     PerspRayCamera(const Vec3& position,
-                   const Vec3& focus = Eigen::Vector3f::Zero(),
-                   const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
-                   float vfov = 90.0f,
-                   unsigned width = 256,
-                   unsigned height = 256);
+                   const Vec3& focus,
+                   const Vec3& up,
+                   float vfov,
+                   unsigned width,
+                   unsigned height);
 
     /** Set aspect ratio.
      *
@@ -187,15 +187,15 @@ public:
      *  @param yextent Height of the film plane in world space.
      */
     OrthoRayCamera(const Vec3& position,
-                   const Vec3& focus = Eigen::Vector3f::Zero(),
-                   const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f),
-                   float xextent = 1.0f,
-                   float yextent = 1.0f);
+                   const Vec3& focus,
+                   const Vec3& up,
+                   float xextent,
+                   float yextent);
 
     /** Set the extent of the film plane.
      *
      */
-    void set_extent(float width, float height);
+    void set_extent(float xextent, float yextent);
 
     /** Generate an embree rayhit structure.
      *

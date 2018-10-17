@@ -1,6 +1,5 @@
 #include <fstream>
 #include <iostream>
-#include <boost/math/constants/constants.hpp>
 
 namespace Euclid
 {
@@ -430,11 +429,15 @@ inline Euclid::PerspRasCamera::PerspRasCamera(const Eigen::Vector3f& position,
                                               const Eigen::Vector3f& focus,
                                               const Eigen::Vector3f& up,
                                               float vfov,
-                                              float aspect)
+                                              float aspect,
+                                              float tnear,
+                                              float tfar)
     : RasCamera(position, focus, up)
 {
     _vfov = vfov * boost::math::float_constants::degree;
     _aspect = aspect;
+    _tnear = tnear;
+    _tfar = tfar;
 }
 
 inline Euclid::PerspRasCamera::PerspRasCamera(const Eigen::Vector3f& position,
@@ -442,11 +445,15 @@ inline Euclid::PerspRasCamera::PerspRasCamera(const Eigen::Vector3f& position,
                                               const Eigen::Vector3f& up,
                                               float vfov,
                                               unsigned width,
-                                              unsigned height)
+                                              unsigned height,
+                                              float tnear,
+                                              float tfar)
     : RasCamera(position, focus, up)
 {
     _vfov = vfov * boost::math::float_constants::degree;
     _aspect = static_cast<float>(width) / height;
+    _tnear = tnear;
+    _tfar = tfar;
 }
 
 inline void Euclid::PerspRasCamera::set_aspect(float aspect)
@@ -498,10 +505,10 @@ inline Euclid::OrthoRasCamera::OrthoRasCamera(const Eigen::Vector3f& position,
     _y = 2.0f / yextent;
 }
 
-inline void Euclid::OrthoRasCamera::set_extent(float width, float height)
+inline void Euclid::OrthoRasCamera::set_extent(float xextent, float yextent)
 {
-    _x = 2.0f / width;
-    _y = 2.0f / height;
+    _x = 2.0f / xextent;
+    _y = 2.0f / yextent;
 }
 
 inline Eigen::Matrix4f Euclid::OrthoRasCamera::projection() const

@@ -8,6 +8,7 @@
  */
 #pragma once
 
+#include <boost/math/constants/constants.hpp>
 #include <vulkan/vulkan.h>
 #include <Euclid/Render/RenderCore.h>
 #include <config.h>
@@ -72,14 +73,16 @@ public:
      *  @param up Rough up direction.
      *  @param vfov Vertical field of view in degrees.
      *  @param aspect Aspect ratio.
+     *  @param tnear Near plane of the view frustum.
+     *  @param tfar Far plane of the view frustum.
      */
     PerspRasCamera(const Eigen::Vector3f& position,
-                   const Eigen::Vector3f& focus = Eigen::Vector3f::Zero(),
-                   const Eigen::Vector3f& up = Eigen::Vector3f(0.0f,
-                                                               1.0f,
-                                                               0.0f),
-                   float vfov = 90.0f,
-                   float aspect = 1.0f);
+                   const Eigen::Vector3f& focus,
+                   const Eigen::Vector3f& up,
+                   float vfov,
+                   float aspect,
+                   float tnear,
+                   float tfar);
 
     /** Create a PerspRasCamera.
      *
@@ -93,15 +96,17 @@ public:
      *  @param vfov Vertical field of view in degrees.
      *  @param width Width of the image.
      *  @param height Height of the image.
+     *  @param tnear Near plane of the view frustum.
+     *  @param tfar Far plane of the view frustum.
      */
     PerspRasCamera(const Eigen::Vector3f& position,
-                   const Eigen::Vector3f& focus = Eigen::Vector3f::Zero(),
-                   const Eigen::Vector3f& up = Eigen::Vector3f(0.0f,
-                                                               1.0f,
-                                                               0.0f),
-                   float vfov = 90.0f,
-                   unsigned width = 256,
-                   unsigned height = 256);
+                   const Eigen::Vector3f& focus,
+                   const Eigen::Vector3f& up,
+                   float vfov,
+                   unsigned width,
+                   unsigned heigh,
+                   float tnear,
+                   float tfar);
 
     /** Set aspect ratio.
      *
@@ -129,8 +134,8 @@ public:
     virtual Eigen::Matrix4f projection() const override;
 
 private:
-    float _vfov;
-    float _aspect;
+    float _vfov = boost::math::float_constants::half_pi;
+    float _aspect = 1.0f;
     float _tnear = 0.001f;
     float _tfar = 1000.0f;
 };
@@ -156,21 +161,19 @@ public:
      *  @param position Position.
      *  @param focus Focus.
      *  @param up Rough up direction.
-     *  @param xextent Width of the film plane in world space.
-     *  @param yextent Height of the film plane in world space.
+     *  @param xextent Width of the frustum in world space.
+     *  @param yextent Height of the frustum in world space.
      */
     OrthoRasCamera(const Eigen::Vector3f& position,
-                   const Eigen::Vector3f& focus = Eigen::Vector3f::Zero(),
-                   const Eigen::Vector3f& up = Eigen::Vector3f(0.0f,
-                                                               1.0f,
-                                                               0.0f),
-                   float xextent = 1.0f,
-                   float yextent = 1.0f);
+                   const Eigen::Vector3f& focus,
+                   const Eigen::Vector3f& up,
+                   float xextent,
+                   float yextent);
 
-    /** Set the extent of the film plane.
+    /** Set the extent of the frustum.
      *
      */
-    void set_extent(float width, float height);
+    void set_extent(float xextent, float yextent);
 
     /** Return the projection matrix.
      *

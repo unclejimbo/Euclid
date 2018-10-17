@@ -104,18 +104,18 @@ inline RTCRayHit PerspRayCamera::gen_ray(float s, float t) const
 inline OrthoRayCamera::OrthoRayCamera(const Vec3& position,
                                       const Vec3& focus,
                                       const Vec3& up,
-                                      float width,
-                                      float height)
+                                      float xextent,
+                                      float yextent)
     : RayCamera(position, focus, up)
 {
-    this->film.width = width;
-    this->film.height = height;
+    this->film.width = xextent;
+    this->film.height = yextent;
 }
 
-inline void OrthoRayCamera::set_extent(float width, float height)
+inline void OrthoRayCamera::set_extent(float xextent, float yextent)
 {
-    this->film.width = width;
-    this->film.height = height;
+    this->film.width = xextent;
+    this->film.height = yextent;
 }
 
 inline RTCRayHit OrthoRayCamera::gen_ray(float s, float t) const
