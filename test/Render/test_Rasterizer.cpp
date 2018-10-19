@@ -133,8 +133,7 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
             color = rd_number(rd_gen);
         }
         rasterizer.attach_color_buffer(rd_colors.data(), true);
-        rasterizer.attach_geometry_buffers(
-            positions, indices); //���ﻹ��Ҫ�޸�
+        rasterizer.attach_geometry_buffers(positions, indices);
         std::vector<uint8_t> pixels(3 * width * height);
         rasterizer.render_shaded(pixels, cam, width, height);
 
@@ -215,6 +214,7 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
         stbi_write_png(
             outfile.c_str(), width, height, 3, pixels.data(), width * 3);
     }
+
     SECTION("face mask")
     {
         std::vector<uint8_t> mask(indices.size() / 3);
@@ -240,6 +240,7 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
         stbi_write_png(
             outfile.c_str(), width, height, 3, pixels.data(), width * 3);
     }
+
     SECTION("face index using face color")
     {
         std::vector<float> colors(indices.size());
