@@ -104,7 +104,7 @@ public:
                    const Eigen::Vector3f& up,
                    float vfov,
                    unsigned width,
-                   unsigned heigh,
+                   unsigned height,
                    float tnear,
                    float tfar);
 
