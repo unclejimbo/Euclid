@@ -66,7 +66,7 @@ VkCommandBufferBeginInfo commandBufferBeginInfo()
     return cmdBufferBeginInfo;
 }
 
-VkBool32 getSupportedDepthFormat(VkPhysicalDevice physicalDevice,
+VkBool32 getSupportedDepthFormat(VkPhysicalDevice _physical_device,
                                  VkFormat* depthFormat)
 {
     // Since all depth formats may be optional, we need to find a suitable depth
@@ -80,7 +80,7 @@ VkBool32 getSupportedDepthFormat(VkPhysicalDevice physicalDevice,
     for (auto& format : depthFormats) {
         VkFormatProperties formatProps;
         vkGetPhysicalDeviceFormatProperties(
-            physicalDevice, format, &formatProps);
+            _physical_device, format, &formatProps);
         // Format must support depth stencil attachment for optimal tiling
         if (formatProps.optimalTilingFeatures &
             VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) {
@@ -257,13 +257,13 @@ VkPipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo(
 }
 
 VkGraphicsPipelineCreateInfo pipelineCreateInfo(VkPipelineLayout layout,
-                                                VkRenderPass renderPass,
+                                                VkRenderPass _render_pass,
                                                 VkPipelineCreateFlags flags = 0)
 {
     VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
     pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     pipelineCreateInfo.layout = layout;
-    pipelineCreateInfo.renderPass = renderPass;
+    pipelineCreateInfo.renderPass = _render_pass;
     pipelineCreateInfo.flags = flags;
     pipelineCreateInfo.basePipelineIndex = -1;
     pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
@@ -527,19 +527,18 @@ inline Eigen::Matrix4f Euclid::OrthoRasCamera::projection() const
 
 inline Euclid::Rasterizer::Rasterizer()
 {
-    /********  set meterial   ******/
+    // material
     __material.ambient << 0.1f, 0.1f, 0.1f;
     __material.diffuse << 0.7f, 0.7f, 0.7f;
 
+    // vulkan application
     VkApplicationInfo appInfo = {};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pApplicationName = "Vulkan headless example";
-    appInfo.pEngineName = "VulkanExample";
+    appInfo.pApplicationName = "Euclid rasterizer";
+    appInfo.pEngineName = "Euclid";
     appInfo.apiVersion = VK_API_VERSION_1_0;
 
-    /*
-    Vulkan instance creation (without surface extensions)
-    */
+    // Vulkan instance creation (without surface extensions)
     VkInstanceCreateInfo instanceCreateInfo = {};
     instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     instanceCreateInfo.pApplicationInfo = &appInfo;
@@ -580,11 +579,10 @@ inline Euclid::Rasterizer::Rasterizer()
         instanceCreateInfo.ppEnabledExtensionNames = &validationExt;
     }
 #endif
-    if (vkCreateInstance(&instanceCreateInfo, nullptr, &instance) !=
+    if (vkCreateInstance(&instanceCreateInfo, nullptr, &_instance) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create instance!");
     }
-    // create instance done
 
 #ifndef NDEBUG
     if (layersAvailable) {
@@ -599,52 +597,50 @@ inline Euclid::Rasterizer::Rasterizer()
         // We have to explicitly load this function.
         PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT =
             reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(
-                vkGetInstanceProcAddr(instance,
+                vkGetInstanceProcAddr(_instance,
                                       "vkCreateDebugReportCallbackEXT"));
         assert(vkCreateDebugReportCallbackEXT);
-        if (vkCreateDebugReportCallbackEXT(instance,
+        if (vkCreateDebugReportCallbackEXT(_instance,
                                            &debugReportCreateInfo,
                                            nullptr,
-                                           &debugReportCallback) !=
+                                           &_debug_report_callback) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to create debugreportcallback!");
         }
     }
 #endif
 
-    /*
-    Vulkan device creation
-    */
+    // physical device creation
     uint32_t deviceCount = 0;
-    if (vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr) !=
+    if (vkEnumeratePhysicalDevices(_instance, &deviceCount, nullptr) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create physical device!");
     }
     std::vector<VkPhysicalDevice> physicalDevices(deviceCount);
     if (vkEnumeratePhysicalDevices(
-            instance, &deviceCount, physicalDevices.data()) != VK_SUCCESS) {
+            _instance, &deviceCount, physicalDevices.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to create physical device!");
     }
-    physicalDevice = physicalDevices[0];
+    _physical_device = physicalDevices[0];
 
     VkPhysicalDeviceProperties deviceProperties;
-    vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+    vkGetPhysicalDeviceProperties(_physical_device, &deviceProperties);
 
     // Request a single graphics queue
     const float defaultQueuePriority(0.0f);
     VkDeviceQueueCreateInfo queueCreateInfo = {};
     uint32_t queueFamilyCount;
     vkGetPhysicalDeviceQueueFamilyProperties(
-        physicalDevice, &queueFamilyCount, nullptr);
+        _physical_device, &queueFamilyCount, nullptr);
     std::vector<VkQueueFamilyProperties> queueFamilyProperties(
         queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(
-        physicalDevice, &queueFamilyCount, queueFamilyProperties.data());
+        _physical_device, &queueFamilyCount, queueFamilyProperties.data());
     for (uint32_t i = 0;
          i < static_cast<uint32_t>(queueFamilyProperties.size());
          i++) {
         if (queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-            queueFamilyIndex = i;
+            _queue_family_index = i;
             queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
             queueCreateInfo.queueFamilyIndex = i;
             queueCreateInfo.queueCount = 1;
@@ -658,20 +654,21 @@ inline Euclid::Rasterizer::Rasterizer()
     deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     deviceCreateInfo.queueCreateInfoCount = 1;
     deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
-    if (vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &device) !=
+    if (vkCreateDevice(
+            _physical_device, &deviceCreateInfo, nullptr, &_device) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create logical device!");
     }
 
     // Get a graphics queue
-    vkGetDeviceQueue(device, queueFamilyIndex, 0, &queue);
+    vkGetDeviceQueue(_device, _queue_family_index, 0, &_queue);
 
     // Command pool
     VkCommandPoolCreateInfo cmdPoolInfo = {};
     cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    cmdPoolInfo.queueFamilyIndex = queueFamilyIndex;
+    cmdPoolInfo.queueFamilyIndex = _queue_family_index;
     cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    if (vkCreateCommandPool(device, &cmdPoolInfo, nullptr, &commandPool) !=
+    if (vkCreateCommandPool(_device, &cmdPoolInfo, nullptr, &_command_pool) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create command pool!");
     }
@@ -854,9 +851,9 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
     // Command buffer for copy commands (reused)
     VkCommandBufferAllocateInfo cmdBufAllocateInfo =
         _impl::commandBufferAllocateInfo(
-            commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+            _command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
     VkCommandBuffer copyCmd;
-    if (vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &copyCmd) !=
+    if (vkAllocateCommandBuffers(_device, &cmdBufAllocateInfo, &copyCmd) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create command buffer!");
     }
@@ -869,18 +866,18 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
     VkMemoryAllocateInfo memAlloc = _impl::memoryAllocateInfo();
 
     VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice,
+    vkGetPhysicalDeviceMemoryProperties(_physical_device,
                                         &deviceMemoryProperties);
     if (render_with_color_buffer == true) {
         bufferCreateInfo = _impl::bufferCreateInfo(
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT, vertexBufferSize);
         bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         if (vkCreateBuffer(
-                device, &bufferCreateInfo, nullptr, &stagingBuffer) !=
+                _device, &bufferCreateInfo, nullptr, &stagingBuffer) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to create buffer!");
         }
-        vkGetBufferMemoryRequirements(device, *&stagingBuffer, &memReqs);
+        vkGetBufferMemoryRequirements(_device, *&stagingBuffer, &memReqs);
         memAlloc.allocationSize = memReqs.size;
         memAlloc.memoryTypeIndex = -1;
         for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -898,23 +895,26 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
             memReqs.memoryTypeBits >>= 1;
         }
         if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-        if (vkAllocateMemory(device, &memAlloc, nullptr, &stagingMemory) !=
+        if (vkAllocateMemory(_device, &memAlloc, nullptr, &stagingMemory) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to allocate memory!");
         }
 
         if (vertices_color.data() != nullptr) {
             void* mapped;
-            if (vkMapMemory(
-                    device, *&stagingMemory, 0, vertexBufferSize, 0, &mapped) !=
-                VK_SUCCESS) {
+            if (vkMapMemory(_device,
+                            *&stagingMemory,
+                            0,
+                            vertexBufferSize,
+                            0,
+                            &mapped) != VK_SUCCESS) {
                 throw std::runtime_error("vkMapMemory failed!");
             }
             memcpy(mapped, vertices_color.data(), vertexBufferSize);
-            vkUnmapMemory(device, *&stagingMemory);
+            vkUnmapMemory(_device, *&stagingMemory);
         }
 
-        if (vkBindBufferMemory(device, *&stagingBuffer, *&stagingMemory, 0) !=
+        if (vkBindBufferMemory(_device, *&stagingBuffer, *&stagingMemory, 0) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to bind buffer memory!");
         }
@@ -924,11 +924,12 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
                                     vertexBufferSize);
 
         bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        if (vkCreateBuffer(device, &bufferCreateInfo, nullptr, &vertexBuffer) !=
+        if (vkCreateBuffer(
+                _device, &bufferCreateInfo, nullptr, &_vertex_buffer) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to create buffer!");
         }
-        vkGetBufferMemoryRequirements(device, *&vertexBuffer, &memReqs);
+        vkGetBufferMemoryRequirements(_device, *&_vertex_buffer, &memReqs);
         memAlloc.allocationSize = memReqs.size;
         memAlloc.memoryTypeIndex = -1;
         for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -943,12 +944,12 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
             memReqs.memoryTypeBits >>= 1;
         }
         if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex; }
-        if (vkAllocateMemory(device, &memAlloc, nullptr, &vertexMemory) !=
+        if (vkAllocateMemory(_device, &memAlloc, nullptr, &_vertex_memory) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to allocate memory!");
         }
-        if (vkBindBufferMemory(device, *&vertexBuffer, *&vertexMemory, 0) !=
-            VK_SUCCESS) {
+        if (vkBindBufferMemory(
+                _device, *&_vertex_buffer, *&_vertex_memory, 0) != VK_SUCCESS) {
             throw std::runtime_error("failed to bind buffer memory!");
         }
     }
@@ -957,11 +958,11 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT, vertexBufferSize);
         bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         if (vkCreateBuffer(
-                device, &bufferCreateInfo, nullptr, &stagingBuffer) !=
+                _device, &bufferCreateInfo, nullptr, &stagingBuffer) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to create buffer!");
         }
-        vkGetBufferMemoryRequirements(device, *&stagingBuffer, &memReqs);
+        vkGetBufferMemoryRequirements(_device, *&stagingBuffer, &memReqs);
         memAlloc.allocationSize = memReqs.size;
         memAlloc.memoryTypeIndex = -1;
         for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -979,23 +980,26 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
             memReqs.memoryTypeBits >>= 1;
         }
         if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-        if (vkAllocateMemory(device, &memAlloc, nullptr, &stagingMemory) !=
+        if (vkAllocateMemory(_device, &memAlloc, nullptr, &stagingMemory) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to allocate memory!");
         }
 
         if (vertices_index.data() != nullptr) {
             void* mapped;
-            if (vkMapMemory(
-                    device, *&stagingMemory, 0, vertexBufferSize, 0, &mapped) !=
-                VK_SUCCESS) {
+            if (vkMapMemory(_device,
+                            *&stagingMemory,
+                            0,
+                            vertexBufferSize,
+                            0,
+                            &mapped) != VK_SUCCESS) {
                 throw std::runtime_error("vkMapMemory failed!");
             }
             memcpy(mapped, vertices_index.data(), vertexBufferSize);
-            vkUnmapMemory(device, *&stagingMemory);
+            vkUnmapMemory(_device, *&stagingMemory);
         }
 
-        if (vkBindBufferMemory(device, *&stagingBuffer, *&stagingMemory, 0) !=
+        if (vkBindBufferMemory(_device, *&stagingBuffer, *&stagingMemory, 0) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to bind buffer memory!");
         }
@@ -1004,11 +1008,12 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
                                         VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                                     vertexBufferSize);
         bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        if (vkCreateBuffer(device, &bufferCreateInfo, nullptr, &vertexBuffer) !=
+        if (vkCreateBuffer(
+                _device, &bufferCreateInfo, nullptr, &_vertex_buffer) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to create buffer!");
         }
-        vkGetBufferMemoryRequirements(device, *&vertexBuffer, &memReqs);
+        vkGetBufferMemoryRequirements(_device, *&_vertex_buffer, &memReqs);
         memAlloc.allocationSize = memReqs.size;
         memAlloc.memoryTypeIndex = -1;
         for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -1023,12 +1028,12 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
             memReqs.memoryTypeBits >>= 1;
         }
         if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex; }
-        if (vkAllocateMemory(device, &memAlloc, nullptr, &vertexMemory) !=
+        if (vkAllocateMemory(_device, &memAlloc, nullptr, &_vertex_memory) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to allocate memory!");
         }
-        if (vkBindBufferMemory(device, *&vertexBuffer, *&vertexMemory, 0) !=
-            VK_SUCCESS) {
+        if (vkBindBufferMemory(
+                _device, *&_vertex_buffer, *&_vertex_memory, 0) != VK_SUCCESS) {
             throw std::runtime_error("failed to bind buffer memory!");
         }
     }
@@ -1037,11 +1042,11 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT, vertexBufferSize);
         bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         if (vkCreateBuffer(
-                device, &bufferCreateInfo, nullptr, &stagingBuffer) !=
+                _device, &bufferCreateInfo, nullptr, &stagingBuffer) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to create buffer!");
         }
-        vkGetBufferMemoryRequirements(device, *&stagingBuffer, &memReqs);
+        vkGetBufferMemoryRequirements(_device, *&stagingBuffer, &memReqs);
         memAlloc.allocationSize = memReqs.size;
         memAlloc.memoryTypeIndex = -1;
         for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -1059,23 +1064,26 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
             memReqs.memoryTypeBits >>= 1;
         }
         if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-        if (vkAllocateMemory(device, &memAlloc, nullptr, &stagingMemory) !=
+        if (vkAllocateMemory(_device, &memAlloc, nullptr, &stagingMemory) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to allocate memory!");
         }
 
         if (vertices.data() != nullptr) {
             void* mapped;
-            if (vkMapMemory(
-                    device, *&stagingMemory, 0, vertexBufferSize, 0, &mapped) !=
-                VK_SUCCESS) {
+            if (vkMapMemory(_device,
+                            *&stagingMemory,
+                            0,
+                            vertexBufferSize,
+                            0,
+                            &mapped) != VK_SUCCESS) {
                 throw std::runtime_error("vkMapMemory failed!");
             }
             memcpy(mapped, vertices.data(), vertexBufferSize);
-            vkUnmapMemory(device, *&stagingMemory);
+            vkUnmapMemory(_device, *&stagingMemory);
         }
 
-        if (vkBindBufferMemory(device, *&stagingBuffer, *&stagingMemory, 0) !=
+        if (vkBindBufferMemory(_device, *&stagingBuffer, *&stagingMemory, 0) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to bind buffer memory!");
         }
@@ -1084,11 +1092,12 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
                                         VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                                     vertexBufferSize);
         bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        if (vkCreateBuffer(device, &bufferCreateInfo, nullptr, &vertexBuffer) !=
+        if (vkCreateBuffer(
+                _device, &bufferCreateInfo, nullptr, &_vertex_buffer) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to create buffer!");
         }
-        vkGetBufferMemoryRequirements(device, *&vertexBuffer, &memReqs);
+        vkGetBufferMemoryRequirements(_device, *&_vertex_buffer, &memReqs);
         memAlloc.allocationSize = memReqs.size;
         memAlloc.memoryTypeIndex = -1;
         for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -1103,12 +1112,12 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
             memReqs.memoryTypeBits >>= 1;
         }
         if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex; }
-        if (vkAllocateMemory(device, &memAlloc, nullptr, &vertexMemory) !=
+        if (vkAllocateMemory(_device, &memAlloc, nullptr, &_vertex_memory) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to allocate memory!");
         }
-        if (vkBindBufferMemory(device, *&vertexBuffer, *&vertexMemory, 0) !=
-            VK_SUCCESS) {
+        if (vkBindBufferMemory(
+                _device, *&_vertex_buffer, *&_vertex_memory, 0) != VK_SUCCESS) {
             throw std::runtime_error("failed to bind buffer memory!");
         }
     }
@@ -1118,7 +1127,7 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
 
     VkBufferCopy copyRegion = {};
     copyRegion.size = vertexBufferSize;
-    vkCmdCopyBuffer(copyCmd, stagingBuffer, vertexBuffer, 1, &copyRegion);
+    vkCmdCopyBuffer(copyCmd, stagingBuffer, _vertex_buffer, 1, &copyRegion);
     if (vkEndCommandBuffer(copyCmd) != VK_SUCCESS) {
         throw std::runtime_error(
             "failed to end command buffer while creating vertex buffer!");
@@ -1128,29 +1137,30 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
     submitInfo.pCommandBuffers = &copyCmd;
     VkFenceCreateInfo fenceInfo = _impl::fenceCreateInfo();
     VkFence fence;
-    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+    if (vkCreateFence(_device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to create fence!");
     }
-    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(_queue, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit queue!");
     }
-    if (vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (vkWaitForFences(_device, 1, &fence, VK_TRUE, UINT64_MAX) !=
+        VK_SUCCESS) {
         throw std::runtime_error("vkWaitForFences failed!");
     }
-    vkDestroyFence(device, fence, nullptr);
+    vkDestroyFence(_device, fence, nullptr);
 
-    vkDestroyBuffer(device, stagingBuffer, nullptr);
-    vkFreeMemory(device, stagingMemory, nullptr);
+    vkDestroyBuffer(_device, stagingBuffer, nullptr);
+    vkFreeMemory(_device, stagingMemory, nullptr);
 
     // Indices
     bufferCreateInfo = _impl::bufferCreateInfo(VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                                                indexBufferSize);
     bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    if (vkCreateBuffer(device, &bufferCreateInfo, nullptr, &stagingBuffer) !=
+    if (vkCreateBuffer(_device, &bufferCreateInfo, nullptr, &stagingBuffer) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create buffer!");
     }
-    vkGetBufferMemoryRequirements(device, *&stagingBuffer, &memReqs);
+    vkGetBufferMemoryRequirements(_device, *&stagingBuffer, &memReqs);
     memAlloc.allocationSize = memReqs.size;
     memAlloc.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -1168,7 +1178,7 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
         memReqs.memoryTypeBits >>= 1;
     }
     if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-    if (vkAllocateMemory(device, &memAlloc, nullptr, &stagingMemory) !=
+    if (vkAllocateMemory(_device, &memAlloc, nullptr, &stagingMemory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
@@ -1176,15 +1186,15 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
     if (indices_ras.data() != nullptr) {
         void* mapped;
         if (vkMapMemory(
-                device, *&stagingMemory, 0, indexBufferSize, 0, &mapped) !=
+                _device, *&stagingMemory, 0, indexBufferSize, 0, &mapped) !=
             VK_SUCCESS) {
             throw std::runtime_error("vkMapMemory failed!");
         }
         memcpy(mapped, indices_ras.data(), indexBufferSize);
-        vkUnmapMemory(device, *&stagingMemory);
+        vkUnmapMemory(_device, *&stagingMemory);
     }
 
-    if (vkBindBufferMemory(device, *&stagingBuffer, *&stagingMemory, 0) !=
+    if (vkBindBufferMemory(_device, *&stagingBuffer, *&stagingMemory, 0) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to bind buffer memory!");
     }
@@ -1192,11 +1202,11 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         indexBufferSize);
     bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    if (vkCreateBuffer(device, &bufferCreateInfo, nullptr, &indexBuffer) !=
+    if (vkCreateBuffer(_device, &bufferCreateInfo, nullptr, &_index_buffer) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create buffer!");
     }
-    vkGetBufferMemoryRequirements(device, *&indexBuffer, &memReqs);
+    vkGetBufferMemoryRequirements(_device, *&_index_buffer, &memReqs);
     memAlloc.allocationSize = memReqs.size;
     memAlloc.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -1211,11 +1221,11 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
         memReqs.memoryTypeBits >>= 1;
     }
     if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex; }
-    if (vkAllocateMemory(device, &memAlloc, nullptr, &indexMemory) !=
+    if (vkAllocateMemory(_device, &memAlloc, nullptr, &_index_memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
-    if (vkBindBufferMemory(device, *&indexBuffer, *&indexMemory, 0) !=
+    if (vkBindBufferMemory(_device, *&_index_buffer, *&_index_memory, 0) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to bind buffer memory!");
     }
@@ -1224,26 +1234,27 @@ inline void Euclid::Rasterizer::attach_geometry_buffers(
         throw std::runtime_error("failed to create index buffer!");
     }
     copyRegion.size = indexBufferSize;
-    vkCmdCopyBuffer(copyCmd, stagingBuffer, indexBuffer, 1, &copyRegion);
+    vkCmdCopyBuffer(copyCmd, stagingBuffer, _index_buffer, 1, &copyRegion);
     if (vkEndCommandBuffer(copyCmd) != VK_SUCCESS) {
         throw std::runtime_error(
             "failed to end command buffer while creating index buffer!");
     }
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &copyCmd;
-    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+    if (vkCreateFence(_device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to create fence!");
     }
-    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(_queue, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit queue!");
     }
-    if (vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (vkWaitForFences(_device, 1, &fence, VK_TRUE, UINT64_MAX) !=
+        VK_SUCCESS) {
         throw std::runtime_error("vkWaitForFences failed!");
     }
-    vkDestroyFence(device, fence, nullptr);
+    vkDestroyFence(_device, fence, nullptr);
 
-    vkDestroyBuffer(device, stagingBuffer, nullptr);
-    vkFreeMemory(device, stagingMemory, nullptr);
+    vkDestroyBuffer(_device, stagingBuffer, nullptr);
+    vkFreeMemory(_device, stagingMemory, nullptr);
 }
 
 inline void Euclid::Rasterizer::attach_color_buffer(const float* colors,
@@ -1297,7 +1308,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
 {
     std::array<Eigen::Matrix4f, 2> pushConstants;
     VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice,
+    vkGetPhysicalDeviceMemoryProperties(_physical_device,
                                         &deviceMemoryProperties);
     /*
     Create framebuffer attachments
@@ -1305,7 +1316,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     VkFormat colorFormat = VK_FORMAT_R8G8B8A8_UNORM;
     VkFormat depthFormat;
 
-    _impl::getSupportedDepthFormat(physicalDevice, &depthFormat);
+    _impl::getSupportedDepthFormat(_physical_device, &depthFormat);
 
     // Color attachment
     VkImageCreateInfo image = _impl::imageCreateInfo();
@@ -1324,11 +1335,11 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     VkMemoryAllocateInfo memAlloc = _impl::memoryAllocateInfo();
     VkMemoryRequirements memReqs;
 
-    if (vkCreateImage(device, &image, nullptr, &colorAttachment.image) !=
+    if (vkCreateImage(_device, &image, nullptr, &_color_attachment.image) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image!");
     }
-    vkGetImageMemoryRequirements(device, colorAttachment.image, &memReqs);
+    vkGetImageMemoryRequirements(_device, _color_attachment.image, &memReqs);
     memAlloc.allocationSize = memReqs.size;
     memAlloc.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -1342,12 +1353,13 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
         memReqs.memoryTypeBits >>= 1;
     }
     if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-    if (vkAllocateMemory(device, &memAlloc, nullptr, &colorAttachment.memory) !=
+    if (vkAllocateMemory(
+            _device, &memAlloc, nullptr, &_color_attachment.memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
     if (vkBindImageMemory(
-            device, colorAttachment.image, colorAttachment.memory, 0) !=
+            _device, _color_attachment.image, _color_attachment.memory, 0) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
@@ -1361,9 +1373,9 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     colorImageView.subresourceRange.levelCount = 1;
     colorImageView.subresourceRange.baseArrayLayer = 0;
     colorImageView.subresourceRange.layerCount = 1;
-    colorImageView.image = colorAttachment.image;
+    colorImageView.image = _color_attachment.image;
     if (vkCreateImageView(
-            device, &colorImageView, nullptr, &colorAttachment.view) !=
+            _device, &colorImageView, nullptr, &_color_attachment.view) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image view!");
     }
@@ -1372,11 +1384,11 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     image.format = depthFormat;
     image.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-    if (vkCreateImage(device, &image, nullptr, &depthAttachment.image) !=
+    if (vkCreateImage(_device, &image, nullptr, &_depth_attachment.image) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image!");
     }
-    vkGetImageMemoryRequirements(device, depthAttachment.image, &memReqs);
+    vkGetImageMemoryRequirements(_device, _depth_attachment.image, &memReqs);
     memAlloc.allocationSize = memReqs.size;
     memAlloc.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -1390,12 +1402,13 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
         memReqs.memoryTypeBits >>= 1;
     }
     if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-    if (vkAllocateMemory(device, &memAlloc, nullptr, &depthAttachment.memory) !=
+    if (vkAllocateMemory(
+            _device, &memAlloc, nullptr, &_depth_attachment.memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
     if (vkBindImageMemory(
-            device, depthAttachment.image, depthAttachment.memory, 0) !=
+            _device, _depth_attachment.image, _depth_attachment.memory, 0) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
@@ -1411,9 +1424,9 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     depthStencilView.subresourceRange.levelCount = 1;
     depthStencilView.subresourceRange.baseArrayLayer = 0;
     depthStencilView.subresourceRange.layerCount = 1;
-    depthStencilView.image = depthAttachment.image;
+    depthStencilView.image = _depth_attachment.image;
     if (vkCreateImageView(
-            device, &depthStencilView, nullptr, &depthAttachment.view) !=
+            _device, &depthStencilView, nullptr, &_depth_attachment.view) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image view!");
     }
@@ -1489,24 +1502,24 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     renderPassInfo.pSubpasses = &subpassDescription;
     renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
     renderPassInfo.pDependencies = dependencies.data();
-    if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) !=
+    if (vkCreateRenderPass(_device, &renderPassInfo, nullptr, &_render_pass) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create renderpass!");
     }
     VkImageView attachments[2];
-    attachments[0] = colorAttachment.view;
-    attachments[1] = depthAttachment.view;
+    attachments[0] = _color_attachment.view;
+    attachments[1] = _depth_attachment.view;
 
     VkFramebufferCreateInfo framebufferCreateInfo =
         _impl::framebufferCreateInfo();
-    framebufferCreateInfo.renderPass = renderPass;
+    framebufferCreateInfo.renderPass = _render_pass;
     framebufferCreateInfo.attachmentCount = 2;
     framebufferCreateInfo.pAttachments = attachments;
     framebufferCreateInfo.width = width;
     framebufferCreateInfo.height = height;
     framebufferCreateInfo.layers = 1;
     if (vkCreateFramebuffer(
-            device, &framebufferCreateInfo, nullptr, &framebuffer) !=
+            _device, &framebufferCreateInfo, nullptr, &_framebuffer) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create frame buffer!");
     }
@@ -1519,7 +1532,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     VkDescriptorSetLayoutCreateInfo descriptorLayout =
         _impl::descriptorSetLayoutCreateInfo(setLayoutBindings);
     if (vkCreateDescriptorSetLayout(
-            device, &descriptorLayout, nullptr, &descriptorSetLayout) !=
+            _device, &descriptorLayout, nullptr, &_descriptor_set_layout) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
@@ -1533,7 +1546,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
     if (vkCreatePipelineLayout(
-            device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) !=
+            _device, &pipelineLayoutCreateInfo, nullptr, &_pipeline_layout) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
@@ -1542,7 +1555,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     pipelineCacheCreateInfo.sType =
         VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
     if (vkCreatePipelineCache(
-            device, &pipelineCacheCreateInfo, nullptr, &pipelineCache) !=
+            _device, &pipelineCacheCreateInfo, nullptr, &_pipeline_cache) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline cache!");
     }
@@ -1580,7 +1593,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
         _impl::pipelineDynamicStateCreateInfo(dynamicStateEnables);
 
     VkGraphicsPipelineCreateInfo pipelineCreateInfo =
-        _impl::pipelineCreateInfo(pipelineLayout, renderPass);
+        _impl::pipelineCreateInfo(_pipeline_layout, _render_pass);
 
     std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages{};
 
@@ -1638,8 +1651,8 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
         shaderStages[1].pName = "main";
         std::string vert_color = std::string(DATA_DIR) + "vert_color.spv";
         std::string frag_color = std::string(DATA_DIR) + "frag_color.spv";
-        shaderStages[0].module = _impl::loadShader(vert_color.data(), device);
-        shaderStages[1].module = _impl::loadShader(frag_color.data(), device);
+        shaderStages[0].module = _impl::loadShader(vert_color.data(), _device);
+        shaderStages[1].module = _impl::loadShader(frag_color.data(), _device);
     }
     else {
 
@@ -1679,17 +1692,17 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
         shaderStages[1].pName = "main";
         std::string vert = std::string(DATA_DIR) + "vert.spv";
         std::string frag = std::string(DATA_DIR) + "frag.spv";
-        shaderStages[0].module = _impl::loadShader(vert.data(), device);
-        shaderStages[1].module = _impl::loadShader(frag.data(), device);
+        shaderStages[0].module = _impl::loadShader(vert.data(), _device);
+        shaderStages[1].module = _impl::loadShader(frag.data(), _device);
     }
 
-    shaderModules = { shaderStages[0].module, shaderStages[1].module };
-    if (vkCreateGraphicsPipelines(device,
-                                  pipelineCache,
+    _shader_modules = { shaderStages[0].module, shaderStages[1].module };
+    if (vkCreateGraphicsPipelines(_device,
+                                  _pipeline_cache,
                                   1,
                                   &pipelineCreateInfo,
                                   nullptr,
-                                  &pipeline) != VK_SUCCESS) {
+                                  &_pipeline) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 
@@ -1700,9 +1713,9 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     VkCommandBuffer commandBuffer;
     VkCommandBufferAllocateInfo cmdBufAllocateInfo =
         _impl::commandBufferAllocateInfo(
-            commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
-    if (vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &commandBuffer) !=
-        VK_SUCCESS) {
+            _command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+    if (vkAllocateCommandBuffers(
+            _device, &cmdBufAllocateInfo, &commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
 
@@ -1726,8 +1739,8 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     renderPassBeginInfo.renderArea.extent.height = height;
     renderPassBeginInfo.clearValueCount = 2;
     renderPassBeginInfo.pClearValues = clearValues;
-    renderPassBeginInfo.renderPass = renderPass;
-    renderPassBeginInfo.framebuffer = framebuffer;
+    renderPassBeginInfo.renderPass = _render_pass;
+    renderPassBeginInfo.framebuffer = _framebuffer;
 
     vkCmdBeginRenderPass(
         commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -1745,12 +1758,13 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     scissor.extent.height = height;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+    vkCmdBindPipeline(
+        commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline);
 
     // Render scene
     VkDeviceSize offsets[1] = { 0 };
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, offsets);
-    vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &_vertex_buffer, offsets);
+    vkCmdBindIndexBuffer(commandBuffer, _index_buffer, 0, VK_INDEX_TYPE_UINT32);
     Eigen::Matrix4f mvpMatrix = camera.projection() * camera.view();
     pushConstants[0] = mvpMatrix;
 
@@ -1782,7 +1796,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
 
     pushConstants[1] = ubo;
     vkCmdPushConstants(commandBuffer,
-                       pipelineLayout,
+                       _pipeline_layout,
                        VK_SHADER_STAGE_VERTEX_BIT,
                        0,
                        sizeof(pushConstants),
@@ -1799,18 +1813,19 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     submitInfo.pCommandBuffers = &commandBuffer;
     VkFenceCreateInfo fenceInfo = _impl::fenceCreateInfo();
     VkFence fence;
-    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+    if (vkCreateFence(_device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to create fence!");
     }
-    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(_queue, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit queue!");
     }
-    if (vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (vkWaitForFences(_device, 1, &fence, VK_TRUE, UINT64_MAX) !=
+        VK_SUCCESS) {
         throw std::runtime_error("vkWaitForFences failed!");
     }
-    vkDestroyFence(device, fence, nullptr);
+    vkDestroyFence(_device, fence, nullptr);
 
-    vkDeviceWaitIdle(device);
+    vkDeviceWaitIdle(_device);
 
     /*
     Copy framebuffer image to host visible image
@@ -1832,7 +1847,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     imgCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     // Create the image
     VkImage dstImage;
-    if (vkCreateImage(device, &imgCreateInfo, nullptr, &dstImage) !=
+    if (vkCreateImage(_device, &imgCreateInfo, nullptr, &dstImage) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to end create image!");
     }
@@ -1840,7 +1855,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     VkMemoryRequirements memRequirements;
     VkMemoryAllocateInfo memAllocInfo(_impl::memoryAllocateInfo());
     VkDeviceMemory dstImageMemory;
-    vkGetImageMemoryRequirements(device, dstImage, &memRequirements);
+    vkGetImageMemoryRequirements(_device, dstImage, &memRequirements);
     memAllocInfo.allocationSize = memRequirements.size;
     memAllocInfo.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -1859,20 +1874,20 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     if (memAllocInfo.memoryTypeIndex == -1) {
         memAllocInfo.memoryTypeIndex = 0;
     }
-    if (vkAllocateMemory(device, &memAllocInfo, nullptr, &dstImageMemory) !=
+    if (vkAllocateMemory(_device, &memAllocInfo, nullptr, &dstImageMemory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
-    if (vkBindImageMemory(device, dstImage, dstImageMemory, 0) != VK_SUCCESS) {
+    if (vkBindImageMemory(_device, dstImage, dstImageMemory, 0) != VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
 
     // Do the actual blit from the offscreen image to our host visible
     // destination image
     cmdBufAllocateInfo = _impl::commandBufferAllocateInfo(
-        commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+        _command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
     VkCommandBuffer copyCmd;
-    if (vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &copyCmd) !=
+    if (vkAllocateCommandBuffers(_device, &cmdBufAllocateInfo, &copyCmd) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
@@ -1895,8 +1910,9 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
         VK_PIPELINE_STAGE_TRANSFER_BIT,
         VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 });
 
-    // colorAttachment.image is already in VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-    // and does not need to be transitioned
+    // _color_attachment.image is already in
+    // VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, and does not need to be
+    // transitioned
 
     VkImageCopy imageCopyRegion{};
     imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -1908,7 +1924,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     imageCopyRegion.extent.depth = 1;
 
     vkCmdCopyImage(copyCmd,
-                   colorAttachment.image,
+                   _color_attachment.image,
                    VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                    dstImage,
                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -1935,16 +1951,17 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     // submitWork(copyCmd, queue);
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &copyCmd;
-    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+    if (vkCreateFence(_device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to create fence!");
     }
-    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(_queue, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit queue!");
     }
-    if (vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (vkWaitForFences(_device, 1, &fence, VK_TRUE, UINT64_MAX) !=
+        VK_SUCCESS) {
         throw std::runtime_error("vkWaitForFences failed!");
     }
-    vkDestroyFence(device, fence, nullptr);
+    vkDestroyFence(_device, fence, nullptr);
 
     // Get layout of the image (including row pitch)
     VkImageSubresource subResource{};
@@ -1952,11 +1969,11 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     VkSubresourceLayout subResourceLayout;
 
     vkGetImageSubresourceLayout(
-        device, dstImage, &subResource, &subResourceLayout);
+        _device, dstImage, &subResource, &subResourceLayout);
 
     // Map image memory so we can start copying from it
     vkMapMemory(
-        device, dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&imagedata);
+        _device, dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&imagedata);
     imagedata += subResourceLayout.offset;
 
     /*
@@ -2004,11 +2021,11 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     }
 
     // Clean up resources
-    vkUnmapMemory(device, dstImageMemory);
-    vkFreeMemory(device, dstImageMemory, nullptr);
-    vkDestroyImage(device, dstImage, nullptr);
+    vkUnmapMemory(_device, dstImageMemory);
+    vkFreeMemory(_device, dstImageMemory, nullptr);
+    vkDestroyImage(_device, dstImage, nullptr);
 
-    vkQueueWaitIdle(queue);
+    vkQueueWaitIdle(_queue);
 }
 
 inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
@@ -2021,7 +2038,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     std::array<Eigen::Matrix4f, 2> pushConstants;
     VkSampleCountFlagBits msaaSamples;
     VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice,
+    vkGetPhysicalDeviceMemoryProperties(_physical_device,
                                         &deviceMemoryProperties);
     switch (samples) {
     case 1: msaaSamples = VK_SAMPLE_COUNT_1_BIT; break;
@@ -2040,7 +2057,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     VkFormat colorFormat = VK_FORMAT_R8G8B8A8_UNORM;
     VkFormat depthFormat;
 
-    _impl::getSupportedDepthFormat(physicalDevice, &depthFormat);
+    _impl::getSupportedDepthFormat(_physical_device, &depthFormat);
 
     // Color attachment
     VkImageCreateInfo image = _impl::imageCreateInfo();
@@ -2060,11 +2077,11 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     VkMemoryAllocateInfo memAlloc = _impl::memoryAllocateInfo();
     VkMemoryRequirements memReqs;
 
-    if (vkCreateImage(device, &image, nullptr, &colorAttachment.image) !=
+    if (vkCreateImage(_device, &image, nullptr, &_color_attachment.image) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image!");
     }
-    vkGetImageMemoryRequirements(device, colorAttachment.image, &memReqs);
+    vkGetImageMemoryRequirements(_device, _color_attachment.image, &memReqs);
     memAlloc.allocationSize = memReqs.size;
     memAlloc.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -2078,12 +2095,13 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
         memReqs.memoryTypeBits >>= 1;
     }
     if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-    if (vkAllocateMemory(device, &memAlloc, nullptr, &colorAttachment.memory) !=
+    if (vkAllocateMemory(
+            _device, &memAlloc, nullptr, &_color_attachment.memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
     if (vkBindImageMemory(
-            device, colorAttachment.image, colorAttachment.memory, 0) !=
+            _device, _color_attachment.image, _color_attachment.memory, 0) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
@@ -2097,21 +2115,21 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     colorImageView.subresourceRange.levelCount = 1;
     colorImageView.subresourceRange.baseArrayLayer = 0;
     colorImageView.subresourceRange.layerCount = 1;
-    colorImageView.image = colorAttachment.image;
+    colorImageView.image = _color_attachment.image;
     if (vkCreateImageView(
-            device, &colorImageView, nullptr, &colorAttachment.view) !=
+            _device, &colorImageView, nullptr, &_color_attachment.view) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image view!");
     }
     image.format = colorFormat;
     image.samples = VK_SAMPLE_COUNT_1_BIT;
     image.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    if (vkCreateImage(device, &image, nullptr, &dstAttachment.image) !=
+    if (vkCreateImage(_device, &image, nullptr, &_dst_attachment.image) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
 
-    vkGetImageMemoryRequirements(device, dstAttachment.image, &memReqs);
+    vkGetImageMemoryRequirements(_device, _dst_attachment.image, &memReqs);
     memAlloc.allocationSize = memReqs.size;
     memAlloc.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -2125,12 +2143,13 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
         memReqs.memoryTypeBits >>= 1;
     }
     if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-    if (vkAllocateMemory(device, &memAlloc, nullptr, &dstAttachment.memory) !=
+    if (vkAllocateMemory(
+            _device, &memAlloc, nullptr, &_dst_attachment.memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
     if (vkBindImageMemory(
-            device, dstAttachment.image, dstAttachment.memory, 0) !=
+            _device, _dst_attachment.image, _dst_attachment.memory, 0) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
@@ -2143,9 +2162,9 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     dstImageView.subresourceRange.levelCount = 1;
     dstImageView.subresourceRange.baseArrayLayer = 0;
     dstImageView.subresourceRange.layerCount = 1;
-    dstImageView.image = dstAttachment.image;
+    dstImageView.image = _dst_attachment.image;
     if (vkCreateImageView(
-            device, &dstImageView, nullptr, &dstAttachment.view) !=
+            _device, &dstImageView, nullptr, &_dst_attachment.view) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image view!");
     }
@@ -2154,11 +2173,11 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     image.format = depthFormat;
     image.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
     image.samples = msaaSamples;
-    if (vkCreateImage(device, &image, nullptr, &depthAttachment.image) !=
+    if (vkCreateImage(_device, &image, nullptr, &_depth_attachment.image) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image!");
     }
-    vkGetImageMemoryRequirements(device, depthAttachment.image, &memReqs);
+    vkGetImageMemoryRequirements(_device, _depth_attachment.image, &memReqs);
     memAlloc.allocationSize = memReqs.size;
     memAlloc.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -2172,12 +2191,13 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
         memReqs.memoryTypeBits >>= 1;
     }
     if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-    if (vkAllocateMemory(device, &memAlloc, nullptr, &depthAttachment.memory) !=
+    if (vkAllocateMemory(
+            _device, &memAlloc, nullptr, &_depth_attachment.memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
     if (vkBindImageMemory(
-            device, depthAttachment.image, depthAttachment.memory, 0) !=
+            _device, _depth_attachment.image, _depth_attachment.memory, 0) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
@@ -2193,9 +2213,9 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     depthStencilView.subresourceRange.levelCount = 1;
     depthStencilView.subresourceRange.baseArrayLayer = 0;
     depthStencilView.subresourceRange.layerCount = 1;
-    depthStencilView.image = depthAttachment.image;
+    depthStencilView.image = _depth_attachment.image;
     if (vkCreateImageView(
-            device, &depthStencilView, nullptr, &depthAttachment.view) !=
+            _device, &depthStencilView, nullptr, &_depth_attachment.view) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image view!");
     }
@@ -2288,25 +2308,25 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     renderPassInfo.pSubpasses = &subpassDescription;
     renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
     renderPassInfo.pDependencies = dependencies.data();
-    if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) !=
+    if (vkCreateRenderPass(_device, &renderPassInfo, nullptr, &_render_pass) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create renderpass!");
     }
     VkImageView attachments[3];
-    attachments[0] = colorAttachment.view;
-    attachments[1] = depthAttachment.view;
-    attachments[2] = dstAttachment.view;
+    attachments[0] = _color_attachment.view;
+    attachments[1] = _depth_attachment.view;
+    attachments[2] = _dst_attachment.view;
     // attachments[3] = depthStencil.view;
     VkFramebufferCreateInfo framebufferCreateInfo =
         _impl::framebufferCreateInfo();
-    framebufferCreateInfo.renderPass = renderPass;
+    framebufferCreateInfo.renderPass = _render_pass;
     framebufferCreateInfo.attachmentCount = 3;
     framebufferCreateInfo.pAttachments = attachments;
     framebufferCreateInfo.width = width;
     framebufferCreateInfo.height = height;
     framebufferCreateInfo.layers = 1;
     if (vkCreateFramebuffer(
-            device, &framebufferCreateInfo, nullptr, &framebuffer) !=
+            _device, &framebufferCreateInfo, nullptr, &_framebuffer) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create frame buffer!");
     }
@@ -2318,7 +2338,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     VkDescriptorSetLayoutCreateInfo descriptorLayout =
         _impl::descriptorSetLayoutCreateInfo(setLayoutBindings);
     if (vkCreateDescriptorSetLayout(
-            device, &descriptorLayout, nullptr, &descriptorSetLayout) !=
+            _device, &descriptorLayout, nullptr, &_descriptor_set_layout) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
@@ -2332,7 +2352,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
     if (vkCreatePipelineLayout(
-            device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) !=
+            _device, &pipelineLayoutCreateInfo, nullptr, &_pipeline_layout) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
@@ -2341,7 +2361,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     pipelineCacheCreateInfo.sType =
         VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
     if (vkCreatePipelineCache(
-            device, &pipelineCacheCreateInfo, nullptr, &pipelineCache) !=
+            _device, &pipelineCacheCreateInfo, nullptr, &_pipeline_cache) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline cache!");
     }
@@ -2382,7 +2402,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
         _impl::pipelineDynamicStateCreateInfo(dynamicStateEnables);
 
     VkGraphicsPipelineCreateInfo pipelineCreateInfo =
-        _impl::pipelineCreateInfo(pipelineLayout, renderPass);
+        _impl::pipelineCreateInfo(_pipeline_layout, _render_pass);
 
     std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages{};
 
@@ -2440,8 +2460,8 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
         shaderStages[1].pName = "main";
         std::string vert_color = std::string(DATA_DIR) + "vert_color.spv";
         std::string frag_color = std::string(DATA_DIR) + "frag_color.spv";
-        shaderStages[0].module = _impl::loadShader(vert_color.data(), device);
-        shaderStages[1].module = _impl::loadShader(frag_color.data(), device);
+        shaderStages[0].module = _impl::loadShader(vert_color.data(), _device);
+        shaderStages[1].module = _impl::loadShader(frag_color.data(), _device);
     }
     else {
 
@@ -2481,17 +2501,17 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
         shaderStages[1].pName = "main";
         std::string vert = std::string(DATA_DIR) + "vert.spv";
         std::string frag = std::string(DATA_DIR) + "frag.spv";
-        shaderStages[0].module = _impl::loadShader(vert.data(), device);
-        shaderStages[1].module = _impl::loadShader(frag.data(), device);
+        shaderStages[0].module = _impl::loadShader(vert.data(), _device);
+        shaderStages[1].module = _impl::loadShader(frag.data(), _device);
     }
 
-    shaderModules = { shaderStages[0].module, shaderStages[1].module };
-    if (vkCreateGraphicsPipelines(device,
-                                  pipelineCache,
+    _shader_modules = { shaderStages[0].module, shaderStages[1].module };
+    if (vkCreateGraphicsPipelines(_device,
+                                  _pipeline_cache,
                                   1,
                                   &pipelineCreateInfo,
                                   nullptr,
-                                  &pipeline) != VK_SUCCESS) {
+                                  &_pipeline) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 
@@ -2502,9 +2522,9 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     VkCommandBuffer commandBuffer;
     VkCommandBufferAllocateInfo cmdBufAllocateInfo =
         _impl::commandBufferAllocateInfo(
-            commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
-    if (vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &commandBuffer) !=
-        VK_SUCCESS) {
+            _command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+    if (vkAllocateCommandBuffers(
+            _device, &cmdBufAllocateInfo, &commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
 
@@ -2528,8 +2548,8 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     renderPassBeginInfo.renderArea.extent.height = height;
     renderPassBeginInfo.clearValueCount = 2;
     renderPassBeginInfo.pClearValues = clearValues;
-    renderPassBeginInfo.renderPass = renderPass;
-    renderPassBeginInfo.framebuffer = framebuffer;
+    renderPassBeginInfo.renderPass = _render_pass;
+    renderPassBeginInfo.framebuffer = _framebuffer;
 
     vkCmdBeginRenderPass(
         commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -2547,12 +2567,13 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     scissor.extent.height = height;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+    vkCmdBindPipeline(
+        commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline);
 
     // Render scene
     VkDeviceSize offsets[1] = { 0 };
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, offsets);
-    vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &_vertex_buffer, offsets);
+    vkCmdBindIndexBuffer(commandBuffer, _index_buffer, 0, VK_INDEX_TYPE_UINT32);
     Eigen::Matrix4f mvpMatrix = camera.projection() * camera.view();
     pushConstants[0] = mvpMatrix;
 
@@ -2582,10 +2603,10 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     ubo(3, 3) = 0.0f;
 
     pushConstants[1] = ubo;
-    // vkCmdPushConstants(commandBuffer, pipelineLayout,
+    // vkCmdPushConstants(commandBuffer, _pipeline_layout,
     // VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(mvpMatrix), &mvpMatrix);
     vkCmdPushConstants(commandBuffer,
-                       pipelineLayout,
+                       _pipeline_layout,
                        VK_SHADER_STAGE_VERTEX_BIT,
                        0,
                        sizeof(pushConstants),
@@ -2602,18 +2623,19 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     submitInfo.pCommandBuffers = &commandBuffer;
     VkFenceCreateInfo fenceInfo = _impl::fenceCreateInfo();
     VkFence fence;
-    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+    if (vkCreateFence(_device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to create fence!");
     }
-    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(_queue, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit queue!");
     }
-    if (vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (vkWaitForFences(_device, 1, &fence, VK_TRUE, UINT64_MAX) !=
+        VK_SUCCESS) {
         throw std::runtime_error("vkWaitForFences failed!");
     }
-    vkDestroyFence(device, fence, nullptr);
+    vkDestroyFence(_device, fence, nullptr);
 
-    vkDeviceWaitIdle(device);
+    vkDeviceWaitIdle(_device);
 
     /*
     Copy framebuffer image to host visible image
@@ -2635,7 +2657,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     imgCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     // Create the image
     VkImage dstImage;
-    if (vkCreateImage(device, &imgCreateInfo, nullptr, &dstImage) !=
+    if (vkCreateImage(_device, &imgCreateInfo, nullptr, &dstImage) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to end create image!");
     }
@@ -2643,7 +2665,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     VkMemoryRequirements memRequirements;
     VkMemoryAllocateInfo memAllocInfo(_impl::memoryAllocateInfo());
     VkDeviceMemory dstImageMemory;
-    vkGetImageMemoryRequirements(device, dstImage, &memRequirements);
+    vkGetImageMemoryRequirements(_device, dstImage, &memRequirements);
     memAllocInfo.allocationSize = memRequirements.size;
     memAllocInfo.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -2663,19 +2685,19 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
         memAllocInfo.memoryTypeIndex = 0;
     }
 
-    if (vkAllocateMemory(device, &memAllocInfo, nullptr, &dstImageMemory) !=
+    if (vkAllocateMemory(_device, &memAllocInfo, nullptr, &dstImageMemory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
-    if (vkBindImageMemory(device, dstImage, dstImageMemory, 0) != VK_SUCCESS) {
+    if (vkBindImageMemory(_device, dstImage, dstImageMemory, 0) != VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
     // Do the actual blit from the offscreen image to our host visible
     // destination image
     cmdBufAllocateInfo = _impl::commandBufferAllocateInfo(
-        commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+        _command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
     VkCommandBuffer copyCmd;
-    if (vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &copyCmd) !=
+    if (vkAllocateCommandBuffers(_device, &cmdBufAllocateInfo, &copyCmd) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
@@ -2698,8 +2720,9 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
         VK_PIPELINE_STAGE_TRANSFER_BIT,
         VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 });
 
-    // colorAttachment.image is already in VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-    // and does not need to be transitioned
+    // _color_attachment.image is already in
+    // VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, and does not need to be
+    // transitioned
 
     VkImageCopy imageCopyRegion{};
     imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -2710,7 +2733,7 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     imageCopyRegion.extent.height = height;
     imageCopyRegion.extent.depth = 1;
     vkCmdCopyImage(copyCmd,
-                   dstAttachment.image,
+                   _dst_attachment.image,
                    VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                    dstImage,
                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -2737,16 +2760,17 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     // submitWork(copyCmd, queue);
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &copyCmd;
-    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+    if (vkCreateFence(_device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to create fence!");
     }
-    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(_queue, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit queue!");
     }
-    if (vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (vkWaitForFences(_device, 1, &fence, VK_TRUE, UINT64_MAX) !=
+        VK_SUCCESS) {
         throw std::runtime_error("vkWaitForFences failed!");
     }
-    vkDestroyFence(device, fence, nullptr);
+    vkDestroyFence(_device, fence, nullptr);
 
     // Get layout of the image (including row pitch)
     VkImageSubresource subResource{};
@@ -2754,11 +2778,11 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     VkSubresourceLayout subResourceLayout;
 
     vkGetImageSubresourceLayout(
-        device, dstImage, &subResource, &subResourceLayout);
+        _device, dstImage, &subResource, &subResourceLayout);
 
     // Map image memory so we can start copying from it
     vkMapMemory(
-        device, dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&imagedata);
+        _device, dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&imagedata);
     imagedata += subResourceLayout.offset;
 
     /*
@@ -2806,11 +2830,11 @@ inline void Euclid::Rasterizer::render_shaded(std::vector<uint8_t>& pixels,
     }
 
     // Clean up resources
-    vkUnmapMemory(device, dstImageMemory);
-    vkFreeMemory(device, dstImageMemory, nullptr);
-    vkDestroyImage(device, dstImage, nullptr);
+    vkUnmapMemory(_device, dstImageMemory);
+    vkFreeMemory(_device, dstImageMemory, nullptr);
+    vkDestroyImage(_device, dstImage, nullptr);
 
-    vkQueueWaitIdle(queue);
+    vkQueueWaitIdle(_queue);
 }
 
 inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
@@ -2820,7 +2844,7 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
 {
     std::array<Eigen::Matrix4f, 2> pushConstants;
     VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice,
+    vkGetPhysicalDeviceMemoryProperties(_physical_device,
                                         &deviceMemoryProperties);
     /*
     Create framebuffer attachments
@@ -2828,7 +2852,7 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     VkFormat colorFormat = VK_FORMAT_R8G8B8A8_UNORM;
     VkFormat depthFormat;
 
-    _impl::getSupportedDepthFormat(physicalDevice, &depthFormat);
+    _impl::getSupportedDepthFormat(_physical_device, &depthFormat);
 
     // Color attachment
     VkImageCreateInfo image = _impl::imageCreateInfo();
@@ -2847,11 +2871,11 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     VkMemoryAllocateInfo memAlloc = _impl::memoryAllocateInfo();
     VkMemoryRequirements memReqs;
 
-    if (vkCreateImage(device, &image, nullptr, &colorAttachment.image) !=
+    if (vkCreateImage(_device, &image, nullptr, &_color_attachment.image) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image!");
     }
-    vkGetImageMemoryRequirements(device, colorAttachment.image, &memReqs);
+    vkGetImageMemoryRequirements(_device, _color_attachment.image, &memReqs);
     memAlloc.allocationSize = memReqs.size;
     memAlloc.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -2865,12 +2889,13 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
         memReqs.memoryTypeBits >>= 1;
     }
     if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-    if (vkAllocateMemory(device, &memAlloc, nullptr, &colorAttachment.memory) !=
+    if (vkAllocateMemory(
+            _device, &memAlloc, nullptr, &_color_attachment.memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
     if (vkBindImageMemory(
-            device, colorAttachment.image, colorAttachment.memory, 0) !=
+            _device, _color_attachment.image, _color_attachment.memory, 0) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
@@ -2884,9 +2909,9 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     colorImageView.subresourceRange.levelCount = 1;
     colorImageView.subresourceRange.baseArrayLayer = 0;
     colorImageView.subresourceRange.layerCount = 1;
-    colorImageView.image = colorAttachment.image;
+    colorImageView.image = _color_attachment.image;
     if (vkCreateImageView(
-            device, &colorImageView, nullptr, &colorAttachment.view) !=
+            _device, &colorImageView, nullptr, &_color_attachment.view) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image view!");
     }
@@ -2895,11 +2920,11 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     image.format = depthFormat;
     image.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-    if (vkCreateImage(device, &image, nullptr, &depthAttachment.image) !=
+    if (vkCreateImage(_device, &image, nullptr, &_depth_attachment.image) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image!");
     }
-    vkGetImageMemoryRequirements(device, depthAttachment.image, &memReqs);
+    vkGetImageMemoryRequirements(_device, _depth_attachment.image, &memReqs);
     memAlloc.allocationSize = memReqs.size;
     memAlloc.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -2913,12 +2938,13 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
         memReqs.memoryTypeBits >>= 1;
     }
     if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-    if (vkAllocateMemory(device, &memAlloc, nullptr, &depthAttachment.memory) !=
+    if (vkAllocateMemory(
+            _device, &memAlloc, nullptr, &_depth_attachment.memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
     if (vkBindImageMemory(
-            device, depthAttachment.image, depthAttachment.memory, 0) !=
+            _device, _depth_attachment.image, _depth_attachment.memory, 0) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
@@ -2934,9 +2960,9 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     depthStencilView.subresourceRange.levelCount = 1;
     depthStencilView.subresourceRange.baseArrayLayer = 0;
     depthStencilView.subresourceRange.layerCount = 1;
-    depthStencilView.image = depthAttachment.image;
+    depthStencilView.image = _depth_attachment.image;
     if (vkCreateImageView(
-            device, &depthStencilView, nullptr, &depthAttachment.view) !=
+            _device, &depthStencilView, nullptr, &_depth_attachment.view) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image view!");
     }
@@ -3011,24 +3037,24 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     renderPassInfo.pSubpasses = &subpassDescription;
     renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
     renderPassInfo.pDependencies = dependencies.data();
-    if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) !=
+    if (vkCreateRenderPass(_device, &renderPassInfo, nullptr, &_render_pass) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create renderpass!");
     }
     VkImageView attachments[2];
-    attachments[0] = colorAttachment.view;
-    attachments[1] = depthAttachment.view;
+    attachments[0] = _color_attachment.view;
+    attachments[1] = _depth_attachment.view;
 
     VkFramebufferCreateInfo framebufferCreateInfo =
         _impl::framebufferCreateInfo();
-    framebufferCreateInfo.renderPass = renderPass;
+    framebufferCreateInfo.renderPass = _render_pass;
     framebufferCreateInfo.attachmentCount = 2;
     framebufferCreateInfo.pAttachments = attachments;
     framebufferCreateInfo.width = width;
     framebufferCreateInfo.height = height;
     framebufferCreateInfo.layers = 1;
     if (vkCreateFramebuffer(
-            device, &framebufferCreateInfo, nullptr, &framebuffer) !=
+            _device, &framebufferCreateInfo, nullptr, &_framebuffer) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create frame buffer!");
     }
@@ -3040,7 +3066,7 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     VkDescriptorSetLayoutCreateInfo descriptorLayout =
         _impl::descriptorSetLayoutCreateInfo(setLayoutBindings);
     if (vkCreateDescriptorSetLayout(
-            device, &descriptorLayout, nullptr, &descriptorSetLayout) !=
+            _device, &descriptorLayout, nullptr, &_descriptor_set_layout) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
@@ -3059,7 +3085,7 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
     if (vkCreatePipelineLayout(
-            device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) !=
+            _device, &pipelineLayoutCreateInfo, nullptr, &_pipeline_layout) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
@@ -3068,7 +3094,7 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     pipelineCacheCreateInfo.sType =
         VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
     if (vkCreatePipelineCache(
-            device, &pipelineCacheCreateInfo, nullptr, &pipelineCache) !=
+            _device, &pipelineCacheCreateInfo, nullptr, &_pipeline_cache) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline cache!");
     }
@@ -3106,7 +3132,7 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
         _impl::pipelineDynamicStateCreateInfo(dynamicStateEnables);
 
     VkGraphicsPipelineCreateInfo pipelineCreateInfo =
-        _impl::pipelineCreateInfo(pipelineLayout, renderPass);
+        _impl::pipelineCreateInfo(_pipeline_layout, _render_pass);
 
     std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages{};
 
@@ -3164,8 +3190,8 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
         shaderStages[1].pName = "main";
         std::string vert_color = std::string(DATA_DIR) + "vert_color.spv";
         std::string frag_color = std::string(DATA_DIR) + "frag_color.spv";
-        shaderStages[0].module = _impl::loadShader(vert_color.data(), device);
-        shaderStages[1].module = _impl::loadShader(frag_color.data(), device);
+        shaderStages[0].module = _impl::loadShader(vert_color.data(), _device);
+        shaderStages[1].module = _impl::loadShader(frag_color.data(), _device);
     }
     else {
 
@@ -3205,17 +3231,17 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
         shaderStages[1].pName = "main";
         std::string vert_depth = std::string(DATA_DIR) + "vert_depth.spv";
         std::string frag_depth = std::string(DATA_DIR) + "frag_depth.spv";
-        shaderStages[0].module = _impl::loadShader(vert_depth.data(), device);
-        shaderStages[1].module = _impl::loadShader(frag_depth.data(), device);
+        shaderStages[0].module = _impl::loadShader(vert_depth.data(), _device);
+        shaderStages[1].module = _impl::loadShader(frag_depth.data(), _device);
     }
 
-    shaderModules = { shaderStages[0].module, shaderStages[1].module };
-    if (vkCreateGraphicsPipelines(device,
-                                  pipelineCache,
+    _shader_modules = { shaderStages[0].module, shaderStages[1].module };
+    if (vkCreateGraphicsPipelines(_device,
+                                  _pipeline_cache,
                                   1,
                                   &pipelineCreateInfo,
                                   nullptr,
-                                  &pipeline) != VK_SUCCESS) {
+                                  &_pipeline) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
     /*
@@ -3225,9 +3251,9 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     VkCommandBuffer commandBuffer;
     VkCommandBufferAllocateInfo cmdBufAllocateInfo =
         _impl::commandBufferAllocateInfo(
-            commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
-    if (vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &commandBuffer) !=
-        VK_SUCCESS) {
+            _command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+    if (vkAllocateCommandBuffers(
+            _device, &cmdBufAllocateInfo, &commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
 
@@ -3251,8 +3277,8 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     renderPassBeginInfo.renderArea.extent.height = height;
     renderPassBeginInfo.clearValueCount = 2;
     renderPassBeginInfo.pClearValues = clearValues;
-    renderPassBeginInfo.renderPass = renderPass;
-    renderPassBeginInfo.framebuffer = framebuffer;
+    renderPassBeginInfo.renderPass = _render_pass;
+    renderPassBeginInfo.framebuffer = _framebuffer;
 
     vkCmdBeginRenderPass(
         commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -3270,12 +3296,13 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     scissor.extent.height = height;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+    vkCmdBindPipeline(
+        commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline);
 
     // Render scene
     VkDeviceSize offsets[1] = { 0 };
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, offsets);
-    vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &_vertex_buffer, offsets);
+    vkCmdBindIndexBuffer(commandBuffer, _index_buffer, 0, VK_INDEX_TYPE_UINT32);
     Eigen::Matrix4f mvpMatrix = camera.projection() * camera.view();
 
     pushConstants[0] = mvpMatrix;
@@ -3306,10 +3333,10 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     ubo(3, 3) = 0.0f;
 
     pushConstants[1] = ubo;
-    // vkCmdPushConstants(commandBuffer, pipelineLayout,
+    // vkCmdPushConstants(commandBuffer, _pipeline_layout,
     // VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(mvpMatrix), &mvpMatrix);
     vkCmdPushConstants(commandBuffer,
-                       pipelineLayout,
+                       _pipeline_layout,
                        VK_SHADER_STAGE_VERTEX_BIT,
                        0,
                        sizeof(pushConstants),
@@ -3329,18 +3356,19 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     submitInfo.pCommandBuffers = &commandBuffer;
     VkFenceCreateInfo fenceInfo = _impl::fenceCreateInfo();
     VkFence fence;
-    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+    if (vkCreateFence(_device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to create fence!");
     }
-    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(_queue, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit queue!");
     }
-    if (vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (vkWaitForFences(_device, 1, &fence, VK_TRUE, UINT64_MAX) !=
+        VK_SUCCESS) {
         throw std::runtime_error("vkWaitForFences failed!");
     }
-    vkDestroyFence(device, fence, nullptr);
+    vkDestroyFence(_device, fence, nullptr);
 
-    vkDeviceWaitIdle(device);
+    vkDeviceWaitIdle(_device);
 
     /*
     Copy framebuffer image to host visible image
@@ -3362,7 +3390,7 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     imgCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     // Create the image
     VkImage dstImage;
-    if (vkCreateImage(device, &imgCreateInfo, nullptr, &dstImage) !=
+    if (vkCreateImage(_device, &imgCreateInfo, nullptr, &dstImage) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to end create image!");
     }
@@ -3370,7 +3398,7 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     VkMemoryRequirements memRequirements;
     VkMemoryAllocateInfo memAllocInfo(_impl::memoryAllocateInfo());
     VkDeviceMemory dstImageMemory;
-    vkGetImageMemoryRequirements(device, dstImage, &memRequirements);
+    vkGetImageMemoryRequirements(_device, dstImage, &memRequirements);
     memAllocInfo.allocationSize = memRequirements.size;
     // Memory must be host visible to copy from
     memAllocInfo.memoryTypeIndex = -1;
@@ -3390,20 +3418,20 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     if (memAllocInfo.memoryTypeIndex == -1) {
         memAllocInfo.memoryTypeIndex = 0;
     }
-    if (vkAllocateMemory(device, &memAllocInfo, nullptr, &dstImageMemory) !=
+    if (vkAllocateMemory(_device, &memAllocInfo, nullptr, &dstImageMemory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
-    if (vkBindImageMemory(device, dstImage, dstImageMemory, 0) != VK_SUCCESS) {
+    if (vkBindImageMemory(_device, dstImage, dstImageMemory, 0) != VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
 
     // Do the actual blit from the offscreen image to our host visible
     // destination image
     cmdBufAllocateInfo = _impl::commandBufferAllocateInfo(
-        commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+        _command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
     VkCommandBuffer copyCmd;
-    if (vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &copyCmd) !=
+    if (vkAllocateCommandBuffers(_device, &cmdBufAllocateInfo, &copyCmd) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
@@ -3426,8 +3454,9 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
         VK_PIPELINE_STAGE_TRANSFER_BIT,
         VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 });
 
-    // colorAttachment.image is already in VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-    // and does not need to be transitioned
+    // _color_attachment.image is already in
+    // VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, and does not need to be
+    // transitioned
 
     VkImageCopy imageCopyRegion{};
     imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -3439,7 +3468,7 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     imageCopyRegion.extent.depth = 1;
 
     vkCmdCopyImage(copyCmd,
-                   colorAttachment.image,
+                   _color_attachment.image,
                    VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                    dstImage,
                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -3466,16 +3495,17 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     // submitWork(copyCmd, queue);
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &copyCmd;
-    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+    if (vkCreateFence(_device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to create fence!");
     }
-    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(_queue, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit queue!");
     }
-    if (vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (vkWaitForFences(_device, 1, &fence, VK_TRUE, UINT64_MAX) !=
+        VK_SUCCESS) {
         throw std::runtime_error("vkWaitForFences failed!");
     }
-    vkDestroyFence(device, fence, nullptr);
+    vkDestroyFence(_device, fence, nullptr);
 
     // Get layout of the image (including row pitch)
     VkImageSubresource subResource{};
@@ -3483,11 +3513,11 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
     VkSubresourceLayout subResourceLayout;
 
     vkGetImageSubresourceLayout(
-        device, dstImage, &subResource, &subResourceLayout);
+        _device, dstImage, &subResource, &subResourceLayout);
 
     // Map image memory so we can start copying from it
     vkMapMemory(
-        device, dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&imagedata);
+        _device, dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&imagedata);
     imagedata += subResourceLayout.offset;
 
     /*
@@ -3529,11 +3559,11 @@ inline void Euclid::Rasterizer::render_depth(std::vector<uint8_t>& pixels,
         imagedata += subResourceLayout.rowPitch;
     }
     // Clean up resources
-    vkUnmapMemory(device, dstImageMemory);
-    vkFreeMemory(device, dstImageMemory, nullptr);
-    vkDestroyImage(device, dstImage, nullptr);
+    vkUnmapMemory(_device, dstImageMemory);
+    vkFreeMemory(_device, dstImageMemory, nullptr);
+    vkDestroyImage(_device, dstImage, nullptr);
 
-    vkQueueWaitIdle(queue);
+    vkQueueWaitIdle(_queue);
 }
 
 inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
@@ -3543,7 +3573,7 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
 {
     std::array<Eigen::Matrix4f, 2> pushConstants;
     VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice,
+    vkGetPhysicalDeviceMemoryProperties(_physical_device,
                                         &deviceMemoryProperties);
     /*
     Create framebuffer attachments
@@ -3551,7 +3581,7 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     VkFormat colorFormat = VK_FORMAT_R8G8B8A8_UNORM;
     VkFormat depthFormat;
 
-    _impl::getSupportedDepthFormat(physicalDevice, &depthFormat);
+    _impl::getSupportedDepthFormat(_physical_device, &depthFormat);
 
     // Color attachment
     VkImageCreateInfo image = _impl::imageCreateInfo();
@@ -3570,11 +3600,11 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     VkMemoryAllocateInfo memAlloc = _impl::memoryAllocateInfo();
     VkMemoryRequirements memReqs;
 
-    if (vkCreateImage(device, &image, nullptr, &colorAttachment.image) !=
+    if (vkCreateImage(_device, &image, nullptr, &_color_attachment.image) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image!");
     }
-    vkGetImageMemoryRequirements(device, colorAttachment.image, &memReqs);
+    vkGetImageMemoryRequirements(_device, _color_attachment.image, &memReqs);
     memAlloc.allocationSize = memReqs.size;
     memAlloc.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -3588,12 +3618,13 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
         memReqs.memoryTypeBits >>= 1;
     }
     if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-    if (vkAllocateMemory(device, &memAlloc, nullptr, &colorAttachment.memory) !=
+    if (vkAllocateMemory(
+            _device, &memAlloc, nullptr, &_color_attachment.memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
     if (vkBindImageMemory(
-            device, colorAttachment.image, colorAttachment.memory, 0) !=
+            _device, _color_attachment.image, _color_attachment.memory, 0) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
@@ -3607,9 +3638,9 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     colorImageView.subresourceRange.levelCount = 1;
     colorImageView.subresourceRange.baseArrayLayer = 0;
     colorImageView.subresourceRange.layerCount = 1;
-    colorImageView.image = colorAttachment.image;
+    colorImageView.image = _color_attachment.image;
     if (vkCreateImageView(
-            device, &colorImageView, nullptr, &colorAttachment.view) !=
+            _device, &colorImageView, nullptr, &_color_attachment.view) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image view!");
     }
@@ -3617,11 +3648,11 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     image.format = depthFormat;
     image.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-    if (vkCreateImage(device, &image, nullptr, &depthAttachment.image) !=
+    if (vkCreateImage(_device, &image, nullptr, &_depth_attachment.image) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image!");
     }
-    vkGetImageMemoryRequirements(device, depthAttachment.image, &memReqs);
+    vkGetImageMemoryRequirements(_device, _depth_attachment.image, &memReqs);
     memAlloc.allocationSize = memReqs.size;
     memAlloc.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -3635,12 +3666,13 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
         memReqs.memoryTypeBits >>= 1;
     }
     if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-    if (vkAllocateMemory(device, &memAlloc, nullptr, &depthAttachment.memory) !=
+    if (vkAllocateMemory(
+            _device, &memAlloc, nullptr, &_depth_attachment.memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
     if (vkBindImageMemory(
-            device, depthAttachment.image, depthAttachment.memory, 0) !=
+            _device, _depth_attachment.image, _depth_attachment.memory, 0) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
@@ -3656,9 +3688,9 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     depthStencilView.subresourceRange.levelCount = 1;
     depthStencilView.subresourceRange.baseArrayLayer = 0;
     depthStencilView.subresourceRange.layerCount = 1;
-    depthStencilView.image = depthAttachment.image;
+    depthStencilView.image = _depth_attachment.image;
     if (vkCreateImageView(
-            device, &depthStencilView, nullptr, &depthAttachment.view) !=
+            _device, &depthStencilView, nullptr, &_depth_attachment.view) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image view!");
     }
@@ -3733,24 +3765,24 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     renderPassInfo.pSubpasses = &subpassDescription;
     renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
     renderPassInfo.pDependencies = dependencies.data();
-    if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) !=
+    if (vkCreateRenderPass(_device, &renderPassInfo, nullptr, &_render_pass) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create renderpass!");
     }
     VkImageView attachments[2];
-    attachments[0] = colorAttachment.view;
-    attachments[1] = depthAttachment.view;
+    attachments[0] = _color_attachment.view;
+    attachments[1] = _depth_attachment.view;
 
     VkFramebufferCreateInfo framebufferCreateInfo =
         _impl::framebufferCreateInfo();
-    framebufferCreateInfo.renderPass = renderPass;
+    framebufferCreateInfo.renderPass = _render_pass;
     framebufferCreateInfo.attachmentCount = 2;
     framebufferCreateInfo.pAttachments = attachments;
     framebufferCreateInfo.width = width;
     framebufferCreateInfo.height = height;
     framebufferCreateInfo.layers = 1;
     if (vkCreateFramebuffer(
-            device, &framebufferCreateInfo, nullptr, &framebuffer) !=
+            _device, &framebufferCreateInfo, nullptr, &_framebuffer) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create frame buffer!");
     }
@@ -3762,7 +3794,7 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     VkDescriptorSetLayoutCreateInfo descriptorLayout =
         _impl::descriptorSetLayoutCreateInfo(setLayoutBindings);
     if (vkCreateDescriptorSetLayout(
-            device, &descriptorLayout, nullptr, &descriptorSetLayout) !=
+            _device, &descriptorLayout, nullptr, &_descriptor_set_layout) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
@@ -3775,7 +3807,7 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
     if (vkCreatePipelineLayout(
-            device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) !=
+            _device, &pipelineLayoutCreateInfo, nullptr, &_pipeline_layout) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
@@ -3784,7 +3816,7 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     pipelineCacheCreateInfo.sType =
         VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
     if (vkCreatePipelineCache(
-            device, &pipelineCacheCreateInfo, nullptr, &pipelineCache) !=
+            _device, &pipelineCacheCreateInfo, nullptr, &_pipeline_cache) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline cache!");
     }
@@ -3822,7 +3854,7 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
         _impl::pipelineDynamicStateCreateInfo(dynamicStateEnables);
 
     VkGraphicsPipelineCreateInfo pipelineCreateInfo =
-        _impl::pipelineCreateInfo(pipelineLayout, renderPass);
+        _impl::pipelineCreateInfo(_pipeline_layout, _render_pass);
 
     std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages{};
 
@@ -3880,8 +3912,8 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
         shaderStages[1].pName = "main";
         std::string vert_color = std::string(DATA_DIR) + "vert_color.spv";
         std::string frag_color = std::string(DATA_DIR) + "frag_color.spv";
-        shaderStages[0].module = _impl::loadShader(vert_color.data(), device);
-        shaderStages[1].module = _impl::loadShader(frag_color.data(), device);
+        shaderStages[0].module = _impl::loadShader(vert_color.data(), _device);
+        shaderStages[1].module = _impl::loadShader(frag_color.data(), _device);
     }
     else {
 
@@ -3924,18 +3956,18 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
         std::string frag_silhouette =
             std::string(DATA_DIR) + "frag_silhouette.spv";
         shaderStages[0].module =
-            _impl::loadShader(vert_silhouette.data(), device);
+            _impl::loadShader(vert_silhouette.data(), _device);
         shaderStages[1].module =
-            _impl::loadShader(frag_silhouette.data(), device);
+            _impl::loadShader(frag_silhouette.data(), _device);
     }
 
-    shaderModules = { shaderStages[0].module, shaderStages[1].module };
-    if (vkCreateGraphicsPipelines(device,
-                                  pipelineCache,
+    _shader_modules = { shaderStages[0].module, shaderStages[1].module };
+    if (vkCreateGraphicsPipelines(_device,
+                                  _pipeline_cache,
                                   1,
                                   &pipelineCreateInfo,
                                   nullptr,
-                                  &pipeline) != VK_SUCCESS) {
+                                  &_pipeline) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 
@@ -3946,9 +3978,9 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     VkCommandBuffer commandBuffer;
     VkCommandBufferAllocateInfo cmdBufAllocateInfo =
         _impl::commandBufferAllocateInfo(
-            commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
-    if (vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &commandBuffer) !=
-        VK_SUCCESS) {
+            _command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+    if (vkAllocateCommandBuffers(
+            _device, &cmdBufAllocateInfo, &commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
 
@@ -3971,8 +4003,8 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     renderPassBeginInfo.renderArea.extent.height = height;
     renderPassBeginInfo.clearValueCount = 2;
     renderPassBeginInfo.pClearValues = clearValues;
-    renderPassBeginInfo.renderPass = renderPass;
-    renderPassBeginInfo.framebuffer = framebuffer;
+    renderPassBeginInfo.renderPass = _render_pass;
+    renderPassBeginInfo.framebuffer = _framebuffer;
 
     vkCmdBeginRenderPass(
         commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -3990,12 +4022,13 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     scissor.extent.height = height;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+    vkCmdBindPipeline(
+        commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline);
 
     // Render scene
     VkDeviceSize offsets[1] = { 0 };
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, offsets);
-    vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &_vertex_buffer, offsets);
+    vkCmdBindIndexBuffer(commandBuffer, _index_buffer, 0, VK_INDEX_TYPE_UINT32);
     Eigen::Matrix4f mvpMatrix = camera.projection() * camera.view();
     pushConstants[0] = mvpMatrix;
 
@@ -4025,10 +4058,10 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     ubo(3, 3) = 0.0f;
 
     pushConstants[1] = ubo;
-    // vkCmdPushConstants(commandBuffer, pipelineLayout,
+    // vkCmdPushConstants(commandBuffer, _pipeline_layout,
     // VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(mvpMatrix), &mvpMatrix);
     vkCmdPushConstants(commandBuffer,
-                       pipelineLayout,
+                       _pipeline_layout,
                        VK_SHADER_STAGE_VERTEX_BIT,
                        0,
                        sizeof(pushConstants),
@@ -4045,18 +4078,19 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     submitInfo.pCommandBuffers = &commandBuffer;
     VkFenceCreateInfo fenceInfo = _impl::fenceCreateInfo();
     VkFence fence;
-    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+    if (vkCreateFence(_device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to create fence!");
     }
-    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(_queue, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit queue!");
     }
-    if (vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (vkWaitForFences(_device, 1, &fence, VK_TRUE, UINT64_MAX) !=
+        VK_SUCCESS) {
         throw std::runtime_error("vkWaitForFences failed!");
     }
-    vkDestroyFence(device, fence, nullptr);
+    vkDestroyFence(_device, fence, nullptr);
 
-    vkDeviceWaitIdle(device);
+    vkDeviceWaitIdle(_device);
 
     /*
     Copy framebuffer image to host visible image
@@ -4078,7 +4112,7 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     imgCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     // Create the image
     VkImage dstImage;
-    if (vkCreateImage(device, &imgCreateInfo, nullptr, &dstImage) !=
+    if (vkCreateImage(_device, &imgCreateInfo, nullptr, &dstImage) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to end create image!");
     }
@@ -4086,7 +4120,7 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     VkMemoryRequirements memRequirements;
     VkMemoryAllocateInfo memAllocInfo(_impl::memoryAllocateInfo());
     VkDeviceMemory dstImageMemory;
-    vkGetImageMemoryRequirements(device, dstImage, &memRequirements);
+    vkGetImageMemoryRequirements(_device, dstImage, &memRequirements);
     memAllocInfo.allocationSize = memRequirements.size;
     // Memory must be host visible to copy from
     memAllocInfo.memoryTypeIndex = -1;
@@ -4106,20 +4140,20 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     if (memAllocInfo.memoryTypeIndex == -1) {
         memAllocInfo.memoryTypeIndex = 0;
     }
-    if (vkAllocateMemory(device, &memAllocInfo, nullptr, &dstImageMemory) !=
+    if (vkAllocateMemory(_device, &memAllocInfo, nullptr, &dstImageMemory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
-    if (vkBindImageMemory(device, dstImage, dstImageMemory, 0) != VK_SUCCESS) {
+    if (vkBindImageMemory(_device, dstImage, dstImageMemory, 0) != VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
 
     // Do the actual blit from the offscreen image to our host visible
     // destination image
     cmdBufAllocateInfo = _impl::commandBufferAllocateInfo(
-        commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+        _command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
     VkCommandBuffer copyCmd;
-    if (vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &copyCmd) !=
+    if (vkAllocateCommandBuffers(_device, &cmdBufAllocateInfo, &copyCmd) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
@@ -4142,8 +4176,9 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
         VK_PIPELINE_STAGE_TRANSFER_BIT,
         VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 });
 
-    // colorAttachment.image is already in VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-    // and does not need to be transitioned
+    // _color_attachment.image is already in
+    // VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, and does not need to be
+    // transitioned
 
     VkImageCopy imageCopyRegion{};
     imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -4155,7 +4190,7 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     imageCopyRegion.extent.depth = 1;
 
     vkCmdCopyImage(copyCmd,
-                   colorAttachment.image,
+                   _color_attachment.image,
                    VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                    dstImage,
                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -4182,16 +4217,17 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     // submitWork(copyCmd, queue);
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &copyCmd;
-    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+    if (vkCreateFence(_device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to create fence!");
     }
-    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(_queue, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit queue!");
     }
-    if (vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (vkWaitForFences(_device, 1, &fence, VK_TRUE, UINT64_MAX) !=
+        VK_SUCCESS) {
         throw std::runtime_error("vkWaitForFences failed!");
     }
-    vkDestroyFence(device, fence, nullptr);
+    vkDestroyFence(_device, fence, nullptr);
 
     // Get layout of the image (including row pitch)
     VkImageSubresource subResource{};
@@ -4199,11 +4235,11 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
     VkSubresourceLayout subResourceLayout;
 
     vkGetImageSubresourceLayout(
-        device, dstImage, &subResource, &subResourceLayout);
+        _device, dstImage, &subResource, &subResourceLayout);
 
     // Map image memory so we can start copying from it
     vkMapMemory(
-        device, dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&imagedata);
+        _device, dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&imagedata);
     imagedata += subResourceLayout.offset;
 
     /*
@@ -4245,11 +4281,11 @@ inline void Euclid::Rasterizer::render_silhouette(std::vector<uint8_t>& pixels,
         imagedata += subResourceLayout.rowPitch;
     }
     // Clean up resources
-    vkUnmapMemory(device, dstImageMemory);
-    vkFreeMemory(device, dstImageMemory, nullptr);
-    vkDestroyImage(device, dstImage, nullptr);
+    vkUnmapMemory(_device, dstImageMemory);
+    vkFreeMemory(_device, dstImageMemory, nullptr);
+    vkDestroyImage(_device, dstImage, nullptr);
 
-    vkQueueWaitIdle(queue);
+    vkQueueWaitIdle(_queue);
 }
 
 inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
@@ -4260,7 +4296,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
 {
     std::array<Eigen::Matrix4f, 2> pushConstants;
     VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice,
+    vkGetPhysicalDeviceMemoryProperties(_physical_device,
                                         &deviceMemoryProperties);
     /*
     Create framebuffer attachments
@@ -4268,7 +4304,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     VkFormat colorFormat = VK_FORMAT_R8G8B8A8_UNORM;
     VkFormat depthFormat;
 
-    _impl::getSupportedDepthFormat(physicalDevice, &depthFormat);
+    _impl::getSupportedDepthFormat(_physical_device, &depthFormat);
 
     // Color attachment
     VkImageCreateInfo image = _impl::imageCreateInfo();
@@ -4287,11 +4323,11 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     VkMemoryAllocateInfo memAlloc = _impl::memoryAllocateInfo();
     VkMemoryRequirements memReqs;
 
-    if (vkCreateImage(device, &image, nullptr, &colorAttachment.image) !=
+    if (vkCreateImage(_device, &image, nullptr, &_color_attachment.image) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image!");
     }
-    vkGetImageMemoryRequirements(device, colorAttachment.image, &memReqs);
+    vkGetImageMemoryRequirements(_device, _color_attachment.image, &memReqs);
     memAlloc.allocationSize = memReqs.size;
     memAlloc.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -4305,12 +4341,13 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
         memReqs.memoryTypeBits >>= 1;
     }
     if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-    if (vkAllocateMemory(device, &memAlloc, nullptr, &colorAttachment.memory) !=
+    if (vkAllocateMemory(
+            _device, &memAlloc, nullptr, &_color_attachment.memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
     if (vkBindImageMemory(
-            device, colorAttachment.image, colorAttachment.memory, 0) !=
+            _device, _color_attachment.image, _color_attachment.memory, 0) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
@@ -4324,9 +4361,9 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     colorImageView.subresourceRange.levelCount = 1;
     colorImageView.subresourceRange.baseArrayLayer = 0;
     colorImageView.subresourceRange.layerCount = 1;
-    colorImageView.image = colorAttachment.image;
+    colorImageView.image = _color_attachment.image;
     if (vkCreateImageView(
-            device, &colorImageView, nullptr, &colorAttachment.view) !=
+            _device, &colorImageView, nullptr, &_color_attachment.view) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image view!");
     }
@@ -4334,11 +4371,11 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     image.format = depthFormat;
     image.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-    if (vkCreateImage(device, &image, nullptr, &depthAttachment.image) !=
+    if (vkCreateImage(_device, &image, nullptr, &_depth_attachment.image) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image!");
     }
-    vkGetImageMemoryRequirements(device, depthAttachment.image, &memReqs);
+    vkGetImageMemoryRequirements(_device, _depth_attachment.image, &memReqs);
     memAlloc.allocationSize = memReqs.size;
     memAlloc.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -4352,12 +4389,13 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
         memReqs.memoryTypeBits >>= 1;
     }
     if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-    if (vkAllocateMemory(device, &memAlloc, nullptr, &depthAttachment.memory) !=
+    if (vkAllocateMemory(
+            _device, &memAlloc, nullptr, &_depth_attachment.memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
     if (vkBindImageMemory(
-            device, depthAttachment.image, depthAttachment.memory, 0) !=
+            _device, _depth_attachment.image, _depth_attachment.memory, 0) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
@@ -4373,9 +4411,9 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     depthStencilView.subresourceRange.levelCount = 1;
     depthStencilView.subresourceRange.baseArrayLayer = 0;
     depthStencilView.subresourceRange.layerCount = 1;
-    depthStencilView.image = depthAttachment.image;
+    depthStencilView.image = _depth_attachment.image;
     if (vkCreateImageView(
-            device, &depthStencilView, nullptr, &depthAttachment.view) !=
+            _device, &depthStencilView, nullptr, &_depth_attachment.view) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image view!");
     }
@@ -4450,24 +4488,24 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     renderPassInfo.pSubpasses = &subpassDescription;
     renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
     renderPassInfo.pDependencies = dependencies.data();
-    if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) !=
+    if (vkCreateRenderPass(_device, &renderPassInfo, nullptr, &_render_pass) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create renderpass!");
     }
     VkImageView attachments[2];
-    attachments[0] = colorAttachment.view;
-    attachments[1] = depthAttachment.view;
+    attachments[0] = _color_attachment.view;
+    attachments[1] = _depth_attachment.view;
 
     VkFramebufferCreateInfo framebufferCreateInfo =
         _impl::framebufferCreateInfo();
-    framebufferCreateInfo.renderPass = renderPass;
+    framebufferCreateInfo.renderPass = _render_pass;
     framebufferCreateInfo.attachmentCount = 2;
     framebufferCreateInfo.pAttachments = attachments;
     framebufferCreateInfo.width = width;
     framebufferCreateInfo.height = height;
     framebufferCreateInfo.layers = 1;
     if (vkCreateFramebuffer(
-            device, &framebufferCreateInfo, nullptr, &framebuffer) !=
+            _device, &framebufferCreateInfo, nullptr, &_framebuffer) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create frame buffer!");
     }
@@ -4479,7 +4517,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     VkDescriptorSetLayoutCreateInfo descriptorLayout =
         _impl::descriptorSetLayoutCreateInfo(setLayoutBindings);
     if (vkCreateDescriptorSetLayout(
-            device, &descriptorLayout, nullptr, &descriptorSetLayout) !=
+            _device, &descriptorLayout, nullptr, &_descriptor_set_layout) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
@@ -4493,7 +4531,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
     if (vkCreatePipelineLayout(
-            device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) !=
+            _device, &pipelineLayoutCreateInfo, nullptr, &_pipeline_layout) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
@@ -4502,7 +4540,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     pipelineCacheCreateInfo.sType =
         VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
     if (vkCreatePipelineCache(
-            device, &pipelineCacheCreateInfo, nullptr, &pipelineCache) !=
+            _device, &pipelineCacheCreateInfo, nullptr, &_pipeline_cache) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline cache!");
     }
@@ -4540,7 +4578,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
         _impl::pipelineDynamicStateCreateInfo(dynamicStateEnables);
 
     VkGraphicsPipelineCreateInfo pipelineCreateInfo =
-        _impl::pipelineCreateInfo(pipelineLayout, renderPass);
+        _impl::pipelineCreateInfo(_pipeline_layout, _render_pass);
 
     std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages{};
 
@@ -4592,16 +4630,16 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     shaderStages[1].pName = "main";
     std::string vert_index = std::string(DATA_DIR) + "vert_index.spv";
     std::string frag_index = std::string(DATA_DIR) + "frag_index.spv";
-    shaderStages[0].module = _impl::loadShader(vert_index.data(), device);
-    shaderStages[1].module = _impl::loadShader(frag_index.data(), device);
+    shaderStages[0].module = _impl::loadShader(vert_index.data(), _device);
+    shaderStages[1].module = _impl::loadShader(frag_index.data(), _device);
 
-    shaderModules = { shaderStages[0].module, shaderStages[1].module };
-    if (vkCreateGraphicsPipelines(device,
-                                  pipelineCache,
+    _shader_modules = { shaderStages[0].module, shaderStages[1].module };
+    if (vkCreateGraphicsPipelines(_device,
+                                  _pipeline_cache,
                                   1,
                                   &pipelineCreateInfo,
                                   nullptr,
-                                  &pipeline) != VK_SUCCESS) {
+                                  &_pipeline) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 
@@ -4612,9 +4650,9 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     VkCommandBuffer commandBuffer;
     VkCommandBufferAllocateInfo cmdBufAllocateInfo =
         _impl::commandBufferAllocateInfo(
-            commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
-    if (vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &commandBuffer) !=
-        VK_SUCCESS) {
+            _command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+    if (vkAllocateCommandBuffers(
+            _device, &cmdBufAllocateInfo, &commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
 
@@ -4638,8 +4676,8 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     renderPassBeginInfo.renderArea.extent.height = height;
     renderPassBeginInfo.clearValueCount = 2;
     renderPassBeginInfo.pClearValues = clearValues;
-    renderPassBeginInfo.renderPass = renderPass;
-    renderPassBeginInfo.framebuffer = framebuffer;
+    renderPassBeginInfo.renderPass = _render_pass;
+    renderPassBeginInfo.framebuffer = _framebuffer;
 
     vkCmdBeginRenderPass(
         commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -4657,12 +4695,13 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     scissor.extent.height = height;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+    vkCmdBindPipeline(
+        commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline);
 
     // Render scene
     VkDeviceSize offsets[1] = { 0 };
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, offsets);
-    vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &_vertex_buffer, offsets);
+    vkCmdBindIndexBuffer(commandBuffer, _index_buffer, 0, VK_INDEX_TYPE_UINT32);
     Eigen::Matrix4f mvpMatrix = camera.projection() * camera.view();
     pushConstants[0] = mvpMatrix;
 
@@ -4693,7 +4732,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
 
     pushConstants[1] = ubo;
     vkCmdPushConstants(commandBuffer,
-                       pipelineLayout,
+                       _pipeline_layout,
                        VK_SHADER_STAGE_VERTEX_BIT,
                        0,
                        sizeof(pushConstants),
@@ -4712,18 +4751,19 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     submitInfo.pCommandBuffers = &commandBuffer;
     VkFenceCreateInfo fenceInfo = _impl::fenceCreateInfo();
     VkFence fence;
-    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+    if (vkCreateFence(_device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to create fence!");
     }
-    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(_queue, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit queue!");
     }
-    if (vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (vkWaitForFences(_device, 1, &fence, VK_TRUE, UINT64_MAX) !=
+        VK_SUCCESS) {
         throw std::runtime_error("vkWaitForFences failed!");
     }
-    vkDestroyFence(device, fence, nullptr);
+    vkDestroyFence(_device, fence, nullptr);
 
-    vkDeviceWaitIdle(device);
+    vkDeviceWaitIdle(_device);
 
     /*
     Copy framebuffer image to host visible image
@@ -4745,7 +4785,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     imgCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     // Create the image
     VkImage dstImage;
-    if (vkCreateImage(device, &imgCreateInfo, nullptr, &dstImage) !=
+    if (vkCreateImage(_device, &imgCreateInfo, nullptr, &dstImage) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to end create image!");
     }
@@ -4753,7 +4793,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     VkMemoryRequirements memRequirements;
     VkMemoryAllocateInfo memAllocInfo(_impl::memoryAllocateInfo());
     VkDeviceMemory dstImageMemory;
-    vkGetImageMemoryRequirements(device, dstImage, &memRequirements);
+    vkGetImageMemoryRequirements(_device, dstImage, &memRequirements);
     memAllocInfo.allocationSize = memRequirements.size;
     // Memory must be host visible to copy from
     memAllocInfo.memoryTypeIndex = -1;
@@ -4773,20 +4813,20 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     if (memAllocInfo.memoryTypeIndex == -1) {
         memAllocInfo.memoryTypeIndex = 0;
     }
-    if (vkAllocateMemory(device, &memAllocInfo, nullptr, &dstImageMemory) !=
+    if (vkAllocateMemory(_device, &memAllocInfo, nullptr, &dstImageMemory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
-    if (vkBindImageMemory(device, dstImage, dstImageMemory, 0) != VK_SUCCESS) {
+    if (vkBindImageMemory(_device, dstImage, dstImageMemory, 0) != VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
 
     // Do the actual blit from the offscreen image to our host visible
     // destination image
     cmdBufAllocateInfo = _impl::commandBufferAllocateInfo(
-        commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+        _command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
     VkCommandBuffer copyCmd;
-    if (vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &copyCmd) !=
+    if (vkAllocateCommandBuffers(_device, &cmdBufAllocateInfo, &copyCmd) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
@@ -4809,8 +4849,9 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
         VK_PIPELINE_STAGE_TRANSFER_BIT,
         VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 });
 
-    // colorAttachment.image is already in VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-    // and does not need to be transitioned
+    // _color_attachment.image is already in
+    // VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, and does not need to be
+    // transitioned
 
     VkImageCopy imageCopyRegion{};
     imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -4822,7 +4863,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     imageCopyRegion.extent.depth = 1;
 
     vkCmdCopyImage(copyCmd,
-                   colorAttachment.image,
+                   _color_attachment.image,
                    VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                    dstImage,
                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -4849,16 +4890,17 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     // submitWork(copyCmd, queue);
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &copyCmd;
-    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+    if (vkCreateFence(_device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to create fence!");
     }
-    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(_queue, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit queue!");
     }
-    if (vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (vkWaitForFences(_device, 1, &fence, VK_TRUE, UINT64_MAX) !=
+        VK_SUCCESS) {
         throw std::runtime_error("vkWaitForFences failed!");
     }
-    vkDestroyFence(device, fence, nullptr);
+    vkDestroyFence(_device, fence, nullptr);
 
     // Get layout of the image (including row pitch)
     VkImageSubresource subResource{};
@@ -4866,11 +4908,11 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
     VkSubresourceLayout subResourceLayout;
 
     vkGetImageSubresourceLayout(
-        device, dstImage, &subResource, &subResourceLayout);
+        _device, dstImage, &subResource, &subResourceLayout);
 
     // Map image memory so we can start copying from it
     vkMapMemory(
-        device, dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&imagedata);
+        _device, dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&imagedata);
     imagedata += subResourceLayout.offset;
 
     /*
@@ -4917,11 +4959,11 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint8_t>& pixels,
         imagedata += subResourceLayout.rowPitch;
     }
     // Clean up resources
-    vkUnmapMemory(device, dstImageMemory);
-    vkFreeMemory(device, dstImageMemory, nullptr);
-    vkDestroyImage(device, dstImage, nullptr);
+    vkUnmapMemory(_device, dstImageMemory);
+    vkFreeMemory(_device, dstImageMemory, nullptr);
+    vkDestroyImage(_device, dstImage, nullptr);
 
-    vkQueueWaitIdle(queue);
+    vkQueueWaitIdle(_queue);
 }
 
 inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
@@ -4931,7 +4973,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
 {
     std::array<Eigen::Matrix4f, 2> pushConstants;
     VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice,
+    vkGetPhysicalDeviceMemoryProperties(_physical_device,
                                         &deviceMemoryProperties);
     /*
     Create framebuffer attachments
@@ -4939,7 +4981,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     VkFormat colorFormat = VK_FORMAT_R8G8B8A8_UNORM;
     VkFormat depthFormat;
 
-    _impl::getSupportedDepthFormat(physicalDevice, &depthFormat);
+    _impl::getSupportedDepthFormat(_physical_device, &depthFormat);
 
     // Color attachment
     VkImageCreateInfo image = _impl::imageCreateInfo();
@@ -4958,11 +5000,11 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     VkMemoryAllocateInfo memAlloc = _impl::memoryAllocateInfo();
     VkMemoryRequirements memReqs;
 
-    if (vkCreateImage(device, &image, nullptr, &colorAttachment.image) !=
+    if (vkCreateImage(_device, &image, nullptr, &_color_attachment.image) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image!");
     }
-    vkGetImageMemoryRequirements(device, colorAttachment.image, &memReqs);
+    vkGetImageMemoryRequirements(_device, _color_attachment.image, &memReqs);
     memAlloc.allocationSize = memReqs.size;
     memAlloc.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -4976,12 +5018,13 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
         memReqs.memoryTypeBits >>= 1;
     }
     if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-    if (vkAllocateMemory(device, &memAlloc, nullptr, &colorAttachment.memory) !=
+    if (vkAllocateMemory(
+            _device, &memAlloc, nullptr, &_color_attachment.memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
     if (vkBindImageMemory(
-            device, colorAttachment.image, colorAttachment.memory, 0) !=
+            _device, _color_attachment.image, _color_attachment.memory, 0) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
@@ -4995,9 +5038,9 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     colorImageView.subresourceRange.levelCount = 1;
     colorImageView.subresourceRange.baseArrayLayer = 0;
     colorImageView.subresourceRange.layerCount = 1;
-    colorImageView.image = colorAttachment.image;
+    colorImageView.image = _color_attachment.image;
     if (vkCreateImageView(
-            device, &colorImageView, nullptr, &colorAttachment.view) !=
+            _device, &colorImageView, nullptr, &_color_attachment.view) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image view!");
     }
@@ -5006,11 +5049,11 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     image.format = depthFormat;
     image.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
-    if (vkCreateImage(device, &image, nullptr, &depthAttachment.image) !=
+    if (vkCreateImage(_device, &image, nullptr, &_depth_attachment.image) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image!");
     }
-    vkGetImageMemoryRequirements(device, depthAttachment.image, &memReqs);
+    vkGetImageMemoryRequirements(_device, _depth_attachment.image, &memReqs);
     memAlloc.allocationSize = memReqs.size;
     memAlloc.memoryTypeIndex = -1;
     for (uint32_t i = 0; i < deviceMemoryProperties.memoryTypeCount; i++) {
@@ -5024,12 +5067,13 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
         memReqs.memoryTypeBits >>= 1;
     }
     if (memAlloc.memoryTypeIndex == -1) { memAlloc.memoryTypeIndex = 0; }
-    if (vkAllocateMemory(device, &memAlloc, nullptr, &depthAttachment.memory) !=
+    if (vkAllocateMemory(
+            _device, &memAlloc, nullptr, &_depth_attachment.memory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
     if (vkBindImageMemory(
-            device, depthAttachment.image, depthAttachment.memory, 0) !=
+            _device, _depth_attachment.image, _depth_attachment.memory, 0) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
@@ -5045,9 +5089,9 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     depthStencilView.subresourceRange.levelCount = 1;
     depthStencilView.subresourceRange.baseArrayLayer = 0;
     depthStencilView.subresourceRange.layerCount = 1;
-    depthStencilView.image = depthAttachment.image;
+    depthStencilView.image = _depth_attachment.image;
     if (vkCreateImageView(
-            device, &depthStencilView, nullptr, &depthAttachment.view) !=
+            _device, &depthStencilView, nullptr, &_depth_attachment.view) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create image view!");
     }
@@ -5122,24 +5166,24 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     renderPassInfo.pSubpasses = &subpassDescription;
     renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
     renderPassInfo.pDependencies = dependencies.data();
-    if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) !=
+    if (vkCreateRenderPass(_device, &renderPassInfo, nullptr, &_render_pass) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create renderpass!");
     }
     VkImageView attachments[2];
-    attachments[0] = colorAttachment.view;
-    attachments[1] = depthAttachment.view;
+    attachments[0] = _color_attachment.view;
+    attachments[1] = _depth_attachment.view;
 
     VkFramebufferCreateInfo framebufferCreateInfo =
         _impl::framebufferCreateInfo();
-    framebufferCreateInfo.renderPass = renderPass;
+    framebufferCreateInfo.renderPass = _render_pass;
     framebufferCreateInfo.attachmentCount = 2;
     framebufferCreateInfo.pAttachments = attachments;
     framebufferCreateInfo.width = width;
     framebufferCreateInfo.height = height;
     framebufferCreateInfo.layers = 1;
     if (vkCreateFramebuffer(
-            device, &framebufferCreateInfo, nullptr, &framebuffer) !=
+            _device, &framebufferCreateInfo, nullptr, &_framebuffer) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create frame buffer!");
     }
@@ -5152,7 +5196,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     VkDescriptorSetLayoutCreateInfo descriptorLayout =
         _impl::descriptorSetLayoutCreateInfo(setLayoutBindings);
     if (vkCreateDescriptorSetLayout(
-            device, &descriptorLayout, nullptr, &descriptorSetLayout) !=
+            _device, &descriptorLayout, nullptr, &_descriptor_set_layout) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
@@ -5166,7 +5210,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
     if (vkCreatePipelineLayout(
-            device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) !=
+            _device, &pipelineLayoutCreateInfo, nullptr, &_pipeline_layout) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
@@ -5175,7 +5219,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     pipelineCacheCreateInfo.sType =
         VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
     if (vkCreatePipelineCache(
-            device, &pipelineCacheCreateInfo, nullptr, &pipelineCache) !=
+            _device, &pipelineCacheCreateInfo, nullptr, &_pipeline_cache) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline cache!");
     }
@@ -5213,7 +5257,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
         _impl::pipelineDynamicStateCreateInfo(dynamicStateEnables);
 
     VkGraphicsPipelineCreateInfo pipelineCreateInfo =
-        _impl::pipelineCreateInfo(pipelineLayout, renderPass);
+        _impl::pipelineCreateInfo(_pipeline_layout, _render_pass);
 
     std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages{};
 
@@ -5265,16 +5309,16 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     shaderStages[1].pName = "main";
     std::string vert_index = std::string(DATA_DIR) + "vert_index.spv";
     std::string frag_index = std::string(DATA_DIR) + "frag_index.spv";
-    shaderStages[0].module = _impl::loadShader(vert_index.data(), device);
-    shaderStages[1].module = _impl::loadShader(frag_index.data(), device);
+    shaderStages[0].module = _impl::loadShader(vert_index.data(), _device);
+    shaderStages[1].module = _impl::loadShader(frag_index.data(), _device);
 
-    shaderModules = { shaderStages[0].module, shaderStages[1].module };
-    if (vkCreateGraphicsPipelines(device,
-                                  pipelineCache,
+    _shader_modules = { shaderStages[0].module, shaderStages[1].module };
+    if (vkCreateGraphicsPipelines(_device,
+                                  _pipeline_cache,
                                   1,
                                   &pipelineCreateInfo,
                                   nullptr,
-                                  &pipeline) != VK_SUCCESS) {
+                                  &_pipeline) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 
@@ -5285,9 +5329,9 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     VkCommandBuffer commandBuffer;
     VkCommandBufferAllocateInfo cmdBufAllocateInfo =
         _impl::commandBufferAllocateInfo(
-            commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
-    if (vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &commandBuffer) !=
-        VK_SUCCESS) {
+            _command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+    if (vkAllocateCommandBuffers(
+            _device, &cmdBufAllocateInfo, &commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
 
@@ -5311,8 +5355,8 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     renderPassBeginInfo.renderArea.extent.height = height;
     renderPassBeginInfo.clearValueCount = 2;
     renderPassBeginInfo.pClearValues = clearValues;
-    renderPassBeginInfo.renderPass = renderPass;
-    renderPassBeginInfo.framebuffer = framebuffer;
+    renderPassBeginInfo.renderPass = _render_pass;
+    renderPassBeginInfo.framebuffer = _framebuffer;
 
     vkCmdBeginRenderPass(
         commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -5330,12 +5374,13 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     scissor.extent.height = height;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+    vkCmdBindPipeline(
+        commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline);
 
     // Render scene
     VkDeviceSize offsets[1] = { 0 };
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, offsets);
-    vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &_vertex_buffer, offsets);
+    vkCmdBindIndexBuffer(commandBuffer, _index_buffer, 0, VK_INDEX_TYPE_UINT32);
     Eigen::Matrix4f mvpMatrix = camera.projection() * camera.view();
     pushConstants[0] = mvpMatrix;
 
@@ -5366,7 +5411,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
 
     pushConstants[1] = ubo;
     vkCmdPushConstants(commandBuffer,
-                       pipelineLayout,
+                       _pipeline_layout,
                        VK_SHADER_STAGE_VERTEX_BIT,
                        0,
                        sizeof(pushConstants),
@@ -5383,18 +5428,19 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     submitInfo.pCommandBuffers = &commandBuffer;
     VkFenceCreateInfo fenceInfo = _impl::fenceCreateInfo();
     VkFence fence;
-    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+    if (vkCreateFence(_device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to create fence!");
     }
-    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(_queue, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit queue!");
     }
-    if (vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (vkWaitForFences(_device, 1, &fence, VK_TRUE, UINT64_MAX) !=
+        VK_SUCCESS) {
         throw std::runtime_error("vkWaitForFences failed!");
     }
-    vkDestroyFence(device, fence, nullptr);
+    vkDestroyFence(_device, fence, nullptr);
 
-    vkDeviceWaitIdle(device);
+    vkDeviceWaitIdle(_device);
 
     /*
     Copy framebuffer image to host visible image
@@ -5416,7 +5462,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     imgCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
     // Create the image
     VkImage dstImage;
-    if (vkCreateImage(device, &imgCreateInfo, nullptr, &dstImage) !=
+    if (vkCreateImage(_device, &imgCreateInfo, nullptr, &dstImage) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to end create image!");
     }
@@ -5424,7 +5470,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     VkMemoryRequirements memRequirements;
     VkMemoryAllocateInfo memAllocInfo(_impl::memoryAllocateInfo());
     VkDeviceMemory dstImageMemory;
-    vkGetImageMemoryRequirements(device, dstImage, &memRequirements);
+    vkGetImageMemoryRequirements(_device, dstImage, &memRequirements);
     memAllocInfo.allocationSize = memRequirements.size;
     // Memory must be host visible to copy from
     memAllocInfo.memoryTypeIndex = -1;
@@ -5444,20 +5490,20 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     if (memAllocInfo.memoryTypeIndex == -1) {
         memAllocInfo.memoryTypeIndex = 0;
     }
-    if (vkAllocateMemory(device, &memAllocInfo, nullptr, &dstImageMemory) !=
+    if (vkAllocateMemory(_device, &memAllocInfo, nullptr, &dstImageMemory) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate memory!");
     }
-    if (vkBindImageMemory(device, dstImage, dstImageMemory, 0) != VK_SUCCESS) {
+    if (vkBindImageMemory(_device, dstImage, dstImageMemory, 0) != VK_SUCCESS) {
         throw std::runtime_error("failed to bind image memory!");
     }
 
     // Do the actual blit from the offscreen image to our host visible
     // destination image
     cmdBufAllocateInfo = _impl::commandBufferAllocateInfo(
-        commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
+        _command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY, 1);
     VkCommandBuffer copyCmd;
-    if (vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &copyCmd) !=
+    if (vkAllocateCommandBuffers(_device, &cmdBufAllocateInfo, &copyCmd) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
@@ -5480,8 +5526,9 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
         VK_PIPELINE_STAGE_TRANSFER_BIT,
         VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 });
 
-    // colorAttachment.image is already in VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-    // and does not need to be transitioned
+    // _color_attachment.image is already in
+    // VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, and does not need to be
+    // transitioned
 
     VkImageCopy imageCopyRegion{};
     imageCopyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -5493,7 +5540,7 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     imageCopyRegion.extent.depth = 1;
 
     vkCmdCopyImage(copyCmd,
-                   colorAttachment.image,
+                   _color_attachment.image,
                    VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                    dstImage,
                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -5520,16 +5567,17 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     // submitWork(copyCmd, queue);
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &copyCmd;
-    if (vkCreateFence(device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
+    if (vkCreateFence(_device, &fenceInfo, nullptr, &fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to create fence!");
     }
-    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
+    if (vkQueueSubmit(_queue, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit queue!");
     }
-    if (vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX) != VK_SUCCESS) {
+    if (vkWaitForFences(_device, 1, &fence, VK_TRUE, UINT64_MAX) !=
+        VK_SUCCESS) {
         throw std::runtime_error("vkWaitForFences failed!");
     }
-    vkDestroyFence(device, fence, nullptr);
+    vkDestroyFence(_device, fence, nullptr);
 
     // Get layout of the image (including row pitch)
     VkImageSubresource subResource{};
@@ -5537,11 +5585,11 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     VkSubresourceLayout subResourceLayout;
 
     vkGetImageSubresourceLayout(
-        device, dstImage, &subResource, &subResourceLayout);
+        _device, dstImage, &subResource, &subResourceLayout);
 
     // Map image memory so we can start copying from it
     vkMapMemory(
-        device, dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&imagedata);
+        _device, dstImageMemory, 0, VK_WHOLE_SIZE, 0, (void**)&imagedata);
     imagedata += subResourceLayout.offset;
 
     /*
@@ -5582,11 +5630,11 @@ inline void Euclid::Rasterizer::render_index(std::vector<uint32_t>& indices,
     }
 
     // Clean up resources
-    vkUnmapMemory(device, dstImageMemory);
-    vkFreeMemory(device, dstImageMemory, nullptr);
-    vkDestroyImage(device, dstImage, nullptr);
+    vkUnmapMemory(_device, dstImageMemory);
+    vkFreeMemory(_device, dstImageMemory, nullptr);
+    vkDestroyImage(_device, dstImage, nullptr);
 
-    vkQueueWaitIdle(queue);
+    vkQueueWaitIdle(_queue);
 }
 
 inline void Euclid::Rasterizer::enable_index()

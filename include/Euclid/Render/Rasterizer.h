@@ -194,6 +194,9 @@ class Rasterizer
 public:
     /** Create a rasterizer.
      *
+     *  Essential vulkan setup goes here. There's no need for a window since all
+     *  rendering happens offscreen. If your gpu is not suitable for rendering,
+     *  an exception will be thrown.
      */
     Rasterizer();
 
@@ -387,22 +390,9 @@ public:
     void disable_index();
 
 private:
-    Material __material;
-    Eigen::Array3f _background = Eigen::Array3f::Zero();
-
-    const float* _face_colors;
-    bool render_with_color_buffer = false;
-    bool render_with_index = false;
-    bool _lighting = true;
-    bool _vertex_color = false;
-    const uint8_t* _face_mask = nullptr;
-    const uint32_t* _index_color = nullptr;
-    int index_size = 0;
-
     struct Vertex
     {
         float position[3];
-        // float color[3];
         float normal[3];
     };
 
@@ -425,27 +415,12 @@ private:
         float position[3];
     };
 
-    struct
+    struct DepthStencil
     {
         VkImage image;
         VkDeviceMemory mem;
         VkImageView view;
-    } depthStencil;
-
-    VkInstance instance;
-    VkPhysicalDevice physicalDevice;
-    VkDevice device;
-    uint32_t queueFamilyIndex;
-    VkPipelineCache pipelineCache;
-    VkQueue queue;
-    VkCommandPool commandPool;
-    VkCommandBuffer commandBuffer;
-    VkDescriptorSetLayout descriptorSetLayout;
-    VkPipelineLayout pipelineLayout;
-    VkPipeline pipeline;
-    std::vector<VkShaderModule> shaderModules;
-    VkBuffer vertexBuffer, indexBuffer;
-    VkDeviceMemory vertexMemory, indexMemory;
+    };
 
     struct FrameBufferAttachment
     {
@@ -453,14 +428,40 @@ private:
         VkDeviceMemory memory;
         VkImageView view;
     };
-    int32_t width, height;
-    VkFramebuffer framebuffer;
-    FrameBufferAttachment colorAttachment, depthAttachment;
 
-    FrameBufferAttachment dstAttachment;
-    VkRenderPass renderPass;
+private:
+    Material __material;
+    Eigen::Array3f _background = Eigen::Array3f::Zero();
+    const float* _face_colors = nullptr;
+    const uint8_t* _face_mask = nullptr;
+    const uint32_t* _index_color = nullptr;
+    int index_size = 0;
+    bool render_with_color_buffer = false;
+    bool render_with_index = false;
+    bool _lighting = true;
+    bool _vertex_color = false;
 
-    VkDebugReportCallbackEXT debugReportCallback{};
+    VkInstance _instance;
+    VkPhysicalDevice _physical_device;
+    VkDevice _device;
+    uint32_t _queue_family_index;
+    VkPipelineCache _pipeline_cache;
+    VkQueue _queue;
+    VkCommandPool _command_pool;
+    VkDescriptorSetLayout _descriptor_set_layout;
+    VkPipelineLayout _pipeline_layout;
+    VkPipeline _pipeline;
+    std::vector<VkShaderModule> _shader_modules;
+    VkBuffer _vertex_buffer;
+    VkBuffer _index_buffer;
+    VkDeviceMemory _vertex_memory;
+    VkDeviceMemory _index_memory;
+    VkFramebuffer _framebuffer;
+    FrameBufferAttachment _color_attachment;
+    FrameBufferAttachment _depth_attachment;
+    FrameBufferAttachment _dst_attachment;
+    VkRenderPass _render_pass;
+    VkDebugReportCallbackEXT _debug_report_callback;
 };
 
 /** @}*/
