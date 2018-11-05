@@ -66,9 +66,9 @@ TEST_CASE("IO, ObjIO", "[io][objio]")
         REQUIRE(positions[0] == Approx(0.104145));
         REQUIRE(texcoords[0] == Approx(0.0));
         REQUIRE(normals[0] == Approx(0.2104));
-        REQUIRE(pindices[0] == 1);
-        REQUIRE(tindices[0] == 1);
-        REQUIRE(nindices[0] == 1);
+        REQUIRE(pindices[0] == 0);
+        REQUIRE(tindices[0] == 0);
+        REQUIRE(nindices[0] == 0);
 
         std::string fout(TMP_DIR);
         fout.append("sphere2.obj");
@@ -102,8 +102,8 @@ TEST_CASE("IO, ObjIO", "[io][objio]")
         REQUIRE(new_positions[0] == Approx(positions[0]));
         REQUIRE(new_texcoords[0] == Approx(texcoords[0]));
         REQUIRE(new_normals[0] == Approx(normals[0]));
-        REQUIRE(new_pindices[0] == 1);
-        REQUIRE(new_tindices[0] == 1);
-        REQUIRE(new_nindices[0] == 1);
+        REQUIRE(new_pindices[0] == 0);
+        REQUIRE(new_tindices[0] == 0);
+        REQUIRE(new_nindices[0] == 0);
     }
 }

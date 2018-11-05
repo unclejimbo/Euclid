@@ -94,13 +94,13 @@ void read_obj(const std::string& filename,
             for (const auto& face : faces) {
                 auto idx = _impl::split(face, '/');
                 if (idx.size() >= 1) {
-                    pindices.push_back(std::stoi(std::string(idx[0])));
+                    pindices.push_back(std::stoi(std::string(idx[0])) - 1);
                 }
                 if (idx.size() >= 2 && tindices != nullptr) {
-                    tindices->push_back(std::stoi(std::string(idx[1])));
+                    tindices->push_back(std::stoi(std::string(idx[1])) - 1);
                 }
                 if (idx.size() == 3 && nindices != nullptr) {
-                    nindices->push_back(std::stoi(std::string(idx[2])));
+                    nindices->push_back(std::stoi(std::string(idx[2])) - 1);
                 }
                 if (idx.size() > 3) {
                     throw std::runtime_error("Bad obj file");
@@ -207,16 +207,16 @@ void write_obj(const std::string& filename,
     for (size_t i = 0; i < pindices.size(); i += N) {
         stream << "f ";
         for (int j = 0; j < N; ++j) {
-            stream << pindices[i + j];
+            stream << pindices[i + j] + 1;
             if (texcoords != nullptr && tindices != nullptr) {
-                stream << "/" << (*tindices)[i + j];
+                stream << "/" << (*tindices)[i + j] + 1;
                 if (normals != nullptr && nindices != nullptr) {
-                    stream << "/" << (*nindices)[i + j];
+                    stream << "/" << (*nindices)[i + j] + 1;
                 }
             }
             else {
                 if (normals != nullptr && nindices != nullptr) {
-                    stream << "//" << (*nindices)[i + j];
+                    stream << "//" << (*nindices)[i + j] + 1;
                 }
             }
             if (j < N - 1) { stream << " "; }
