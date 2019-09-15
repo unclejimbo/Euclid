@@ -26,22 +26,20 @@ inline void mask_filter(const RTCFilterFunctionNArguments* args)
 
 inline RayCamera::RayCamera(const Vec3& position,
                             const Vec3& focus,
-                            const Vec3& up)
-    : Camera(position, focus, up)
+                            const Vec3& up,
+                            float tnear,
+                            float tfar)
+    : Camera(position, focus, up, tnear, tfar)
 {}
-
-inline void RayCamera::set_range(float tnear, float tfar)
-{
-    this->tnear = tnear;
-    this->tfar = tfar;
-}
 
 inline PerspRayCamera::PerspRayCamera(const Vec3& position,
                                       const Vec3& focus,
                                       const Vec3& up,
                                       float vfov,
-                                      float aspect)
-    : RayCamera(position, focus, up)
+                                      float aspect,
+                                      float tnear,
+                                      float tfar)
+    : RayCamera(position, focus, up, tnear, tfar)
 {
     auto fov = vfov * boost::math::float_constants::degree;
     this->film.height = 2.0f * std::tan(fov * 0.5f);
@@ -53,14 +51,18 @@ inline PerspRayCamera::PerspRayCamera(const Vec3& position,
                                       const Vec3& up,
                                       float vfov,
                                       unsigned width,
-                                      unsigned height)
-    : RayCamera(position, focus, up)
+                                      unsigned height,
+                                      float tnear,
+                                      float tfar)
+    : RayCamera(position, focus, up, tnear, tfar)
 {
     auto fov = vfov * boost::math::float_constants::degree;
     auto aspect = static_cast<float>(width) / height;
     this->film.height = 2.0f * std::tan(fov * 0.5f);
     this->film.width = aspect * film.height;
 }
+
+inline PerspRayCamera::~PerspRayCamera() = default;
 
 inline void PerspRayCamera::set_aspect(float aspect)
 {
@@ -105,12 +107,16 @@ inline OrthoRayCamera::OrthoRayCamera(const Vec3& position,
                                       const Vec3& focus,
                                       const Vec3& up,
                                       float xextent,
-                                      float yextent)
-    : RayCamera(position, focus, up)
+                                      float yextent,
+                                      float tnear,
+                                      float tfar)
+    : RayCamera(position, focus, up, tnear, tfar)
 {
     this->film.width = xextent;
     this->film.height = yextent;
 }
+
+inline OrthoRayCamera::~OrthoRayCamera() = default;
 
 inline void OrthoRayCamera::set_extent(float xextent, float yextent)
 {

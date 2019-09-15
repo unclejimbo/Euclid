@@ -36,8 +36,11 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
 
     const int width = 800;
     const int height = 600;
+    const float near = 0.001f;
+    const float far = 10.0f;
 
-    Euclid::PerspRayCamera cam(view, center, up, 60.0f, width, height);
+    Euclid::PerspRayCamera cam(
+        view, center, up, 60.0f, width, height, near, far);
 
     SECTION("perspective camera")
     {
@@ -55,7 +58,8 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
         std::vector<uint8_t> pixels(3 * width * height);
         auto xextent = aabb.xlen() * 1.5f;
         auto yextent = xextent * height / static_cast<float>(width);
-        Euclid::OrthoRayCamera cam(view, center, up, xextent, yextent);
+        Euclid::OrthoRayCamera cam(
+            view, center, up, xextent, yextent, near, far);
         raytracer.render_shaded(pixels, cam, width, height);
 
         std::string outfile(TMP_DIR);
@@ -265,7 +269,8 @@ TEST_CASE("Render, RayTracer", "[render][raytracer]")
         raytracer.attach_geometry_buffers(positions, indices);
 
         std::vector<uint8_t> pixels(3 * width * height);
-        Euclid::PerspRayCamera cam(view, center, up, 60.0f, width, height);
+        Euclid::PerspRayCamera cam(
+            view, center, up, 60.0f, width, height, near, far);
         raytracer.render_shaded(pixels, cam, width, height);
 
         std::string outfile(TMP_DIR);

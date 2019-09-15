@@ -48,19 +48,16 @@ public:
      *  @param position Position.
      *  @param focus Focus.
      *  @param up Rough up direction.
+     *  @param tnear The near clipping plane.
+     *  @param tfar The far clipping plane.
      */
     RayCamera(const Vec3& position,
-              const Vec3& focus = Eigen::Vector3f::Zero(),
-              const Vec3& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f));
+              const Vec3& focus,
+              const Vec3& up,
+              float tnear,
+              float tfar);
 
     virtual ~RayCamera() = default;
-
-    /** Set the range of the ray.
-     *
-     *  @param tnear The near range of ray.
-     *  @param tfar The far range of ray.
-     */
-    void set_range(float tnear, float tfar);
 
     /** Generate an embree rayhit structure.
      *
@@ -76,16 +73,6 @@ public:
      *  @param tfar The far range of ray.
      */
     Film film;
-
-    /** The near plane.
-     *
-     */
-    float tnear = 0.0f;
-
-    /** The far plane.
-     *
-     */
-    float tfar = std::numeric_limits<float>::max();
 };
 
 /** A RayCamera using perspective projection.
@@ -112,12 +99,16 @@ public:
      *  @param up Rough up direction.
      *  @param vfov Vertical field of view in degrees.
      *  @param aspect Aspect ratio.
+     *  @param tnear The near clipping plane.
+     *  @param tfar The far clipping plane.
      */
     PerspRayCamera(const Vec3& position,
                    const Vec3& focus,
                    const Vec3& up,
                    float vfov,
-                   float aspect);
+                   float aspect,
+                   float tnear,
+                   float tfar);
 
     /** Create a PerspRayCamera.
      *
@@ -131,13 +122,19 @@ public:
      *  @param vfov Vertical field of view in degrees.
      *  @param width Width of the image.
      *  @param height Height of the image.
+     *  @param tnear The near clipping plane.
+     *  @param tfar The far clipping plane.
      */
     PerspRayCamera(const Vec3& position,
                    const Vec3& focus,
                    const Vec3& up,
                    float vfov,
                    unsigned width,
-                   unsigned height);
+                   unsigned height,
+                   float tnear,
+                   float tfar);
+
+    ~PerspRayCamera();
 
     /** Set aspect ratio.
      *
@@ -185,12 +182,18 @@ public:
      *  @param up Rough up direction.
      *  @param xextent Width of the film plane in world space.
      *  @param yextent Height of the film plane in world space.
+     *  @param tnear The near clipping plane.
+     *  @param tfar The far clipping plane.
      */
     OrthoRayCamera(const Vec3& position,
                    const Vec3& focus,
                    const Vec3& up,
                    float xextent,
-                   float yextent);
+                   float yextent,
+                   float tnear,
+                   float tfar);
+
+    ~OrthoRayCamera();
 
     /** Set the extent of the film plane.
      *

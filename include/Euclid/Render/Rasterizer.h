@@ -8,6 +8,7 @@
  */
 #pragma once
 
+#include <vector>
 #include <boost/math/constants/constants.hpp>
 #include <vulkan/vulkan.h>
 #include <Euclid/Render/RenderCore.h>
@@ -15,6 +16,8 @@
 
 namespace Euclid
 {
+/** @{*/
+
 /** A camera model used for rasterization.
  *
  */
@@ -31,12 +34,16 @@ public:
      *  @param position Position.
      *  @param focus Focus.
      *  @param up Rough up direction.
+     *  @param tnear The near clipping plane.
+     *  @param tfar The far clipping plane.
      */
     RasCamera(const Eigen::Vector3f& position,
-              const Eigen::Vector3f& focus = Eigen::Vector3f::Zero(),
-              const Eigen::Vector3f& up = Eigen::Vector3f(0.0f, 1.0f, 0.0f));
+              const Eigen::Vector3f& focus,
+              const Eigen::Vector3f& up,
+              float tnear,
+              float tfar);
 
-    virtual ~RasCamera() = default;
+    virtual ~RasCamera();
 
     /** Return the view/lookat matrix.
      *
@@ -108,6 +115,8 @@ public:
                    float tnear,
                    float tfar);
 
+    ~PerspRasCamera();
+
     /** Set aspect ratio.
      *
      */
@@ -123,11 +132,6 @@ public:
      */
     void set_fov(float vfov);
 
-    /** Set the near and far plane.
-     *
-     */
-    void set_range(float tnear, float tfar);
-
     /** Return the projection matrix.
      *
      */
@@ -136,8 +140,6 @@ public:
 private:
     float _vfov = boost::math::float_constants::half_pi;
     float _aspect = 1.0f;
-    float _tnear = 0.001f;
-    float _tfar = 1000.0f;
 };
 
 /** A RasCamera using orthographic projection.
@@ -163,12 +165,18 @@ public:
      *  @param up Rough up direction.
      *  @param xextent Width of the frustum in world space.
      *  @param yextent Height of the frustum in world space.
+     *  @param tnear Near clip plane.
+     *  @param tfar Far clip plane.
      */
     OrthoRasCamera(const Eigen::Vector3f& position,
                    const Eigen::Vector3f& focus,
                    const Eigen::Vector3f& up,
                    float xextent,
-                   float yextent);
+                   float yextent,
+                   float tnear,
+                   float tfar);
+
+    ~OrthoRasCamera();
 
     /** Set the extent of the frustum.
      *
@@ -181,8 +189,8 @@ public:
     virtual Eigen::Matrix4f projection() const override;
 
 private:
-    float _x;
-    float _y;
+    float _xextent;
+    float _yextent;
 };
 
 /** A simple rasterizer.
@@ -192,55 +200,73 @@ private:
 class Rasterizer
 {
 public:
+    enum SampleCount
+    {
+        SAMPLE_COUNT_1 = 0x00000001,
+        SAMPLE_COUNT_2 = 0x00000002,
+        SAMPLE_COUNT_4 = 0x00000004,
+        SAMPLE_COUNT_8 = 0x00000008,
+    };
+
+public:
     /** Create a rasterizer.
      *
      *  Essential vulkan setup goes here. There's no need for a window since all
      *  rendering happens offscreen. If your gpu is not suitable for rendering,
      *  an exception will be thrown.
      */
-    Rasterizer();
+    Rasterizer(uint32_t width = 256,
+               uint32_t height = 256,
+               SampleCount samples = SAMPLE_COUNT_1);
 
     ~Rasterizer();
 
-    /** Attach shared geoemtry buffers to the rasterizer.
+    /** Attach a position buffer to the rasterizer.
      *
-     *  Attach both the positions and indices buffer. These buffers are mapped
-     *  directly by the Rasterizer so their lifetime should outlive the end of
-     *  rendering. This class can only render one mesh at a time, so attaching
-     *  another geometry will automatically release the previously attached
-     *  geometry and all associated buffers.
+     *  User should at least provide this buffer for the rasterizer to render
+     *  anything. The size of the position buffer determines how many vertices
+     *  are drawn.
      *
-     *  @param positions The geometry's positions buffer.
-     *  @param indices The geometry's indices buffer.
+     *  @param positions An array storing [x,y,z,x,y,z...] coordinates for each
+     *  point. Set position to nullptr to release the current buffer.
+     *  @param size The size of the buffer.
      */
-    void attach_geometry_buffers(const std::vector<float>& positions,
-                                 const std::vector<unsigned>& indices);
+    void attach_position_buffer(const float* positions, size_t size);
 
-    /** Attach a shared color buffer to the rasterizer.
+    /** Attach a normal buffer to the rasterizer.
      *
-     *  Attach a color buffer storing either per-face colors or per-vertex
-     *  colors. This buffer is mapped directly by the Rasterizer so their
-     *  lifetime should outlive the end of rendering. Attach another buffer will
-     *  automatically release the previously attached one.
+     *  Normal buffer is requested in render_shaded.
      *
-     *  @param colors A color array storing [r,g,b,r,g,b...] values of each
-     *  elements. The values range in [0 1]. Set colors to nullptr to disable
-     *  color buffering and fall back to the material.
-     *  @param vertex_color True for vertex color and false for face color.
-     *  Default to false.
+     *  @param normals An array storing [x,y,z,x,y,z...] coordinates for each
+     *  point. Set normal to nullptr to release the current buffer.
+     *  @param size The size of the buffer.
      */
-    void attach_color_buffer(const float* colors, bool vertex_color = false);
+    void attach_normal_buffer(const float* normals, size_t size);
 
-    /** Attach a face maks buffer to the rasterizer.
+    /** Attach a color buffer to the rasterizer.
      *
-     *  This mask is used to filter out specified faces.
+     *  If color buffer is provided, the rasterizer will use this buffer in
+     *  the render_shaded and render_unlit functions. Otherwise, it will use the
+     *  colors provided in the material.
      *
-     *  @param mask The size of the array pointed by mask should be equal to the
-     *  number of faces of the attached geometry. Set (*mask)[i] to 1 to enable
-     *  face i in intersection, otherwise it will be ignored. Set mask to
-     *  nullptr to disable masking.
+     *  @param colors An array storing [r,g,b,r,g,b...] colors for each point.
+     *  The values range in [0 1]. Set colors to nullptr to release the current
+     *  buffer and fall back to the material.
+     *  @param size The size of the buffer.
      */
-    void attach_face_mask_buffer(const uint8_t* mask);
+    void attach_color_buffer(const float* colors, size_t size);
+
+    /** Attach an index buffer to the Rasterizer.
+     *
+     *  If index buffer is provided, the rasterizer will use indexed drawing
+     *  mode. Otherwise, it will use plain drawing mode.
+     *
+     *  @param indices An array storing [v1,v2,v3,v1,v2,v3...] indices for each
+     *  triangle. Set indices to nullptr to release the current buffer and
+     *  fall back to plain drawing mode.
+     *  @param size The size of the buffer.
+     */
+    void attach_index_buffer(const unsigned* indices, size_t size);
 
     /** Release all associated buffers.
      *
@@ -252,216 +278,236 @@ public:
      */
     void set_material(const Material& material);
 
+    /** Change the light settings.
+     *
+     */
+    void set_light(const Light& light);
+
     /** Change the color of background.
      *
      */
-    void set_background(const Eigen::Ref<const Eigen::Array3f>& color);
+    void set_background(const Eigen::Array3f& color);
 
     /** Change the color of background.
      *
      */
     void set_background(float r, float g, float b);
 
-    /** Enable or diable lighting.
+    /** Set the size and sampling of the resulting image.
      *
      */
-    void enable_light(bool on);
+    void set_image(uint32_t width, uint32_t height, SampleCount samples);
 
     /** Render the mesh into a shaded image.
      *
      *  This function renders the mesh with simple lambertian shading, using a
      *  point light located at the camera position.
      *
-     *  @param pixels Output pixels
+     *  @param model The model matrix.
      *  @param camera Camera.
-     *  @param width Image width.
-     *  @param height Image height.
+     *  @param pixels Output pixels
      *  @param interleaved If true, pixels are stored like [RGBRGBRGB...],
      *  otherwise pixels are stored like [RRR...GGG...BBB...].
      */
-    void render_shaded(std::vector<uint8_t>& pixels,
+    void render_shaded(const Eigen::Matrix4f& model,
                        const RasCamera& camera,
-                       int width,
-                       int height,
+                       std::vector<uint8_t>& pixels,
                        bool interleaved = true);
 
-    /** Render the mesh into a shaded image.
+    /** Render the mesh into a unlit image.
      *
-     *  This function renders the mesh with simple lambertian shading, using a
-     *  point light located at the camera position. Random multisampling is
-     *  enabled.
+     *  Only show raw diffuse color or vertex color if provided.
      *
-     *  @param pixels Output pixels
+     *  @param model The model matrix.
      *  @param camera Camera.
-     *  @param width Image width.
-     *  @param height Image height.
-     *  @param samples Number of samples per pixel.
+     *  @param pixels Output pixels.
      *  @param interleaved If true, pixels are stored like [RGBRGBRGB...],
      *  otherwise pixels are stored like [RRR...GGG...BBB...].
      */
-    void render_shaded(std::vector<uint8_t>& pixels,
-                       const RasCamera& camera,
-                       int width,
-                       int height,
-                       int samples,
-                       bool interleaved = true);
+    void render_unlit(const Eigen::Matrix4f& model,
+                      const RasCamera& camera,
+                      std::vector<uint8_t>& pixels,
+                      bool interleaved = true);
 
     /** Render the mesh into a depth image.
      *
-     *  The minimum depth value is mapped to 255 in image, and the maximum depth
-     *  value is mapped to 0.
+     *  The minimum depth value is mapped to 255 in image, and the maximum
+     * depth value is mapped to 0.
      *
-     *  @param pixels Output pixels.
+     *  @param model The model matrix.
      *  @param camera Camera.
-     *  @param width Image width.
-     *  @param height Image height.
+     *  @param pixels Output pixels.
+     *  @param interleaved If true, pixels are stored like [RGBRGBRGB...],
+     *  otherwise pixels are stored like [RRR...GGG...BBB...].
+     *  @param linear If true, return linearized depth value, otherwise
+     * return z value as it is.
      */
-    void render_depth(std::vector<uint8_t>& pixels,
+    void render_depth(const Eigen::Matrix4f& model,
                       const RasCamera& camera,
-                      int width,
-                      int height);
+                      std::vector<uint8_t>& pixels,
+                      bool interleaved = true,
+                      bool linear = true);
 
     /** Render the mesh into a depth image.
      *
      *  The depth values are returned as they are, while the depth of the
-     *  background is set to negative.
+     *  background is one.
      *
-     *  @param values Output depth values.
+     *  @param model The model matrix.
      *  @param camera Camera.
-     *  @param width Image width.
-     *  @param height Image height.
+     *  @param values The depth values.
+     *  @param linear If true, return linearized depth value, otherwise return z
+     *  value as it is.
      */
-    void render_depth(std::vector<float>& values,
+    void render_depth(const Eigen::Matrix4f& model,
                       const RasCamera& camera,
-                      int width,
-                      int height);
-
-    /** Render the mesh into a silhouette image.
-     *
-     *  @param pixels Output pixels.
-     *  @param camera Camera.
-     *  @param width Image width.
-     *  @param height Image height.
-     */
-    void render_silhouette(std::vector<uint8_t>& pixels,
-                           const RasCamera& camera,
-                           int width,
-                           int height);
-
-    /** Render the mesh based on face index.
-     *
-     *  Color each face base on its index, following
-     *
-     *  face_index = r + g << 8 + b << 16 - 1;
-     *
-     *  The background is set to 0, and the primitive index starts from 1. Due
-     *  to bit width limitations, only 2^24 number of faces could be uniquely
-     *  colored.
-     *
-     *  @param pixels Output pixels.
-     *  @param camera Camera.
-     *  @param width Image width.
-     *  @param height Image height.
-     *  @param interleaved If true, pixels are stored like [RGBRGBRGB...],
-     *  otherwise pixels are stored like [RRR...GGG...BBB...].
-     */
-    void render_index(std::vector<uint8_t>& pixels,
-                      const RasCamera& camera,
-                      int width,
-                      int height,
-                      bool interleaved = true);
-
-    /** Render the mesh based on face index.
-     *
-     *  Each index is stored as a uint32_t value. The background is set to 0,
-     *  and the primitive index starts from 1. Due to bit width limitations, the
-     *  maximum number of indices supported is 2^32.
-     *
-     *  @param indices The face indices of each pixel.
-     *  @param camera Camera.
-     *  @param width Image width.
-     *  @param height Image height.
-     */
-    void render_index(std::vector<uint32_t>& indices,
-                      const RasCamera& camera,
-                      int width,
-                      int height);
-    void enable_index();
-    void disable_index();
+                      std::vector<float>& values,
+                      bool linear = true);
 
 private:
-    struct Vertex
+    enum ShaderType : int
     {
-        float position[3];
-        float normal[3];
-    };
-
-    struct Vertex_Color
-    {
-        float position[3];
-        float normal[3];
-        float color[3];
-    };
-
-    struct Vertex_Index // do not need the normal vector anymore when using the
-                        // render_index method
-    {
-        float position[3];
-        float color[3];
-    };
-
-    struct Vertex_Silhouette
-    {
-        float position[3];
-    };
-
-    struct DepthStencil
-    {
-        VkImage image;
-        VkDeviceMemory mem;
-        VkImageView view;
-    };
-
-    struct FrameBufferAttachment
-    {
-        VkImage image;
-        VkDeviceMemory memory;
-        VkImageView view;
+        SHADER_TYPE_SHADING = 0,
+        SHADER_TYPE_VCOLOR,
+        SHADER_TYPE_UNLIT,
+        SHADER_TYPE_UNLIT_VCOLOR,
+        SHADER_TYPE_DEPTH,
+        SHADER_TYPE_COUNT
     };
 
 private:
-    Material __material;
+    void _create_instance();
+
+    void _pick_physical_device();
+
+    uint32_t _create_logical_device();
+
+    void _create_command_pool(uint32_t queue_family_index);
+
+    void _create_descriptor_pool();
+
+    void _create_descriptors();
+
+    void _create_render_pass(VkSampleCountFlagBits samples);
+
+    void _create_pipeline(uint32_t width,
+                          uint32_t height,
+                          VkSampleCountFlagBits samples,
+                          ShaderType shader);
+
+    void _render_scene(const Eigen::Matrix4f& model,
+                       const RasCamera& camera,
+                       const std::vector<VkBuffer>& active_buffers,
+                       ShaderType shader);
+
+    void _copy_fb_to_host_buffer(VkImage src,
+                                 VkImageAspectFlags aspect,
+                                 VkBuffer dst);
+
+    void _transfer_data(const void* data,
+                        size_t byte_size,
+                        VkBufferUsageFlagBits usage,
+                        VkBuffer& buffer,
+                        VkDeviceMemory& buffer_memory);
+
+    uint32_t _find_proper_memory_type(uint32_t mem_type_bits,
+                                      VkMemoryPropertyFlags prop_flags);
+
+    void _create_buffer(VkBuffer& bufer,
+                        VkDeviceMemory& buffer_memory,
+                        VkDeviceSize size,
+                        VkBufferUsageFlags usage,
+                        VkMemoryPropertyFlags props);
+
+    void _release_buffer(VkBuffer& buffer, VkDeviceMemory& buffer_memory);
+
+    void _copy_buffer(VkBuffer src, VkBuffer dst, VkDeviceSize size);
+
+    void _create_image(VkImage& image,
+                       VkDeviceMemory& memory,
+                       VkFormat format,
+                       VkImageUsageFlags usage,
+                       VkImageTiling tiling,
+                       VkMemoryPropertyFlags prop_flags,
+                       uint32_t width,
+                       uint32_t height,
+                       VkSampleCountFlagBits samples);
+
+    void _release_image(VkImage& buffer, VkDeviceMemory& memory);
+
+    void _create_image_view(VkImageView& view,
+                            VkImage image,
+                            VkFormat format,
+                            VkImageAspectFlags aspect);
+
+    void _create_framebuffer(uint32_t width, uint32_t height);
+
+    VkShaderModule _load_shader(const char* path);
+
+    void _update_ubo(const VkDescriptorBufferInfo& info,
+                     uint32_t binding,
+                     ShaderType shader);
+
+private:
+    static const Material _default_material;
+
+    static const Light _default_light;
+
+private:
+    Material _material;
+    Light _light;
     Eigen::Array3f _background = Eigen::Array3f::Zero();
-    const float* _face_colors = nullptr;
-    const uint8_t* _face_mask = nullptr;
-    const uint32_t* _index_color = nullptr;
-    int index_size = 0;
-    bool render_with_color_buffer = false;
-    bool render_with_index = false;
-    bool _lighting = true;
-    bool _vertex_color = false;
+    size_t _num_vertices;
+    size_t _num_indices;
+    uint32_t _width;
+    uint32_t _height;
+    SampleCount _samples;
 
+    VkDebugUtilsMessengerEXT _debug_messenger;
     VkInstance _instance;
     VkPhysicalDevice _physical_device;
+    VkPhysicalDeviceMemoryProperties _physical_device_memory_properties;
     VkDevice _device;
-    uint32_t _queue_family_index;
-    VkPipelineCache _pipeline_cache;
     VkQueue _queue;
     VkCommandPool _command_pool;
-    VkDescriptorSetLayout _descriptor_set_layout;
-    VkPipelineLayout _pipeline_layout;
-    VkPipeline _pipeline;
+    VkDescriptorPool _descriptor_pool;
+    std::vector<VkDescriptorSetLayout> _descriptor_set_layouts;
+    std::vector<VkDescriptorSet> _descriptor_sets;
+    std::vector<VkPipelineLayout> _pipeline_layouts;
+    std::vector<VkPipeline> _pipelines;
+    VkFramebuffer _framebuffer = VK_NULL_HANDLE;
+    VkRenderPass _render_pass = VK_NULL_HANDLE;
+    VkBuffer _position_buffer = VK_NULL_HANDLE;
+    VkDeviceMemory _position_buffer_memory;
+    VkBuffer _normal_buffer = VK_NULL_HANDLE;
+    VkDeviceMemory _normal_buffer_memory;
+    VkBuffer _color_buffer = VK_NULL_HANDLE;
+    VkDeviceMemory _color_buffer_memory;
+    VkBuffer _index_buffer = VK_NULL_HANDLE;
+    VkDeviceMemory _index_buffer_memory;
+    VkBuffer _transform_buffer = VK_NULL_HANDLE;
+    VkDeviceMemory _transform_buffer_memory;
+    VkBuffer _material_buffer = VK_NULL_HANDLE;
+    VkDeviceMemory _material_buffer_memory;
+    VkBuffer _light_buffer = VK_NULL_HANDLE;
+    VkDeviceMemory _light_buffer_memory;
+    VkBuffer _output_color_buffer = VK_NULL_HANDLE;
+    VkDeviceMemory _output_color_buffer_memory;
+    VkBuffer _output_depth_buffer = VK_NULL_HANDLE;
+    VkDeviceMemory _output_depth_buffer_memory;
+    VkImage _color_image = VK_NULL_HANDLE;
+    VkDeviceMemory _color_image_memory;
+    VkImageView _color_image_view = VK_NULL_HANDLE;
+    VkImage _depth_image = VK_NULL_HANDLE;
+    VkDeviceMemory _depth_image_memory;
+    VkImageView _depth_image_view = VK_NULL_HANDLE;
+    VkImage _color_resolve_image = VK_NULL_HANDLE;
+    VkDeviceMemory _color_resolve_image_memory;
+    VkImageView _color_resolve_image_view = VK_NULL_HANDLE;
+    VkImage _depth_resolve_image = VK_NULL_HANDLE;
+    VkDeviceMemory _depth_resolve_image_memory;
+    VkImageView _depth_resolve_image_view = VK_NULL_HANDLE;
     std::vector<VkShaderModule> _shader_modules;
-    VkBuffer _vertex_buffer;
-    VkBuffer _index_buffer;
-    VkDeviceMemory _vertex_memory;
-    VkDeviceMemory _index_memory;
-    VkFramebuffer _framebuffer;
-    FrameBufferAttachment _color_attachment;
-    FrameBufferAttachment _depth_attachment;
-    FrameBufferAttachment _dst_attachment;
-    VkRenderPass _render_pass;
-    VkDebugReportCallbackEXT _debug_report_callback;
 };
 
 /** @}*/

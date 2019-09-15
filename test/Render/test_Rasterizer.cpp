@@ -6,8 +6,10 @@
 
 #include <CGAL/Simple_cartesian.h>
 #include <Euclid/IO/OffIO.h>
+#include <Euclid/IO/PlyIO.h>
 #include <Euclid/Analysis/AABB.h>
 #include <Euclid/Math/Vector.h>
+#include <Eigen/Geometry>
 
 #include <stb_image_write.h>
 
@@ -17,33 +19,50 @@ using Kernel = CGAL::Simple_cartesian<float>;
 
 TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
 {
+    const uint32_t width = 800;
+    const uint32_t height = 600;
+
     std::string filename(DATA_DIR);
-    filename.append("bunny.off");
+    filename.append("bunny_vn.ply");
     std::vector<float> positions;
+    std::vector<float> normals;
     std::vector<unsigned> indices;
-    Euclid::read_off<3>(filename, positions, nullptr, &indices, nullptr);
+    Euclid::read_ply<3>(
+        filename, positions, &normals, nullptr, &indices, nullptr);
 
+    // fit model into unit box
     Euclid::AABB<Kernel> aabb(positions);
-    Eigen::Vector3f center;
-    Euclid::cgal_to_eigen(aabb.center(), center);
-    Eigen::Vector3f view =
-        center + Eigen::Vector3f(0.0f, 0.5f * aabb.ylen(), 2.0f * aabb.zlen());
-    Eigen::Vector3f up = Eigen::Vector3f(0.0f, 1.0f, 0.0f);
+    Eigen::Vector3f translation;
+    Euclid::cgal_to_eigen(aabb.center(), translation);
+    float scale = std::max(aabb.xlen(), aabb.ylen());
+    scale = std::max(scale, aabb.zlen());
+    Eigen::Transform<float, 3, Eigen::Affine> transform;
+    transform.setIdentity();
+    transform.translate(-translation);
+    transform.scale(1.0f / scale);
 
-    Euclid::Rasterizer rasterizer;
-    positions.push_back(0.0f);
-    rasterizer.attach_geometry_buffers(positions, indices);
+    Eigen::Vector3f view(0.0f, 1.0f, 2.0f);
+    Eigen::Vector3f center(0.0f, 0.0f, 0.0f);
+    Eigen::Vector3f up(0.0f, 1.0f, 0.0f);
+    Euclid::PerspRasCamera persp(
+        view, center, up, 60.0f, width, height, 0.5f, 5.0f);
 
-    const int width = 800;
-    const int height = 600;
+    Euclid::Rasterizer rasterizer(
+        width, height, Euclid::Rasterizer::SAMPLE_COUNT_1);
+    rasterizer.attach_position_buffer(positions.data(), positions.size());
+    rasterizer.attach_normal_buffer(normals.data(), normals.size());
+    rasterizer.attach_index_buffer(indices.data(), indices.size());
 
-    Euclid::PerspRasCamera cam(
-        view, center, up, 60.0f, width, height, 0.01f, 100.0f);
+    Euclid::Light l;
+    l.position = view + Eigen::Vector3f(0.1f, 0.1f, 0.1f);
+    l.color = { 1.0f, 1.0f, 1.0f };
+    l.intensity = 0.5f;
+    rasterizer.set_light(l);
 
     SECTION("perspective camera")
     {
         std::vector<uint8_t> pixels(3 * width * height);
-        rasterizer.render_shaded(pixels, cam, width, height);
+        rasterizer.render_shaded(transform.matrix(), persp, pixels);
 
         std::string outfile(TMP_DIR);
         outfile.append("rasterizer_persp.png");
@@ -53,11 +72,13 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
 
     SECTION("orthographic camera")
     {
+        const float xextent = 2.0f;
+        const float yextent = xextent * height / (width + 1e-6f);
+        Euclid::OrthoRasCamera ortho(
+            view, center, up, xextent, yextent, 0.1f, 5.0f);
+
         std::vector<uint8_t> pixels(3 * width * height);
-        auto xextent = aabb.xlen() * 1.5f;
-        auto yextent = xextent * height / static_cast<float>(width);
-        Euclid::OrthoRasCamera cam(view, center, up, xextent, yextent);
-        rasterizer.render_shaded(pixels, cam, width, height);
+        rasterizer.render_shaded(transform.matrix(), ortho, pixels);
 
         std::string outfile(TMP_DIR);
         outfile.append("rasterizer_ortho.png");
@@ -67,8 +88,10 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
 
     SECTION("multisampling")
     {
+        rasterizer.set_image(width, height, Euclid::Rasterizer::SAMPLE_COUNT_8);
+
         std::vector<uint8_t> pixels(3 * width * height);
-        rasterizer.render_shaded(pixels, cam, width, height, 8);
+        rasterizer.render_shaded(transform.matrix(), persp, pixels);
 
         std::string outfile(TMP_DIR);
         outfile.append("rasterizer_multisample.png");
@@ -83,7 +106,7 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
         material.ambient << 0.2f, 0.0f, 0.0f;
         material.diffuse << 0.7f, 0.0f, 0.0f;
         rasterizer.set_material(material);
-        rasterizer.render_shaded(pixels, cam, width, height);
+        rasterizer.render_shaded(transform.matrix(), persp, pixels);
 
         std::string outfile(TMP_DIR);
         outfile.append("rasterizer_material.png");
@@ -95,30 +118,10 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
     {
         std::vector<uint8_t> pixels(3 * width * height);
         rasterizer.set_background(0.0f, 0.3f, 0.4f);
-        rasterizer.render_shaded(pixels, cam, width, height);
+        rasterizer.render_shaded(transform.matrix(), persp, pixels);
 
         std::string outfile(TMP_DIR);
         outfile.append("rasterizer_background.png");
-        stbi_write_png(
-            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
-    }
-
-    SECTION("random face color")
-    {
-        std::random_device rd;
-        std::minstd_rand rd_gen(rd());
-        std::uniform_real_distribution rd_number(0.0, 1.0);
-        std::vector<float> rd_colors(indices.size());
-        for (auto& color : rd_colors) {
-            color = rd_number(rd_gen);
-        }
-        rasterizer.attach_color_buffer(rd_colors.data());
-        rasterizer.attach_geometry_buffers(positions, indices);
-        std::vector<uint8_t> pixels(3 * width * height);
-        rasterizer.render_shaded(pixels, cam, width, height);
-
-        std::string outfile(TMP_DIR);
-        outfile.append("rasterizer_face_color.png");
         stbi_write_png(
             outfile.c_str(), width, height, 3, pixels.data(), width * 3);
     }
@@ -132,10 +135,9 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
         for (auto& color : rd_colors) {
             color = rd_number(rd_gen);
         }
-        rasterizer.attach_color_buffer(rd_colors.data(), true);
-        rasterizer.attach_geometry_buffers(positions, indices);
+        rasterizer.attach_color_buffer(rd_colors.data(), rd_colors.size());
         std::vector<uint8_t> pixels(3 * width * height);
-        rasterizer.render_shaded(pixels, cam, width, height);
+        rasterizer.render_shaded(transform.matrix(), persp, pixels);
 
         std::string outfile(TMP_DIR);
         outfile.append("rasterizer_vertex_color.png");
@@ -143,173 +145,53 @@ TEST_CASE("Render, Rasterizer", "[render][rasterizer]")
             outfile.c_str(), width, height, 3, pixels.data(), width * 3);
     }
 
-    SECTION("light off")
+    SECTION("unlit")
     {
         std::vector<uint8_t> pixels(3 * width * height);
-        rasterizer.enable_light(false);
-        rasterizer.render_shaded(pixels, cam, width, height);
+        rasterizer.render_unlit(transform.matrix(), persp, pixels);
 
         std::string outfile(TMP_DIR);
-        outfile.append("rasterizer_lightoff.png");
+        outfile.append("rasterizer_unlit.png");
+        stbi_write_png(
+            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
+    }
+
+    SECTION("unlit vcolor")
+    {
+        std::random_device rd;
+        std::minstd_rand rd_gen(rd());
+        std::uniform_real_distribution rd_number(0.0, 1.0);
+        std::vector<float> rd_colors(positions.size());
+        for (auto& color : rd_colors) {
+            color = rd_number(rd_gen);
+        }
+        rasterizer.attach_color_buffer(rd_colors.data(), rd_colors.size());
+        std::vector<uint8_t> pixels(3 * width * height);
+        rasterizer.render_unlit(transform.matrix(), persp, pixels);
+
+        std::string outfile(TMP_DIR);
+        outfile.append("rasterizer_unlit_vcolor.png");
         stbi_write_png(
             outfile.c_str(), width, height, 3, pixels.data(), width * 3);
     }
 
     SECTION("depth")
     {
-        // std::vector<uint8_t> pixels(width * height);
         std::vector<uint8_t> pixels(3 * width * height);
-        rasterizer.render_depth(pixels, cam, width, height);
+        rasterizer.render_depth(transform.matrix(), persp, pixels);
 
-        std::string outfile(TMP_DIR);
-        outfile.append("rasterizer_depth.png");
-        // stbi_write_png(outfile.c_str(), width, height, 1, pixels.data(),
-        // width);
+        std::string outfile1(TMP_DIR);
+        outfile1.append("rasterizer_depth_linear.png");
         stbi_write_png(
-            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
-    }
+            outfile1.c_str(), width, height, 3, pixels.data(), width * 3);
 
-    SECTION("silhouette")
-    {
-        // std::vector<uint8_t> pixels(width * height);
-        std::vector<uint8_t> pixels(3 * width * height);
-        rasterizer.render_silhouette(pixels, cam, width, height);
-
-        std::string outfile(TMP_DIR);
-        outfile.append("rasterizer_sillouette.png");
-        // stbi_write_png(outfile.c_str(), width, height, 1, pixels.data(),
-        // width);
+        rasterizer.render_depth(transform.matrix(), persp, pixels, true, false);
+        std::string outfile2(TMP_DIR);
+        outfile2.append("rasterizer_depth.png");
         stbi_write_png(
-            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
-    }
+            outfile2.c_str(), width, height, 3, pixels.data(), width * 3);
 
-    SECTION("face index color")
-    {
-        std::vector<uint8_t> pixels(3 * width * height);
-        rasterizer.enable_index();
-        rasterizer.attach_geometry_buffers(positions, indices);
-        rasterizer.render_index(pixels, cam, width, height);
-        rasterizer.disable_index();
-        std::string outfile(TMP_DIR);
-        outfile.append("rasterizer_fidx1.png");
-        stbi_write_png(
-            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
-    }
-
-    SECTION("face index")
-    {
-        std::vector<uint32_t> indices_fidx(width * height);
-        rasterizer.enable_index();
-        rasterizer.attach_geometry_buffers(positions, indices);
-        rasterizer.render_index(indices_fidx, cam, width, height);
-        rasterizer.disable_index();
-        std::vector<uint8_t> pixels(3 * width * height);
-        for (size_t i = 0; i < indices_fidx.size(); ++i) {
-            pixels[3 * i + 0] = indices_fidx[i] & 0xFF;
-            pixels[3 * i + 1] = (indices_fidx[i] >> 8) & 0xFF;
-            pixels[3 * i + 2] = (indices_fidx[i] >> 16) & 0xFF;
-        }
-        std::string outfile(TMP_DIR);
-        outfile.append("rasterizer_fidx2.png");
-        stbi_write_png(
-            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
-    }
-
-    SECTION("face mask")
-    {
-        std::vector<uint8_t> mask(indices.size() / 3);
-        for (size_t i = 0; i < indices.size(); i += 3) {
-            auto y0 = positions[3 * indices[i + 0] + 1];
-            auto y1 = positions[3 * indices[i + 1] + 1];
-            auto y2 = positions[3 * indices[i + 2] + 1];
-            if (y0 < center[1] && y1 < center[1] && y2 < center[1]) {
-                mask[i / 3] = 0;
-            }
-            else {
-                mask[i / 3] = 1;
-            }
-        }
-        rasterizer.disable_index();
-        rasterizer.attach_face_mask_buffer(mask.data());
-        rasterizer.attach_geometry_buffers(positions, indices);
-        std::vector<uint8_t> pixels(3 * width * height);
-        rasterizer.render_shaded(pixels, cam, width, height);
-
-        std::string outfile(TMP_DIR);
-        outfile.append("rasterizer_face_mask.png");
-        stbi_write_png(
-            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
-    }
-
-    SECTION("face index using face color")
-    {
-        std::vector<float> colors(indices.size());
-        for (unsigned i = 0; i < indices.size() / 3; ++i) {
-            uint8_t r = (i + 1) & 0x000000FF;
-            uint8_t g = ((i + 1) >> 8) & 0x000000FF;
-            uint8_t b = ((i + 1) >> 16) & 0x000000FF;
-            colors[3 * i + 0] = r / 255.0f;
-            colors[3 * i + 1] = g / 255.0f;
-            colors[3 * i + 2] = b / 255.0f;
-        }
-        rasterizer.attach_color_buffer(colors.data());
-        rasterizer.attach_geometry_buffers(positions, indices);
-        // Euclid::Material material;
-        // material.ambient << 0.0f, 0.0f, 0.0f;
-        // material.diffuse << 0.0f, 0.0f, 0.0f;
-        // rasterizer.set_material(material);
-        // rasterizer.enable_light(false);
-
-        std::vector<uint8_t> pixels(3 * width * height);
-        rasterizer.render_shaded(pixels, cam, width, height);
-
-        std::string outfile(TMP_DIR);
-        outfile.append("rasterizer_fidx3.png");
-        stbi_write_png(
-            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
-    }
-
-    SECTION("change geometry")
-    {
-        std::string filename(DATA_DIR);
-        filename.append("kitten.off");
-        std::vector<float> positions;
-        std::vector<unsigned> indices;
-        Euclid::read_off<3>(filename, positions, nullptr, &indices, nullptr);
-
-        Euclid::AABB<Kernel> aabb(positions);
-        Eigen::Vector3f center;
-        Euclid::cgal_to_eigen(aabb.center(), center);
-        Eigen::Vector3f view =
-            center +
-            Eigen::Vector3f(0.0f, 0.5f * aabb.ylen(), 2.0f * aabb.zlen());
-        Eigen::Vector3f up = Eigen::Vector3f(0.0f, 1.0f, 0.0f);
-
-        positions.push_back(0.0f);
-
-        for (int i = 0; i < positions.size(); i++) {
-            positions[i] /= 100.0f;
-        }
-        center[0] /= 100.0f;
-        center[1] /= 100.0f;
-        center[2] /= 100.0f;
-        view[0] /= 100.0f;
-        view[1] /= 100.0f;
-        view[2] /= 100.0f;
-        up[0] /= 100.0f;
-        up[1] /= 100.0f;
-        up[2] /= 100.0f;
-
-        rasterizer.attach_geometry_buffers(positions, indices);
-
-        std::vector<uint8_t> pixels(3 * width * height);
-        Euclid::PerspRasCamera cam(
-            view, center, up, 60.0f, width, height, 0.1f, 100.0f);
-        rasterizer.render_shaded(pixels, cam, width, height);
-
-        std::string outfile(TMP_DIR);
-        outfile.append("rasterizer_geometry.png");
-        stbi_write_png(
-            outfile.c_str(), width, height, 3, pixels.data(), width * 3);
+        std::vector<float> values(3 * width * height);
+        rasterizer.render_depth(transform.matrix(), persp, values);
     }
 }

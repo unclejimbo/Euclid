@@ -45,7 +45,13 @@ void vs_view_entropy(const Mesh& mesh,
         Eigen::Vector3f up;
         cgal_to_eigen(tangent_plane.base1(), up);
         // this algorithm only works with orthogonal projection
-        OrthoRayCamera camera(view, center, up, extent, extent);
+        OrthoRayCamera camera(view,
+                              center,
+                              up,
+                              extent,
+                              extent,
+                              0.001f,
+                              view_sphere.radius * 2.0f);
         raytracer.render_index(findices, camera, width, height);
 
         // counting pixels belonging to each face, including background
