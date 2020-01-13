@@ -14,6 +14,12 @@
  *  @defgroup PkgMath Math
  */
 
+/**Shape descriptors.
+ * This package contains methods to compute local/global descriptors for 3D
+ * shapes.
+ * @defgroup PkgDescriptor Descriptor
+ */
+
 /** Mesh renderer.
  *  @defgroup PkgRender Render
  */

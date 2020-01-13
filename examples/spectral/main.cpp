@@ -6,7 +6,7 @@
 #include <Eigen/Core>
 #include <Eigen/Householder>
 #include <Eigen/SparseCore>
-#include <Euclid/Analysis/Descriptor.h>
+#include <Euclid/Descriptor/HKS.h>
 #include <Euclid/Math/Distance.h>
 #include <Euclid/IO/OffIO.h>
 #include <Euclid/IO/PlyIO.h>

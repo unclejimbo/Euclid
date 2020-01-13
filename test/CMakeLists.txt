@@ -1,10 +1,12 @@
 add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_AABB.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_Descriptor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_OBB.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_Segmentation.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_ViewSelection.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_HKS.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_SpinImage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_WKS.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_Geodesics.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_MeshHelpers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_PrimitiveGenerator.cpp
