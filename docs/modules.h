@@ -20,6 +20,12 @@
  * @defgroup PkgDescriptor Descriptor
  */
 
+/**Shape segmentation.
+ * This package contains algorithms to segment 3D shapes into geometric
+ * meaningful parts.
+ * @defgroup PkgSegmentation Segmentation
+ */
+
 /** Mesh renderer.
  *  @defgroup PkgRender Render
  */

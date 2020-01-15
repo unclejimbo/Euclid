@@ -1,15 +1,10 @@
-/** Geometric shape segmentation.
- *
- *  @defgroup PkgSegmentation Segmentation
- *  @ingroup PkgAnalysis
- */
 #pragma once
 
 #include <vector>
 
 namespace Euclid
 {
-/** @{*/
+/**@{ @ingroup PkgSegmentation*/
 
 /** Mesh segmentation using random walk.
  *
@@ -55,4 +50,4 @@ void random_walk_segmentation(const Mesh& mesh,
 /** @}*/
 } // namespace Euclid
 
-#include "src/RandWalkSeg.cpp"
+#include "src/RandomWalk.cpp"

@@ -2,7 +2,6 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_AABB.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_OBB.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_Segmentation.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_ViewSelection.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_HKS.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_SpinImage.cpp
@@ -24,6 +23,7 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/Render/test_Rasterizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Render/test_RayTracer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Render/test_RenderCore.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Segmentation/test_RandomWalk.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Util/test_Color.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Util/test_Memory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Util/test_Serialize.cpp
