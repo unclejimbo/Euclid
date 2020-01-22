@@ -1,8 +1,7 @@
 add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_AABB.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_OBB.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Analysis/test_ViewSelection.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/BoundingVolume/test_AABB.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/BoundingVolume/test_OBB.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_HKS.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_SpinImage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_WKS.cpp
@@ -28,6 +27,9 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/Util/test_Memory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Util/test_Serialize.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Util/test_Timer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ViewSelection/test_ProxyView.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ViewSelection/test_ViewEntropy.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ViewSelection/test_ViewSphere.cpp
 )
 
 configure_file(

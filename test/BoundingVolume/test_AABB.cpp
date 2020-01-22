@@ -1,5 +1,5 @@
 #include <catch2/catch.hpp>
-#include <Euclid/Analysis/AABB.h>
+#include <Euclid/BoundingVolume/AABB.h>
 
 #include <vector>
 

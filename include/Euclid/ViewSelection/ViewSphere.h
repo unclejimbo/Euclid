@@ -1,9 +1,6 @@
 /** View selection.
  *
  *  View selection methods try to find a proper viewpoint to observe the shape.
- *  Within this package, the center of the view sphere is located at the center
- *  of the bounding box of the mesh, and the radius of the view sphere is equal
- *  to the length of diagonal length of the bounding box.
  *
  *  @defgroup PkgView View Selection
  *  @ingroup PkgAnalysis
@@ -15,10 +12,13 @@
 
 namespace Euclid
 {
-/** @{*/
+/**@{ @ingroup PkgViewSelection*/
 
-/** View sphere around a mesh.
+/**View sphere around a mesh.
  *
+ * Within this package, the center of the view sphere is located at the center
+ * of the bounding box of the mesh, and the radius of the view sphere is equal
+ * to the length of diagonal length of the bounding box.
  */
 template<typename Mesh>
 class ViewSphere
@@ -84,53 +84,7 @@ public:
     FT scale;
 };
 
-/** View selection using view entropy.
- *
- *  View entropy uses the solid angle of each face as the probability of its
- *  visibility and computes entropy based on it. It encourages all faces to have
- *  the same projected area.
- *
- *  @param mesh The target mesh model.
- *  @param view_sphere The viewing sphere.
- *  @param view_scores The corresponding view scores.
- *
- *  **Reference**
- *
- *  Vazquez P, Feixas M, Sbert M, and Heidrich W.
- *  Viewpoint Selection using View Entropy.
- *  Proceedings of the Vision Modeling and Visualization Conference 2001.
- */
-template<typename Mesh, typename T>
-void vs_view_entropy(const Mesh& mesh,
-                     const ViewSphere<Mesh>& view_sphere,
-                     std::vector<T>& view_scores);
-
-/** View selection using proxy information.
- *
- *  Using the object oriented bounding box as proxies to measure view saliency
- *  and interpolate results to other view samples, which is very fast.
- *
- *  @param mesh The target mesh model.
- *  @param view_sphere The viewing sphere.
- *  @param view_scores The corresponding view scores.
- *  @param weight The weighting of the projected area term, (1 - weight) is the
- *  weighting for the visible ratio term.
- *
- *  **Reference**
- *
- *  Gao T, Wang W, Han H.
- *  Efficient view selection by measuring proxy information[J].
- *  Computer Animation and Virtual Worlds, 2016, 27(3-4): 351-357.
- */
-template<typename Mesh, typename T>
-void proxy_view_selection(const Mesh& mesh,
-                          const ViewSphere<Mesh>& view_sphere,
-                          std::vector<T>& view_scores,
-                          float weight = 0.5f);
-
 /** @}*/
 } // namespace Euclid
 
 #include "src/ViewSphere.cpp"
-#include "src/ViewEntropy.cpp"
-#include "src/ProxyViewSelection.cpp"

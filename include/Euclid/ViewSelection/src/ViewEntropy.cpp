@@ -11,9 +11,9 @@ namespace Euclid
 {
 
 template<typename Mesh, typename T>
-void vs_view_entropy(const Mesh& mesh,
-                     const ViewSphere<Mesh>& view_sphere,
-                     std::vector<T>& view_scores)
+void view_entropy(const Mesh& mesh,
+                  const ViewSphere<Mesh>& view_sphere,
+                  std::vector<T>& view_scores)
 {
     using VPMap =
         typename boost::property_map<Mesh, boost::vertex_point_t>::type;

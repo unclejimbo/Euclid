@@ -1,10 +1,9 @@
 #include <catch2/catch.hpp>
-#include <Euclid/Analysis/ViewSelection.h>
+#include <Euclid/ViewSelection/ViewSphere.h>
 
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
 #include <Euclid/IO/OffIO.h>
-#include <Euclid/IO/PlyIO.h>
 #include <Euclid/Geometry/MeshHelpers.h>
 #include <Euclid/Util/Color.h>
 
@@ -25,22 +24,7 @@ static void write_view_sphere(const Euclid::ViewSphere<Mesh>& sphere,
     Euclid::write_off<3>(fout, spositions, nullptr, &sindices, nullptr);
 }
 
-static void write_view_sphere(const Euclid::ViewSphere<Mesh>& sphere,
-                              const std::vector<float>& view_scores,
-                              const std::string& name)
-{
-    std::vector<float> spositions;
-    std::vector<unsigned> sindices;
-    Euclid::extract_mesh<3>(sphere.mesh, spositions, sindices);
-    std::vector<unsigned char> colors;
-    Euclid::colormap(igl::COLOR_MAP_TYPE_JET, view_scores, colors, true);
-    std::string fout(TMP_DIR);
-    fout.append(name);
-    Euclid::write_ply<3>(
-        fout, spositions, nullptr, nullptr, &sindices, &colors);
-}
-
-TEST_CASE("Analysis, ViewSelection", "[analysis][viewselection]")
+TEST_CASE("ViewSelection, ViewSphere", "[viewselection][viewsphere]")
 {
     std::string filename(DATA_DIR);
     filename.append("bunny.off");
@@ -60,21 +44,5 @@ TEST_CASE("Analysis, ViewSelection", "[analysis][viewselection]")
     {
         auto sphere = Euclid::ViewSphere<Mesh>::make_random(mesh, 3.0f, 5000);
         write_view_sphere(sphere, "view_sphere_uniform.off");
-    }
-
-    SECTION("view entropy")
-    {
-        auto sphere = Euclid::ViewSphere<Mesh>::make_subdiv(mesh);
-        std::vector<float> view_scores;
-        Euclid::vs_view_entropy(mesh, sphere, view_scores);
-        write_view_sphere(sphere, view_scores, "view_entropy_sphere.ply");
-    }
-
-    SECTION("proxy view selection")
-    {
-        auto sphere = Euclid::ViewSphere<Mesh>::make_subdiv(mesh);
-        std::vector<float> view_scores;
-        Euclid::proxy_view_selection(mesh, sphere, view_scores);
-        write_view_sphere(sphere, view_scores, "proxy_view_sphere.ply");
     }
 }

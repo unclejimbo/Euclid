@@ -1,5 +1,5 @@
 #include <catch2/catch.hpp>
-#include <Euclid/Analysis/OBB.h>
+#include <Euclid/BoundingVolume/OBB.h>
 
 #include <vector>
 

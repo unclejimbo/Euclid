@@ -1,7 +1,3 @@
-/** Shape analysis.
- *  @defgroup PkgAnalysis Analysis
- */
-
 /** Geometric functionalities.
  *  @defgroup PkgGeometry Geometry
  */
@@ -24,6 +20,16 @@
  * This package contains algorithms to segment 3D shapes into geometric
  * meaningful parts.
  * @defgroup PkgSegmentation Segmentation
+ */
+
+/**View selection.
+ * View selection methods try to find a proper viewpoint to observe the shape.
+ * @defgroup PkgViewSelection View Selection
+ */
+
+/**Bounding volumes.
+ * Compute the bounding volume of 3D shape.
+ * @defgroup PckBoundingVolume Bounding volume
  */
 
 /** Mesh renderer.

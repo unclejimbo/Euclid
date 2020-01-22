@@ -4,7 +4,7 @@
 #include <string>
 #include <CGAL/Simple_cartesian.h>
 #include <Euclid/IO/OffIO.h>
-#include <Euclid/Analysis/AABB.h>
+#include <Euclid/BoundingVolume/AABB.h>
 #include <Euclid/Math/Vector.h>
 #include <Euclid/Util/Color.h>
 

@@ -3,7 +3,7 @@
 #include <cmath>
 
 #include <boost/math/constants/constants.hpp>
-#include <Euclid/Analysis/OBB.h>
+#include <Euclid/BoundingVolume/OBB.h>
 #include <Euclid/Geometry/MeshHelpers.h>
 #include <Euclid/Geometry/TriMeshGeometry.h>
 #include <Euclid/Math/Vector.h>
@@ -13,10 +13,10 @@ namespace Euclid
 {
 
 template<typename Mesh, typename T>
-void proxy_view_selection(const Mesh& mesh,
-                          const ViewSphere<Mesh>& view_sphere,
-                          std::vector<T>& view_scores,
-                          float weight)
+void proxy_view(const Mesh& mesh,
+                const ViewSphere<Mesh>& view_sphere,
+                std::vector<T>& view_scores,
+                float weight)
 {
     using Point_3 = typename boost::property_traits<
         typename boost::property_map<Mesh,
