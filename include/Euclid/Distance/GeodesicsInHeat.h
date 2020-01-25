@@ -1,9 +1,3 @@
-/** Geodesic distance.
- *
- *  This package contains algorithms for computing geodesic distance.
- *  @defgroup PkgGeodesics Geodesics
- *  @ingroup PkgGeometry
- */
 #pragma once
 
 #include <vector>
@@ -14,7 +8,7 @@
 
 namespace Euclid
 {
-/** @{*/
+/**@{ @ingroup PkgDistance*/
 
 /** Single source approximate geodesic distance using the heat method.
  *
@@ -115,4 +109,4 @@ public:
 /** @}*/
 } // namespace Euclid
 
-#include "src/HeatMethod.cpp"
+#include "src/GeodesicsInHeat.cpp"

@@ -2,6 +2,12 @@
  *  @defgroup PkgGeometry Geometry
  */
 
+/**Intrinsic distances.
+ * This package contains algorithms to compute geodesic distance, and other
+ * types of intrinsic distances on a surface.
+ * @defgroup PkgDistance Distance
+ */
+
 /** File I/O.
  *  @defgroup PkgIO I/O
  */

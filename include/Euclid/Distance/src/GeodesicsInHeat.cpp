@@ -45,7 +45,7 @@ void GeodesicsInHeat<Mesh>::build(const Mesh& mesh,
     }
 
     // Factorize the laplacian matrix
-    this->poisson_solver.compute(*this->cot_mat);
+    this->poisson_solver.compute(-*this->cot_mat);
     if (this->poisson_solver.info() != Eigen::Success) {
         throw std::runtime_error("Unable to factor the poisson equation.");
     }
@@ -64,7 +64,7 @@ void GeodesicsInHeat<Mesh>::scale(float scale)
     }
 
     // Factorize the laplacian matrix
-    this->poisson_solver.compute(*this->cot_mat);
+    this->poisson_solver.compute(-*this->cot_mat);
     if (this->poisson_solver.info() != Eigen::Success) {
         throw std::runtime_error("Unable to factor the poisson equation.");
     }
