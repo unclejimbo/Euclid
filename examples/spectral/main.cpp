@@ -7,7 +7,7 @@
 #include <Eigen/Householder>
 #include <Eigen/SparseCore>
 #include <Euclid/Descriptor/HKS.h>
-#include <Euclid/Math/Distance.h>
+#include <Euclid/Descriptor/Histogram.h>
 #include <Euclid/IO/OffIO.h>
 #include <Euclid/IO/PlyIO.h>
 #include <Euclid/MeshUtil/MeshHelpers.h>
