@@ -4,7 +4,7 @@
 #include <CGAL/Min_sphere_of_spheres_d.h>
 #include <CGAL/point_generators_3.h>
 #include <CGAL/convex_hull_3.h>
-#include <Euclid/Geometry/PrimitiveGenerator.h>
+#include <Euclid/MeshUtil/PrimitiveGenerator.h>
 
 namespace Euclid
 {

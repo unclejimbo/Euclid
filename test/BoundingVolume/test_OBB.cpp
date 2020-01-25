@@ -6,7 +6,7 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Point_set_3.h> // CGAL's bug, must be included after a kernel
 #include <CGAL/Surface_mesh.h>
-#include <Euclid/Geometry/MeshHelpers.h>
+#include <Euclid/MeshUtil/MeshHelpers.h>
 
 #include <config.h>
 

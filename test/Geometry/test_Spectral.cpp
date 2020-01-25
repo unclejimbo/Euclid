@@ -8,7 +8,7 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
 #include <Eigen/Core>
-#include <Euclid/Geometry/MeshHelpers.h>
+#include <Euclid/MeshUtil/MeshHelpers.h>
 #include <Euclid/IO/OffIO.h>
 
 #include <config.h>

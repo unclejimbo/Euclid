@@ -10,7 +10,7 @@
 #include <Euclid/Math/Distance.h>
 #include <Euclid/IO/OffIO.h>
 #include <Euclid/IO/PlyIO.h>
-#include <Euclid/Geometry/MeshHelpers.h>
+#include <Euclid/MeshUtil/MeshHelpers.h>
 #include <Euclid/Geometry/Spectral.h>
 #include <Euclid/Util/Color.h>
 

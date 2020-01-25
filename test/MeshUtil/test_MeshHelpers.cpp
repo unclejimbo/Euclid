@@ -1,5 +1,5 @@
 #include <catch2/catch.hpp>
-#include <Euclid/Geometry/MeshHelpers.h>
+#include <Euclid/MeshUtil/MeshHelpers.h>
 
 #include <string>
 #include <vector>
@@ -15,7 +15,7 @@
 using Kernel = CGAL::Simple_cartesian<double>;
 using Point_3 = typename Kernel::Point_3;
 
-TEST_CASE("Geometry, MeshHelpers", "[geometry][meshhelpers]")
+TEST_CASE("MeshUtil, MeshHelpers", "[meshutil][meshhelpers]")
 {
     std::vector<double> positions;
     std::vector<unsigned> indices;

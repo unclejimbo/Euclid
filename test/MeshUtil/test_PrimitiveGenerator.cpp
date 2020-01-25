@@ -1,11 +1,11 @@
 #include <catch2/catch.hpp>
-#include <Euclid/Geometry/PrimitiveGenerator.h>
+#include <Euclid/MeshUtil/PrimitiveGenerator.h>
 
 #include <string>
 
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
-#include <Euclid/Geometry/MeshHelpers.h>
+#include <Euclid/MeshUtil/MeshHelpers.h>
 #include <Euclid/IO/OffIO.h>
 
 #include <config.h>
@@ -13,7 +13,7 @@
 using Kernel = CGAL::Simple_cartesian<float>;
 using Point_3 = typename Kernel::Point_3;
 
-TEST_CASE("Geometry, PrimitiveGenerator", "[geometry][primitivegenerator]")
+TEST_CASE("MeshUtil, PrimitiveGenerator", "[meshutil][primitivegenerator]")
 {
     SECTION("subdivision sphere")
     {

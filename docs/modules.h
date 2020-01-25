@@ -16,6 +16,11 @@
  *  @defgroup PkgMath Math
  */
 
+/**Mesh utilities.
+ * Mesh generation, conversion, etc..
+ * @defgroup PkgMeshUtil Mesh Util
+ */
+
 /**Shape descriptors.
  * This package contains methods to compute local/global descriptors for 3D
  * shapes.

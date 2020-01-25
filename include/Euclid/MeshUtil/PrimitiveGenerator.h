@@ -1,8 +1,8 @@
-/** Geometric primitive generator.
+/**Geometric primitive generator.
  *
- *  This package contains functions to generate geometric primitives.
- *  @defgroup PkgPrimGen Primitive Generator
- *  @ingroup PkgGeometry
+ * This package contains functions to generate geometric primitives.
+ * @defgroup PkgPrimGen Primitive Generator
+ * @ingroup PkgMeshUtil
  */
 #pragma once
 

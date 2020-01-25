@@ -4,7 +4,7 @@
 
 #include <boost/math/constants/constants.hpp>
 #include <Euclid/BoundingVolume/OBB.h>
-#include <Euclid/Geometry/MeshHelpers.h>
+#include <Euclid/MeshUtil/MeshHelpers.h>
 #include <Euclid/Geometry/TriMeshGeometry.h>
 #include <Euclid/Math/Vector.h>
 #include <Euclid/Render/RayTracer.h>

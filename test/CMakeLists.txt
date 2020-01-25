@@ -6,8 +6,6 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_SpinImage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_WKS.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Distance/test_GeodesicsInHeat.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_MeshHelpers.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_PrimitiveGenerator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_Spectral.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_TriMeshGeometry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IO/test_ObjIO.cpp
@@ -19,6 +17,8 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Statistics.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Transformation.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Vector.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/MeshUtil/test_MeshHelpers.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/MeshUtil/test_PrimitiveGenerator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Render/test_Rasterizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Render/test_RayTracer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Render/test_RenderCore.cpp

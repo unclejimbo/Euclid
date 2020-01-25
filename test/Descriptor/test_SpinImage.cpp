@@ -4,7 +4,7 @@
 #include <vector>
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
-#include <Euclid/Geometry/MeshHelpers.h>
+#include <Euclid/MeshUtil/MeshHelpers.h>
 #include <Euclid/IO/PlyIO.h>
 #include <Euclid/Math/Distance.h>
 #include <Euclid/Util/Color.h>

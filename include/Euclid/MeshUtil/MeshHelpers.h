@@ -1,16 +1,16 @@
-/** Helper functions for mesh.
+/**Helper functions for mesh.
  *
- *  This package provides functions to process several common mesh
- *  data structures.
+ * This package provides functions to process several common mesh data
+ * structures.
  *
- *  Conceptually, the Mesh type should conform to the concepts defined in the
- *  Boost Graph Library, including CGAL::Surface_mesh, CGAL::Polyhedron_3 and
- *  OpenMesh. For more details, see https://doc.cgal.org/latest/BGL/index.html.
+ * Conceptually, the Mesh type should conform to the concepts defined in the
+ * Boost Graph Library, including CGAL::Surface_mesh, CGAL::Polyhedron_3 and
+ * OpenMesh. For more details, see https://doc.cgal.org/latest/BGL/index.html.
  *
- *  And the matrix representation should primarily be used along with libigl.
+ * And the matrix representation should primarily be used along with libigl.
  *
- *  @defgroup PkgMeshHelpers MeshHelpers
- *  @ingroup PkgGeometry
+ * @defgroup PkgMeshHelpers MeshHelpers
+ * @ingroup PkgMeshUtil
  */
 #pragma once
 

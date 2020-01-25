@@ -3,7 +3,7 @@
 
 #include <CGAL/Min_sphere_of_spheres_d.h>
 #include <CGAL/Plane_3.h>
-#include <Euclid/Geometry/MeshHelpers.h>
+#include <Euclid/MeshUtil/MeshHelpers.h>
 #include <Euclid/Math/Vector.h>
 #include <Euclid/Render/RayTracer.h>
 
