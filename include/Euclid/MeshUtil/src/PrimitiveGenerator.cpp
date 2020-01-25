@@ -14,7 +14,8 @@ void make_subdivision_sphere(
     int iterations)
 {
     CGAL::make_icosahedron(mesh, Point_3(0, 0, 0));
-    CGAL::Subdivision_method_3::Loop_subdivision(mesh, iterations);
+    CGAL::Subdivision_method_3::Loop_subdivision(
+        mesh, CGAL::parameters::number_of_iterations(iterations));
 
     // Transform the sphere after subdivision
     auto vpmap = get(boost::vertex_point, mesh);
