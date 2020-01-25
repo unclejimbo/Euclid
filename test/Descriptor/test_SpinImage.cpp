@@ -6,7 +6,7 @@
 #include <CGAL/Surface_mesh.h>
 #include <Euclid/MeshUtil/MeshHelpers.h>
 #include <Euclid/IO/PlyIO.h>
-#include <Euclid/Math/Distance.h>
+#include <Euclid/Descriptor/Histogram.h>
 #include <Euclid/Util/Color.h>
 #include <stb_image_write.h>
 

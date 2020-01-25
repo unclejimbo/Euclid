@@ -1,9 +1,9 @@
-/** Distance between probability distributions.
+/**Measure histograms.
  *
- *  This package contains several distance measures between two probability
- *  distributions, e.g. histograms.
- *  @defgroup PkgDistance Distance
- *  @ingroup PkgMath
+ * Histograms are commonly used as shape descriptors. This package contains
+ * functions to compute distances between histograms.
+ * @defgroup PkgHistogram Histogram
+ * @ingroup PkgDescriptor
  */
 #pragma once
 
@@ -64,4 +64,4 @@ T chi2_asym(const Eigen::ArrayBase<DerivedA>& d1,
 /** @}*/
 } // namespace Euclid
 
-#include "src/Distance.cpp"
+#include "src/Histogram.cpp"

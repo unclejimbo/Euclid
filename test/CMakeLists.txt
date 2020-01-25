@@ -2,6 +2,7 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/BoundingVolume/test_AABB.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/BoundingVolume/test_OBB.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_Histogram.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_HKS.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_SpinImage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_WKS.cpp
@@ -12,7 +13,6 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/IO/test_OffIO.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IO/test_PlyIO.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IO/test_InputFixer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Distance.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Numeric.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Statistics.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Transformation.cpp

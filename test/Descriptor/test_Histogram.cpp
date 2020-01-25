@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
-#include <Euclid/Math/Distance.h>
+#include <Euclid/Descriptor/Histogram.h>
 
-TEST_CASE("Math, Distance", "[math][distance]")
+TEST_CASE("Descriptor, Histogram", "[distance][histogram]")
 {
     SECTION("compare arrays")
     {

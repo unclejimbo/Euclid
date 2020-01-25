@@ -7,7 +7,7 @@
 #include <Euclid/MeshUtil/MeshHelpers.h>
 #include <Euclid/Geometry/Spectral.h>
 #include <Euclid/IO/PlyIO.h>
-#include <Euclid/Math/Distance.h>
+#include <Euclid/Descriptor/Histogram.h>
 #include <Euclid/Util/Color.h>
 #include <Euclid/Util/Serialize.h>
 #include <stb_image_write.h>
