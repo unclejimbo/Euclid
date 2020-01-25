@@ -1,9 +1,3 @@
-/** Object oriented bounding box for 3D geometry.
- *
- *  Use pca analysis to generate an object oriented bounding box.
- *  @defgroup PkgOBB OBB
- *  @ingroup PkgAnalysis
- */
 #pragma once
 
 #include <array>
@@ -13,7 +7,7 @@
 
 namespace Euclid
 {
-/** @{*/
+/** @{ @ingroup PkgBoundingVolume*/
 
 /** Object oriented bounding box.
  *

@@ -1,10 +1,3 @@
-/** View selection.
- *
- *  View selection methods try to find a proper viewpoint to observe the shape.
- *
- *  @defgroup PkgView View Selection
- *  @ingroup PkgAnalysis
- */
 #pragma once
 
 #include <vector>

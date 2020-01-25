@@ -1,9 +1,3 @@
-/** Axis aligned bounding box.
- *
- *  An axis aligned bounding box is aligned with the x, y, z axis.
- *  @defgroup PkgAABB AABB
- *  @ingroup PkgAnalysis
- */
 #pragma once
 
 #include <array>
@@ -11,7 +5,7 @@
 
 namespace Euclid
 {
-/** @{*/
+/** @{ @ingroup PkgBoundingVolume*/
 
 /** Axis Aligned Bounding Box.
  *

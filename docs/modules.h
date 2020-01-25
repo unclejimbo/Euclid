@@ -1,5 +1,12 @@
-/** Geometric functionalities.
- *  @defgroup PkgGeometry Geometry
+/**Bounding volumes.
+ * Compute the bounding volume of 3D shape.
+ * @defgroup PkgBoundingVolume Bounding volume
+ */
+
+/**Shape descriptors.
+ * This package contains methods to compute local/global descriptors for 3D
+ * shapes.
+ * @defgroup PkgDescriptor Descriptor
  */
 
 /**Intrinsic distances.
@@ -8,12 +15,20 @@
  * @defgroup PkgDistance Distance
  */
 
-/** File I/O.
- *  @defgroup PkgIO I/O
+/**Geometric functionalities.
+ * This package contains functions for spectral decomposition, differential
+ * geometries, etc..
+ * @defgroup PkgGeometry Geometry
  */
 
-/** Math utilities.
- *  @defgroup PkgMath Math
+/**File I/O.
+ * Currently support obj, off, and ply format.
+ * @defgroup PkgIO I/O
+ */
+
+/**Math utilities.
+ * Basic math functions.
+ * @defgroup PkgMath Math
  */
 
 /**Mesh utilities.
@@ -21,10 +36,9 @@
  * @defgroup PkgMeshUtil Mesh Util
  */
 
-/**Shape descriptors.
- * This package contains methods to compute local/global descriptors for 3D
- * shapes.
- * @defgroup PkgDescriptor Descriptor
+/**Mesh renderer.
+ * This package contains renderers primarily aimed for shape analysis.
+ * @defgroup PkgRender Render
  */
 
 /**Shape segmentation.
@@ -38,15 +52,6 @@
  * @defgroup PkgViewSelection View Selection
  */
 
-/**Bounding volumes.
- * Compute the bounding volume of 3D shape.
- * @defgroup PckBoundingVolume Bounding volume
- */
-
-/** Mesh renderer.
- *  @defgroup PkgRender Render
- */
-
-/** Other utilities.
+/**Other utilities.
  * @defgroup PkgUtil Util
  */
