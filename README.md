@@ -20,24 +20,20 @@ The purpose of Euclid is not to replace any of the above packages, but to glue t
 - Robust floating point comparisons.
 - Affine transformation.
 - Statistical analysis.
-- Distance computation between probability distributions.
 
 ### IO
 
 - Mesh I/O, currently supporting .ply, .obj and .off file format.
 - Mesh fixers, fixing degeneracies in input meshes.
 
-### Geometry
+### Geometry Processing and Shape Analysis
 
 - Convert raw mesh arrays read from the IO package into mesh data structures in CGAL and libigl and vice versa.
 - Generate common mesh primitives.
-- Discrete differential and geometric properties.
+- Discrete differential geometry.
+- Spectral decomposition.
 - Geodesic distance.
-- Spectral shape analysis.
-
-### Analysis
-
-- Shape bounding boxes.
+- Shape bounding volumes.
 - Geometric shape segmentation.
 - Shape descriptors.
 - View selection.
@@ -45,6 +41,7 @@ The purpose of Euclid is not to replace any of the above packages, but to glue t
 ### Render
 
 - Fast cpu ray tracing.
+- Headless gpu rendering using Vulkan.
 
 ### Util
 
@@ -147,4 +144,4 @@ See the [examples](https://github.com/unclejimbo/Euclid/tree/dev/examples) folde
 
 MIT for code not related to any third-party libraries.
 
-Otherwise it should follow whatever license the third-party libraries require, I guess?
+Otherwise it should follow whatever license the third-party libraries require.
