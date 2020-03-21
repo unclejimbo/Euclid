@@ -165,7 +165,8 @@ std::enable_if_t<std::is_arithmetic_v<FT>, void> extract_mesh(
     auto vimap = get(boost::vertex_index, mesh);
     for (auto [fb, fe] = faces(mesh); fb != fe; ++fb) {
         int i = 0;
-        for (auto [vb, ve] = vertices_around_face(halfedge(*fb, mesh), mesh);
+        for (auto [vb, ve] =
+                 CGAL::vertices_around_face(halfedge(*fb, mesh), mesh);
              vb != ve;
              ++vb) {
             if (i++ >= N) {
@@ -198,7 +199,8 @@ std::enable_if_t<!std::is_arithmetic_v<Point_3>, void> extract_mesh(
     auto vimap = get(boost::vertex_index, mesh);
     for (auto [fb, fe] = faces(mesh); fb != fe; ++fb) {
         int i = 0;
-        for (auto [vb, ve] = vertices_around_face(halfedge(*fb, mesh), mesh);
+        for (auto [vb, ve] =
+                 CGAL::vertices_around_face(halfedge(*fb, mesh), mesh);
              vb != ve;
              ++vb) {
             if (i++ >= N) {
@@ -254,7 +256,7 @@ std::vector<Vertex> nring_vertices(Vertex target, const Mesh& mesh, unsigned n)
 {
     std::vector<Vertex> neighbors;
     if (n == 1) {
-        for (auto v : vertices_around_target(target, mesh)) {
+        for (auto v : CGAL::vertices_around_target(target, mesh)) {
             neighbors.push_back(v);
         }
     }
@@ -266,7 +268,7 @@ std::vector<Vertex> nring_vertices(Vertex target, const Mesh& mesh, unsigned n)
             auto t = targets.front().first;
             auto m = targets.front().second;
             targets.pop();
-            for (auto v : vertices_around_target(t, mesh)) {
+            for (auto v : CGAL::vertices_around_target(t, mesh)) {
                 if (visited.find(v) == visited.end()) {
                     visited.insert(v);
                     neighbors.push_back(v);

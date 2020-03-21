@@ -46,7 +46,7 @@ void construct_equation(const Mesh& mesh,
         auto fa_id = ids[get(fimap, fa)];
         auto na = Euclid::face_normal(fa, mesh);
 
-        for (auto ha : halfedges_around_face(halfedge(fa, mesh), mesh)) {
+        for (auto ha : CGAL::halfedges_around_face(halfedge(fa, mesh), mesh)) {
             auto hb = opposite(ha, mesh);
             if (!is_border(hb, mesh)) { // Non-boundary
 

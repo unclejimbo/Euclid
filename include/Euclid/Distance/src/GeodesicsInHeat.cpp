@@ -116,7 +116,7 @@ void GeodesicsInHeat<Mesh>::compute(
     for (const auto& v : vertices(*this->mesh)) {
         FT divergence = zero;
         auto p = get(vpmap, v);
-        for (const auto& he : halfedges_around_target(v, *this->mesh)) {
+        for (const auto& he : CGAL::halfedges_around_target(v, *this->mesh)) {
             auto f = face(he, *this->mesh);
             auto g = gradients[get(fimap, f)];
             auto vi = source(he, *this->mesh);

@@ -21,7 +21,7 @@ Vector_3 vertex_normal(
 {
     auto vpmap = get(boost::vertex_point, mesh);
     Vector_3 normal(0.0, 0.0, 0.0);
-    for (auto he : halfedges_around_source(v, mesh)) {
+    for (auto he : CGAL::halfedges_around_source(v, mesh)) {
         if (!CGAL::is_border(he, mesh)) {
             auto f = face(he, mesh);
             auto fn = face_normal(f, mesh);
@@ -59,7 +59,7 @@ Vector_3 vertex_normal(
     auto vpmap = get(boost::vertex_point, mesh);
     auto fimap = get(boost::face_index, mesh);
     Vector_3 normal(0.0, 0.0, 0.0);
-    for (auto he : halfedges_around_source(v, mesh)) {
+    for (auto he : CGAL::halfedges_around_source(v, mesh)) {
         if (!CGAL::is_border(he, mesh)) {
             auto f = face(he, mesh);
             auto fi = get(fimap, f);
@@ -110,7 +110,7 @@ T vertex_area(typename boost::graph_traits<const Mesh>::vertex_descriptor v,
     auto va = T(0);
     if (method == VertexArea::barycentric) {
         const auto one_third = boost::math::constants::third<T>();
-        for (auto he : halfedges_around_target(v, mesh)) {
+        for (auto he : CGAL::halfedges_around_target(v, mesh)) {
             if (!CGAL::is_border(he, mesh)) {
                 auto p1 = get(vpmap, source(he, mesh));
                 auto p2 = get(vpmap, target(he, mesh));
@@ -121,7 +121,7 @@ T vertex_area(typename boost::graph_traits<const Mesh>::vertex_descriptor v,
         va *= one_third;
     }
     else if (method == VertexArea::voronoi) {
-        for (auto he : halfedges_around_target(v, mesh)) {
+        for (auto he : CGAL::halfedges_around_target(v, mesh)) {
             if (!CGAL::is_border(he, mesh)) {
                 auto p1 = get(vpmap, source(he, mesh));
                 auto p2 = get(vpmap, target(he, mesh));
@@ -142,7 +142,7 @@ T vertex_area(typename boost::graph_traits<const Mesh>::vertex_descriptor v,
         }
     }
     else { // method == VertexArea::mixed_voronoi
-        for (auto he : halfedges_around_target(v, mesh)) {
+        for (auto he : CGAL::halfedges_around_target(v, mesh)) {
             if (!CGAL::is_border(he, mesh)) {
                 auto p1 = get(vpmap, source(he, mesh));
                 auto p2 = get(vpmap, target(he, mesh));
@@ -298,7 +298,7 @@ Point_3 barycenter(typename boost::graph_traits<const Mesh>::face_descriptor f,
                    const Mesh& mesh)
 {
     auto vpmap = get(boost::vertex_point, mesh);
-    auto [vbeg, vend] = vertices_around_face(halfedge(f, mesh), mesh);
+    auto [vbeg, vend] = CGAL::vertices_around_face(halfedge(f, mesh), mesh);
     auto p0 = get(vpmap, *vbeg++);
     auto p1 = get(vpmap, *vbeg++);
     auto p2 = get(vpmap, *vbeg);
@@ -324,7 +324,7 @@ T gaussian_curvature(
     auto vpmap = get(boost::vertex_point, mesh);
 
     T angle_defect = boost::math::constants::two_pi<T>();
-    for (auto he : halfedges_around_target(v, mesh)) {
+    for (auto he : CGAL::halfedges_around_target(v, mesh)) {
         if (!CGAL::is_border(he, mesh)) {
             auto vp = source(he, mesh);
             auto vq = target(next(he, mesh), mesh);
@@ -358,7 +358,7 @@ std::tuple<Eigen::SparseMatrix<T>, Eigen::SparseMatrix<T>> adjacency_matrix(
     for (auto vi : vertices(mesh)) {
         int i = get(vimap, vi);
         int d = 0;
-        for (auto he : halfedges_around_target(vi, mesh)) {
+        for (auto he : CGAL::halfedges_around_target(vi, mesh)) {
             auto vj = source(he, mesh);
             int j = get(vimap, vj);
             adj.emplace_back(i, j, 1);
@@ -398,7 +398,7 @@ Eigen::SparseMatrix<T> cotangent_matrix(const Mesh& mesh)
     for (auto vi : vertices(mesh)) {
         int i = get(vimap, vi);
         T row_sum = 0.0;
-        for (auto he : halfedges_around_target(vi, mesh)) {
+        for (auto he : CGAL::halfedges_around_target(vi, mesh)) {
             auto vj = source(he, mesh);
             int j = get(vimap, vj);
             auto existing = values.find(Triplet(j, i, 0.0));
