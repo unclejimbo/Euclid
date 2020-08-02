@@ -186,14 +186,12 @@ inline Eigen::Matrix4f OrthoRasCamera::projection() const
 
 /************************ Rsterizer *************************/
 
-inline const Material Rasterizer::_default_material{
-    .ambient = { 0.1f, 0.1f, 0.1f },
-    .diffuse = { 0.7f, 0.7f, 0.7f }
-};
+inline const Material Rasterizer::_default_material{ { 0.1f, 0.1f, 0.1f },
+                                                     { 0.7f, 0.7f, 0.7f } };
 
-inline const Light Rasterizer::_default_light{ .position = { 1.0f, 1.0f, 1.0f },
-                                               .color = { 1.0f, 1.0f, 1.0f },
-                                               .intensity = 1.0f };
+inline const Light Rasterizer::_default_light{ { 1.0f, 1.0f, 1.0f },
+                                               { 1.0f, 1.0f, 1.0f },
+                                               1.0f };
 
 inline Rasterizer::Rasterizer(uint32_t width,
                               uint32_t height,
@@ -849,8 +847,7 @@ inline uint32_t Rasterizer::_create_logical_device()
     // }
 
     // Requested extensions
-    const char* extensions[4] = { "VK_KHR_depth_stencil_resolve",
-                                  "VK_KHR_create_renderpass2",
+    const char* extensions[4] = { "VK_KHR_create_renderpass2",
                                   "VK_KHR_multiview",
                                   "VK_KHR_maintenance2" };
 
@@ -859,7 +856,7 @@ inline uint32_t Rasterizer::_create_logical_device()
     device_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     device_info.queueCreateInfoCount = 1;
     device_info.pQueueCreateInfos = &queue_info;
-    device_info.enabledExtensionCount = 4;
+    device_info.enabledExtensionCount = 3;
     device_info.ppEnabledExtensionNames = extensions;
     if (vkCreateDevice(_physical_device, &device_info, nullptr, &_device) !=
         VK_SUCCESS) {
@@ -1124,7 +1121,7 @@ inline void Rasterizer::_create_render_pass(VkSampleCountFlagBits samples)
             VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         depth_resolve_ref.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
-        VkSubpassDescriptionDepthStencilResolveKHR depth_resolve{};
+        VkSubpassDescriptionDepthStencilResolve depth_resolve{};
         depth_resolve.sType =
             VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_DEPTH_STENCIL_RESOLVE_KHR;
         depth_resolve.pDepthStencilResolveAttachment = &depth_resolve_ref;

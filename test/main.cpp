@@ -5,8 +5,14 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 
+// #ifdef CXX_STANDARD
+#ifdef __cpp_lib_filesystem
+#include <filesystem>
+namespace fs = std::filesystem;
+#else
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
+#endif
 
 #include "config.h"
 
