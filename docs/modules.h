@@ -47,6 +47,11 @@
  * @defgroup PkgSegmentation Segmentation
  */
 
+/**Topology.
+ * This package provides topology related operations.
+ * @defgroup PkgTopology Topology
+ */
+
 /**View selection.
  * View selection methods try to find a proper viewpoint to observe the shape.
  * @defgroup PkgViewSelection View Selection
