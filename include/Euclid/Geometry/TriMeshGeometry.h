@@ -3,6 +3,9 @@
  *  This package contains functions to compute geometric properties and
  *  differential operators on a triangle mesh.
  *
+ *  Note that, edge_length() and squared_edge_length() are partial specialized
+ *  for CGAL::Dual<Mesh> which approximate the length with barycenters.
+ *
  *  **References**
  *
  *  [1] Botsch, M., Kobbelt L., Pauly M., et al.

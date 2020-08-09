@@ -7,6 +7,7 @@
 #include <boost/functional/hash.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <CGAL/boost/graph/helpers.h>
+#include <CGAL/boost/graph/Dual.h>
 #include <Euclid/Math/Vector.h>
 #include <Euclid/Util/Assert.h>
 
@@ -177,6 +178,19 @@ std::vector<T> vertex_areas(const Mesh& mesh, const VertexArea& method)
     return vareas;
 }
 
+template<typename Mesh>
+decltype(auto) edge_length(
+    typename boost::graph_traits<const Mesh>::halfedge_descriptor h,
+    const CGAL::Dual<Mesh>& dual)
+{
+    auto primal = dual.primal();
+    auto f0 = source(h, dual);
+    auto f1 = target(h, dual);
+    auto p0 = barycenter(f0, primal);
+    auto p1 = barycenter(f1, primal);
+    return length(p1 - p0);
+}
+
 template<typename Mesh, typename T>
 T edge_length(typename boost::graph_traits<const Mesh>::halfedge_descriptor he,
               const Mesh& mesh)
@@ -204,6 +218,19 @@ std::vector<T> edge_lengths(const Mesh& mesh)
         elens.push_back(edge_length(he, mesh));
     }
     return elens;
+}
+
+template<typename Mesh>
+decltype(auto) squared_edge_length(
+    typename boost::graph_traits<const Mesh>::edge_descriptor e,
+    const CGAL::Dual<Mesh>& dual)
+{
+    auto primal = dual.primal();
+    auto f0 = source(h, dual);
+    auto f1 = target(h, dual);
+    auto p0 = barycenter(f0, primal);
+    auto p1 = barycenter(f1, primal);
+    return (p1 - p0).squared_length();
 }
 
 template<typename Mesh, typename T>
