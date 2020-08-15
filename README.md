@@ -2,7 +2,6 @@
 
 - [GitHub repo](https://github.com/unclejimbo/Euclid)
 - [Latest documentation](https://codedocs.xyz/unclejimbo/Euclid/index.html)
-- [Gallery](https://github.com/unclejimbo/Euclid/tree/dev/gallery)
 
 ## Introduction
 
@@ -11,44 +10,6 @@ Euclid is a header only library for geometry processing and shape analysis.
 It contains some utilities and algorithms which extend and cooperate with other popular libraries around there, like Eigen(libigl), CGAL, to name a few.
 
 The purpose of Euclid is not to replace any of the above packages, but to glue things together as well as to provide more algorithms which do not appear in those libraries.
-
-## Modules Overview
-
-### Math
-
-- Common operations in linear algebra.
-- Robust floating point comparisons.
-- Affine transformation.
-- Statistical analysis.
-
-### IO
-
-- Mesh I/O, currently supporting .ply, .obj and .off file format.
-- Mesh fixers, fixing degeneracies in input meshes.
-
-### Geometry Processing and Shape Analysis
-
-- Convert raw mesh arrays read from the IO package into mesh data structures in CGAL and libigl and vice versa.
-- Generate common mesh primitives.
-- Discrete differential geometry.
-- Spectral decomposition.
-- Geodesic distance.
-- Shape bounding volumes.
-- Geometric shape segmentation.
-- Shape descriptors.
-- View selection.
-
-### Render
-
-- Fast cpu ray tracing.
-- Headless gpu rendering using Vulkan.
-
-### Util
-
-- A versatile timer.
-- Memory management.
-- Serialization.
-- Color utilities.
 
 ## Dependencies
 
@@ -129,12 +90,6 @@ int main()
         "outdir/bumpy.ply", positions, nullptr, nullptr, &indices, &colors);
 }
 ```
-
-And here's the result rendered using MeshLab.
-
-<img src="https://raw.githubusercontent.com/unclejimbo/Euclid/dev/gallery/gaussian_curvatures.png" width="512">
-
-See source code [here](https://github.com/unclejimbo/Euclid/blob/dev/examples/hello_world/main.cpp).
 
 ## Examples
 
