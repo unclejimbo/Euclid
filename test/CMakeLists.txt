@@ -6,6 +6,7 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_HKS.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_SpinImage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Descriptor/test_WKS.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Distance/test_BiharmonicDistance.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Distance/test_DiffusionDistance.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Distance/test_GeodesicsInHeat.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_Spectral.cpp
