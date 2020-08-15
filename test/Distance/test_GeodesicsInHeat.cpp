@@ -18,7 +18,7 @@ using Kernel = CGAL::Simple_cartesian<double>;
 using Point_3 = Kernel::Point_3;
 using Mesh = CGAL::Surface_mesh<Point_3>;
 
-TEST_CASE("Geodesics, Heat method", "[geodesics][heat]")
+TEST_CASE("Distance, Heat method", "[distance][heatmethod]")
 {
     // Read triangle mesh into buffers
     std::vector<float> positions;
