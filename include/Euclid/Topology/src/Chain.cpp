@@ -4,9 +4,9 @@ namespace Euclid
 template<typename Mesh>
 bool is_chain(const Mesh& mesh, const VertexChain<Mesh>& chain)
 {
-    for (size_t i = 0; i < chain.size(); ++i) {
-        auto v0 = chain[0];
-        auto v1 = chain[1];
+    for (size_t i = 0; i < chain.size() - 1; ++i) {
+        auto v0 = chain[i];
+        auto v1 = chain[i + 1];
         auto h = halfedge(v0, v1, mesh);
         if (!h.second) { return false; }
     }
