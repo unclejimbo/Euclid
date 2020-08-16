@@ -398,6 +398,29 @@ template<
 std::tuple<Eigen::SparseMatrix<T>, Eigen::SparseMatrix<T>> adjacency_matrix(
     const Mesh& mesh);
 
+/**Cotangent weight associated with an edge.
+ *
+ */
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+T cotangent_weight(
+    typename boost::graph_traits<const Mesh>::halfedge_descriptor he,
+    const Mesh& mesh);
+
+/**Cotangent weight associated with an edge.
+ *
+ */
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+T cotangent_weight(typename boost::graph_traits<const Mesh>::edge_descriptor e,
+                   const Mesh& mesh);
+
 /** Cotangent matrix of the mesh.
  *
  *  The cotangent matrix is a discretization of the Laplacian-Beltrami operator.

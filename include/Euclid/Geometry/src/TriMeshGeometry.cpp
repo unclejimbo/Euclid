@@ -403,6 +403,29 @@ std::tuple<Eigen::SparseMatrix<T>, Eigen::SparseMatrix<T>> adjacency_matrix(
 }
 
 template<typename Mesh, typename T>
+T cotangent_weight(
+    typename boost::graph_traits<const Mesh>::halfedge_descriptor he,
+    const Mesh& mesh)
+{
+    auto vpmap = get(boost::vertex_point, mesh);
+    auto vi = source(he, mesh);
+    auto vj = target(he, mesh);
+    auto va = target(next(he, mesh), mesh);
+    auto vb = target(next(opposite(he, mesh), mesh), mesh);
+    auto cota = cotangent(get(vpmap, vi), get(vpmap, va), get(vpmap, vj));
+    auto cotb = cotangent(get(vpmap, vi), get(vpmap, vb), get(vpmap, vj));
+    return static_cast<T>((cota + cotb) * 0.5);
+}
+
+template<typename Mesh, typename T>
+T cotangent_weight(typename boost::graph_traits<const Mesh>::edge_descriptor e,
+                   const Mesh& mesh)
+{
+    auto he = halfedge(e, mesh);
+    return cotangent_weight(he, mesh);
+}
+
+template<typename Mesh, typename T>
 Eigen::SparseMatrix<T> cotangent_matrix(const Mesh& mesh)
 {
     using Triplet = Eigen::Triplet<T>;
@@ -434,13 +457,7 @@ Eigen::SparseMatrix<T> cotangent_matrix(const Mesh& mesh)
                 row_sum -= existing->value();
             }
             else {
-                auto va = target(next(he, mesh), mesh);
-                auto vb = target(next(opposite(he, mesh), mesh), mesh);
-                auto cota =
-                    cotangent(get(vpmap, vi), get(vpmap, va), get(vpmap, vj));
-                auto cotb =
-                    cotangent(get(vpmap, vi), get(vpmap, vb), get(vpmap, vj));
-                auto value = static_cast<T>((cota + cotb) * 0.5);
+                auto value = cotangent_weight(he, mesh);
                 values.emplace(i, j, -value);
                 row_sum += value;
             }
