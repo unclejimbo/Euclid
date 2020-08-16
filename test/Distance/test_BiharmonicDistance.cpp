@@ -49,6 +49,6 @@ TEST_CASE("Distance, Biharmonic distance", "[distance][biharmonicdistance]")
     std::vector<unsigned char> colors;
     Euclid::colormap(igl::COLOR_MAP_TYPE_PARULA, distances, colors, true, true);
     std::string fout(TMP_DIR);
-    fout.append("kitten_diffusion_distance.ply");
+    fout.append("kitten_biharmonic_distance.ply");
     Euclid::write_ply<3>(fout, positions, nullptr, nullptr, &indices, &colors);
 }
