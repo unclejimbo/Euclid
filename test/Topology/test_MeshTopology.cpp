@@ -24,7 +24,7 @@ TEST_CASE("Topology, MeshTopology", "[topology][meshtopology]")
         Euclid::read_off<3>(filename, positions, nullptr, &indices, nullptr);
         Mesh mesh;
         Euclid::make_mesh<3>(mesh, positions, indices);
-        REQUIRE(Euclid::num_bondaries(mesh) == 0);
+        REQUIRE(Euclid::num_boundaries(mesh) == 0);
         REQUIRE(Euclid::euler_characteristic(mesh) == 0);
         REQUIRE(Euclid::genus(mesh) == 1);
     }
@@ -38,7 +38,7 @@ TEST_CASE("Topology, MeshTopology", "[topology][meshtopology]")
         Euclid::read_off<3>(filename, positions, nullptr, &indices, nullptr);
         Mesh mesh;
         Euclid::make_mesh<3>(mesh, positions, indices);
-        REQUIRE(Euclid::num_bondaries(mesh) == 9);
+        REQUIRE(Euclid::num_boundaries(mesh) == 9);
         REQUIRE(Euclid::euler_characteristic(mesh) == -7);
         REQUIRE(Euclid::genus(mesh) == 0);
     }

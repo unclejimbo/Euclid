@@ -36,6 +36,11 @@
  * @defgroup PkgMeshUtil Mesh Util
  */
 
+/**Parameterization.
+ * Surface mesh parameterization.
+ * @defgroup PkgParameterization Parameterization.
+ */
+
 /**Mesh renderer.
  * This package contains renderers primarily aimed for shape analysis.
  * @defgroup PkgRender Render

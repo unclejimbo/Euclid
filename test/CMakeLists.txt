@@ -21,6 +21,7 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Vector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/MeshUtil/test_MeshHelpers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/MeshUtil/test_PrimitiveGenerator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Parameterization/test_SeamMesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Render/test_Rasterizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Render/test_RayTracer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Render/test_RenderCore.cpp

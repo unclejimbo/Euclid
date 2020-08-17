@@ -12,7 +12,7 @@ namespace Euclid
  *
  */
 template<typename Mesh>
-int num_bondaries(const Mesh& mesh);
+int num_boundaries(const Mesh& mesh);
 
 /**Euler characteristic.
  *
