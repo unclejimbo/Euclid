@@ -1,4 +1,6 @@
+#include <map>
 #include <queue>
+#include <unordered_map>
 #include <Eigen/Sparse>
 #include <Euclid/Geometry/DEC.h>
 #include <Euclid/Topology/HomologyGenerator.h>
@@ -63,6 +65,54 @@ void build_duality_matrix(const Mesh& mesh,
             auto e = edge(h, mesh);
             triplets.emplace_back(
                 offset + i, get(eimap, e), halfedge_orientation(mesh, h));
+        }
+    }
+}
+
+template<typename Mesh,
+         typename Derived,
+         typename SEM,
+         typename SVM,
+         typename VertexUVMap,
+         typename VertexParameterizedMap>
+void integrate_holomorphic_one_forms(
+    const Mesh& mesh,
+    const Eigen::MatrixBase<Derived>& one_forms,
+    CGAL::Seam_mesh<Mesh, SEM, SVM>& seam_mesh,
+    VertexUVMap uvmap,
+    VertexParameterizedMap vpmap)
+{
+    using Seam_mesh = CGAL::Seam_mesh<Mesh, SEM, SVM>;
+    using Point_2 =
+        typename CGAL::Kernel_traits<typename boost::property_traits<
+            VertexUVMap>::value_type>::Kernel::Point_2;
+    using Vector_2 =
+        typename CGAL::Kernel_traits<typename boost::property_traits<
+            VertexUVMap>::value_type>::Kernel::Vector_2;
+    using vertex_descriptor =
+        typename boost::graph_traits<Seam_mesh>::vertex_descriptor;
+    auto underlying_eimap = get(boost::edge_index, mesh);
+
+    std::queue<vertex_descriptor> queue;
+    auto root = *(vertices(seam_mesh).first);
+    queue.push(root);
+    put(uvmap, root, Point_2(0, 0));
+    put(vpmap, root, true);
+    while (!queue.empty()) {
+        auto v = queue.front();
+        queue.pop();
+        for (auto h : halfedges_around_source(v, seam_mesh)) {
+            auto vv = target(h, seam_mesh);
+            if (!get(vpmap, vv)) {
+                auto underlying_e = edge(h.tmhd, mesh);
+                auto e_idx = get(underlying_eimap, underlying_e);
+                auto uv = get(uvmap, v);
+                auto s = halfedge_orientation(mesh, h.tmhd);
+                uv += s * Vector_2(one_forms(e_idx, 0), one_forms(e_idx, 1));
+                put(uvmap, vv, uv);
+                put(vpmap, vv, true);
+                queue.push(vv);
+            }
         }
     }
 }
@@ -134,6 +184,26 @@ void holomorphic_one_form_basis(const Mesh& mesh,
     conjugate = primal * L;
 }
 
+template<typename Mesh,
+         typename Derived,
+         typename SEM,
+         typename SVM,
+         typename VertexUVMap>
+void integrate_holomorphic_one_forms(
+    const Mesh& mesh,
+    const Eigen::MatrixBase<Derived>& one_forms,
+    CGAL::Seam_mesh<Mesh, SEM, SVM>& seam_mesh,
+    VertexUVMap uvmap)
+{
+    using SM = CGAL::Seam_mesh<Mesh, SEM, SVM>;
+    using vd = typename boost::graph_traits<SM>::vertex_descriptor;
+    using PM = std::map<vd, bool>;
+    PM parameterized;
+    boost::associative_property_map<PM> vpmap(parameterized);
+    _impl::integrate_holomorphic_one_forms(
+        mesh, one_forms, seam_mesh, uvmap, vpmap);
+}
+
 template<typename Mesh, typename SEM, typename SVM>
 Holomorphic_one_forms_parameterizer3<Mesh, SEM, SVM>::
     Holomorphic_one_forms_parameterizer3(const Mesh& mesh)
@@ -180,41 +250,9 @@ Holomorphic_one_forms_parameterizer3<Mesh, SEM, SVM>::parameterize(
     VertexIndexMap vimap,
     VertexParameterizedMap vpmap)
 {
-    using namespace CGAL::Surface_mesh_parameterization;
-    using Point_2 =
-        typename CGAL::Kernel_traits<typename boost::property_traits<
-            VertexUVMap>::value_type>::Kernel::Point_2;
-    using Vector_2 =
-        typename CGAL::Kernel_traits<typename boost::property_traits<
-            VertexUVMap>::value_type>::Kernel::Vector_2;
-    using vertex_descriptor =
-        typename boost::graph_traits<TriangleMesh>::vertex_descriptor;
-    auto underlying_eimap = get(boost::edge_index, _underlying_mesh);
-
-    std::queue<vertex_descriptor> queue;
-    auto root = *(vertices(mesh).first);
-    queue.push(root);
-    put(uvmap, root, Point_2(0, 0));
-    put(vpmap, root, true);
-    while (!queue.empty()) {
-        auto v = queue.front();
-        queue.pop();
-        for (auto h : halfedges_around_source(v, mesh)) {
-            auto vv = target(h, mesh);
-            if (!get(vpmap, vv)) {
-                auto underlying_e = edge(h.tmhd, _underlying_mesh);
-                auto e_idx = get(underlying_eimap, underlying_e);
-                auto uv = get(uvmap, v);
-                auto s = halfedge_orientation(_underlying_mesh, h.tmhd);
-                uv += s * Vector_2(_one_forms(e_idx, 0), _one_forms(e_idx, 1));
-                put(uvmap, vv, uv);
-                put(vpmap, vv, true);
-                queue.push(vv);
-            }
-        }
-    }
-
-    return OK;
+    _impl::integrate_holomorphic_one_forms(
+        _underlying_mesh, _one_forms, mesh, uvmap, vpmap);
+    return CGAL::Surface_mesh_parameterization::OK;
 }
 
 } // namespace Euclid

@@ -1,3 +1,13 @@
+/**Global conformal parameterization using holomorphic 1-forms.
+ *
+ * **Reference**
+ *
+ * [1] Gu, X., Yau, S.T.
+ * Global Conformal Surface Parameterization.
+ *
+ * @defgroup PkgHolomorphic Holomorphic 1-forms
+ * @ingroup PkgParameterization
+ */
 #pragma once
 
 #include <CGAL/boost/graph/Seam_mesh.h>
@@ -7,58 +17,55 @@
 
 namespace Euclid
 {
-/**@name Algorithms.
- *
- * Parameterization algorithms.
- */
-/**@{ @ingroup PkgParameterization*/
+/**@{*/
 
-/**Global conformal parameterization using holomorphic 1-forms.
- *
- * Compute the holomorphic basis.
+/**Compute the holomorphic basis.
  *
  * @param[in] mesh Input mesh, genus has to be greater than 0.
  * @param[out] primal Primal basis.
  * @param[out] conjugate Conjugate basis.
- *
- * **Reference**
- *
- * [1] Gu, X., Yau, S.T.
- * Global Conformal Surface Parameterization.
  */
 template<typename Mesh, typename DerivedA, typename DerivedB>
 void holomorphic_one_form_basis(const Mesh& mesh,
                                 Eigen::MatrixBase<DerivedA>& primal,
                                 Eigen::MatrixBase<DerivedB>& conjugate);
 
-/**Global conformal parameterization using holomorphic 1-forms.
- *
- * Compute the holomorphic basis.
+/**Compute the holomorphic basis.
  *
  * @param[in] mesh Input mesh, genus has to be greater than 0.
  * @param[in] homology_generators Precomputed homology generators.
  * @param[out] primal Primal basis.
  * @param[out] conjugate Conjugate basis.
- *
- * **Reference**
- *
- * [1] Gu, X., Yau, S.T.
- * Global Conformal Surface Parameterization.
  */
 template<typename Mesh, typename DerivedA, typename DerivedB>
 void holomorphic_one_form_basis(const Mesh& mesh,
                                 const VertexChains<Mesh>& homology_generators,
                                 Eigen::MatrixBase<DerivedA>& primal,
                                 Eigen::MatrixBase<DerivedB>& conjugate);
-/**Global conformal parameterization using holomorphic 1-forms.
+
+/**Integrate holomorphic 1-forms.
  *
- * Compute uv parameterization with holomorphic 1-forms. This class is
- * compatible with CGAL::Surface_mesh_parameterization::parameterize().
+ * @param[in] mesh Input mesh, genus has to be greater than 0.
+ * @param[in] one_forms Holomorphic 1-forms.
+ * @param[out] seam_mesh The 1-forms are integrated on the seam mesh.
+ * @param[out] uvmap A property map storing the integrated
+ * 1-forms/uv-coordinates.
+ */
+template<typename Mesh,
+         typename Derived,
+         typename SEM,
+         typename SVM,
+         typename VertexUVMap>
+void integrate_holomorphic_one_forms(
+    const Mesh& mesh,
+    const Eigen::MatrixBase<Derived>& one_forms,
+    CGAL::Seam_mesh<Mesh, SEM, SVM>& seam_mesh,
+    VertexUVMap uvmap);
+
+/**Compute plane parameterization with holomorphic 1-forms.
  *
- * **Reference**
- *
- * [1] Gu, X., Yau, S.T.
- * Global Conformal Surface Parameterization.
+ * This class is compatible with
+ * CGAL::Surface_mesh_parameterization::parameterize().
  */
 template<typename Mesh, typename SEM, typename SVM>
 class Holomorphic_one_forms_parameterizer3
