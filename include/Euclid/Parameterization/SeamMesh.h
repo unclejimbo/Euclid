@@ -1,3 +1,8 @@
+/**Seam mesh utilities.
+ *
+ * @defgroup PkgSeamMesh Seam mesh
+ * @ingroup PkgParameterization
+ */
 #pragma once
 
 #include <vector>
@@ -6,11 +11,7 @@
 
 namespace Euclid
 {
-/**@name Seam mesh.
- *
- * Seam mesh utilities.
- */
-/**@{ @ingroup PkgParameterization*/
+/**@{*/
 
 /**Mark the cut graph of a high-genus mesh as seams.
  *

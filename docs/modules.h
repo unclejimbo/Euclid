@@ -38,7 +38,7 @@
 
 /**Parameterization.
  * Surface mesh parameterization.
- * @defgroup PkgParameterization Parameterization.
+ * @defgroup PkgParameterization Parameterization
  */
 
 /**Mesh renderer.
