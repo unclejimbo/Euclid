@@ -398,6 +398,18 @@ template<
 std::tuple<Eigen::SparseMatrix<T>, Eigen::SparseMatrix<T>> adjacency_matrix(
     const Mesh& mesh);
 
+/**Graph laplacian matrix of the mesh.
+ *
+ * @tparam Mesh Mesh type.
+ * @tparam T Optional, derived from Mesh.
+ */
+template<
+    typename Mesh,
+    typename T = typename CGAL::Kernel_traits<typename boost::property_traits<
+        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
+                                                  value_type>::Kernel::FT>
+Eigen::SparseMatrix<T> graph_laplacian_matrix(const Mesh& mesh);
+
 /**Cotangent weight associated with an edge.
  *
  */

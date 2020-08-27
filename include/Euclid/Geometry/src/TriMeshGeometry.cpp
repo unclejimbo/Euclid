@@ -403,6 +403,32 @@ std::tuple<Eigen::SparseMatrix<T>, Eigen::SparseMatrix<T>> adjacency_matrix(
 }
 
 template<typename Mesh, typename T>
+Eigen::SparseMatrix<T> graph_laplacian_matrix(const Mesh& mesh)
+{
+    using Triplet = Eigen::Triplet<T>;
+    auto vimap = get(boost::vertex_index, mesh);
+    const auto nv = num_vertices(mesh);
+
+    std::vector<Triplet> triplets;
+    for (auto vi : vertices(mesh)) {
+        int i = get(vimap, vi);
+        int d = 0;
+        for (auto he : CGAL::halfedges_around_target(vi, mesh)) {
+            auto vj = source(he, mesh);
+            int j = get(vimap, vj);
+            triplets.emplace_back(i, j, -1);
+            ++d;
+        }
+        triplets.emplace_back(i, i, d);
+    }
+
+    Eigen::SparseMatrix<T> L(nv, nv);
+    L.setFromTriplets(triplets.begin(), triplets.end());
+    L.makeCompressed();
+    return L;
+}
+
+template<typename Mesh, typename T>
 T cotangent_weight(
     typename boost::graph_traits<const Mesh>::halfedge_descriptor he,
     const Mesh& mesh)
