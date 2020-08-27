@@ -1,5 +1,8 @@
 #pragma once
 
+#include <vector>
+#include <boost/graph/graph_traits.hpp>
+
 namespace Euclid
 {
 /**@name Mesh topology.
@@ -13,6 +16,10 @@ namespace Euclid
  */
 template<typename Mesh>
 int num_boundaries(const Mesh& mesh);
+
+template<typename Mesh>
+std::vector<typename boost::graph_traits<Mesh>::halfedge_descriptor>
+boundary_components(const Mesh& mesh);
 
 /**Euler characteristic.
  *

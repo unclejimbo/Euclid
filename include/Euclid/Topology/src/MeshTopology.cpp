@@ -6,6 +6,13 @@ namespace Euclid
 template<typename Mesh>
 int num_boundaries(const Mesh& mesh)
 {
+    return boundary_components(mesh).size();
+}
+
+template<typename Mesh>
+std::vector<typename boost::graph_traits<Mesh>::halfedge_descriptor>
+boundary_components(const Mesh& mesh)
+{
     // himap is not always available so compute it on the fly
     using hd = boost::graph_traits<Mesh>::halfedge_descriptor;
     std::map<hd, int> himap;
@@ -14,8 +21,8 @@ int num_boundaries(const Mesh& mesh)
         himap[h] = cnt++;
     }
 
-    cnt = 0;
     std::vector<bool> visited(num_halfedges(mesh));
+    std::vector<hd> components;
     for (auto h : halfedges(mesh)) {
         auto hidx = himap[h];
         if (!visited[hidx]) {
@@ -27,11 +34,11 @@ int num_boundaries(const Mesh& mesh)
                     visited[himap[hi]] = true;
                     hi = next(hi, mesh);
                 }
-                ++cnt;
+                components.push_back(h);
             }
         }
     }
-    return cnt;
+    return components;
 }
 
 template<typename Mesh>
