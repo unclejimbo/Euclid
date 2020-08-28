@@ -1,7 +1,7 @@
 # Welcome to Euclid
 
 - [GitHub repo](https://github.com/unclejimbo/Euclid)
-- [Latest documentation](https://codedocs.xyz/unclejimbo/Euclid/index.html)
+- [Latest documentation](https://unclejimbo.github.io/Euclid/)
 
 ## Introduction
 
