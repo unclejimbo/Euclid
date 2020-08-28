@@ -16,7 +16,9 @@ void GeodesicsInHeat<Mesh>::build(const Mesh& mesh,
     this->mesh = &mesh;
 
     // Mesh resolution
-    if (resolution != 0) { this->resolution = resolution; }
+    if (resolution != 0) {
+        this->resolution = resolution;
+    }
     else {
         this->resolution = 0;
         for (const auto& e : edges(mesh)) {
@@ -28,11 +30,15 @@ void GeodesicsInHeat<Mesh>::build(const Mesh& mesh,
     // Construct the equations
     FT diffuse_time =
         this->resolution * this->resolution * static_cast<FT>(scale);
-    if (cot_mat) { this->cot_mat.reset(cot_mat); }
+    if (cot_mat) {
+        this->cot_mat.reset(cot_mat);
+    }
     else {
         this->cot_mat.reset(new SpMat(cotangent_matrix(mesh)), true);
     }
-    if (mass_mat) { this->mass_mat.reset(mass_mat); }
+    if (mass_mat) {
+        this->mass_mat.reset(mass_mat);
+    }
     else {
         this->mass_mat.reset(new SpMat(mass_matrix(mesh)), true);
     }

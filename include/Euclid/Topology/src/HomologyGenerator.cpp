@@ -105,7 +105,9 @@ VertexChains<Mesh> greedy_homology_generators(const Mesh& mesh, double accept)
             added.insert(running.begin(), running.end());
             generators.push_back(l.second);
         }
-        if (generators.size() == two_g) { break; }
+        if (generators.size() == two_g) {
+            break;
+        }
     }
     return generators;
 }

@@ -29,7 +29,8 @@ std::array<T, N> to_canonical(const std::array<T, N>& face)
     std::array<T, N> canonical;
     for (size_t i = 0; i < N; ++i) {
         canonical[i] = *iter++;
-        if (iter == face.end()) iter = face.begin();
+        if (iter == face.end())
+            iter = face.begin();
     }
     return canonical;
 }
@@ -54,7 +55,9 @@ size_t remove_duplicate_vertices(std::vector<T>& positions)
     for (size_t i = 0; i < positions.size(); i += 3) {
         Point p{ { positions[i], positions[i + 1], positions[i + 2] } };
         auto [dummy, is_unique] = unique_points.insert(std::move(p));
-        if (!is_unique) { marks.push_back(i); }
+        if (!is_unique) {
+            marks.push_back(i);
+        }
     }
 
     // Move elements in the back into slots to be removed
@@ -82,7 +85,9 @@ size_t remove_duplicate_vertices(std::vector<T1>& positions,
         EWARNING("positions is empty.");
         return 0;
     }
-    if (indices.empty()) { remove_duplicate_vertices(positions); }
+    if (indices.empty()) {
+        remove_duplicate_vertices(positions);
+    }
     if (positions.size() % 3 != 0) {
         throw std::runtime_error("Input position size is not divisible by 3");
     }
@@ -185,7 +190,9 @@ size_t remove_duplicate_faces(std::vector<T>& indices)
         }
         auto cf = _impl::to_canonical<T, N>(f);
         auto [iter, is_unique] = unique_faces.insert(std::move(cf));
-        if (!is_unique) { marks.push_back(i); }
+        if (!is_unique) {
+            marks.push_back(i);
+        }
     }
 
     size_t idx = indices.size() - N;

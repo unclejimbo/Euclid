@@ -42,9 +42,15 @@ void read_off(const std::string& filename,
 
     auto [nvertices, nfaces, nedges] = read_header(stream);
     positions.resize(nvertices * 3);
-    if (vcolors != nullptr) { vcolors->resize(nvertices * 4); }
-    if (findices != nullptr) { findices->resize(nfaces * N); }
-    if (fcolors != nullptr) { fcolors->resize(nfaces * 4); }
+    if (vcolors != nullptr) {
+        vcolors->resize(nvertices * 4);
+    }
+    if (findices != nullptr) {
+        findices->resize(nfaces * N);
+    }
+    if (fcolors != nullptr) {
+        fcolors->resize(nfaces * 4);
+    }
 
     for (size_t i = 0; i < nvertices; ++i) {
         std::string line;
@@ -100,9 +106,15 @@ void read_off(const std::string& filename,
     }
 
     positions.shrink_to_fit();
-    if (vcolors != nullptr) { vcolors->shrink_to_fit(); }
-    if (findices != nullptr) { findices->shrink_to_fit(); }
-    if (fcolors != nullptr) { fcolors->shrink_to_fit(); }
+    if (vcolors != nullptr) {
+        vcolors->shrink_to_fit();
+    }
+    if (findices != nullptr) {
+        findices->shrink_to_fit();
+    }
+    if (fcolors != nullptr) {
+        fcolors->shrink_to_fit();
+    }
 }
 
 template<int N, typename FT, typename IT, typename CT>
@@ -117,7 +129,9 @@ void write_off(const std::string& filename,
 
     auto nvertices = positions.size() / 3;
     size_t nfaces = 0;
-    if (findices != nullptr && N != 0) { nfaces = findices->size() / N; }
+    if (findices != nullptr && N != 0) {
+        nfaces = findices->size() / N;
+    }
     write_header(stream, nvertices, nfaces);
 
     for (size_t i = 0; i < nvertices; ++i) {

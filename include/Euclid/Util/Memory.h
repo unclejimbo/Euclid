@@ -59,7 +59,10 @@ public:
     /** Move constructor.
      *
      */
-    ProPtr(ProPtr&& pro) noexcept { pro.swap(*this); }
+    ProPtr(ProPtr&& pro) noexcept
+    {
+        pro.swap(*this);
+    }
 
     /** Move construct from a derived type.
      *
@@ -79,7 +82,9 @@ public:
      */
     ~ProPtr()
     {
-        if (_own) { delete _data; }
+        if (_own) {
+            delete _data;
+        }
     }
 
     /** Non-copyable.
@@ -139,7 +144,9 @@ public:
      */
     void reset(pointer p = pointer(), bool own = false) noexcept
     {
-        if (_own) { delete _data; }
+        if (_own) {
+            delete _data;
+        }
         _data = p;
         _own = own;
     }
@@ -157,12 +164,18 @@ public:
     /** Get the underlying resource.
      *
      */
-    pointer get() const noexcept { return _data; }
+    pointer get() const noexcept
+    {
+        return _data;
+    }
 
     /** Return true if resource is valid.
      *
      */
-    explicit operator bool() const noexcept { return _data; }
+    explicit operator bool() const noexcept
+    {
+        return _data;
+    }
 
     /** Return the data being pointed to.
      *
@@ -175,12 +188,18 @@ public:
     /** Return the raw pointer.
      *
      */
-    pointer operator->() const noexcept { return _data; }
+    pointer operator->() const noexcept
+    {
+        return _data;
+    }
 
     /** Return whether this pointer owns the resource.
      *
      */
-    bool owns() const noexcept { return _own; }
+    bool owns() const noexcept
+    {
+        return _own;
+    }
 
 private:
     pointer _data;

@@ -73,12 +73,18 @@ public:
     /** Return the name of this property.
      *
      */
-    const std::string& name() const { return _name; }
+    const std::string& name() const
+    {
+        return _name;
+    }
 
     /** Return if this property is a list property.
      *
      */
-    bool is_list() const { return _is_list; }
+    bool is_list() const
+    {
+        return _is_list;
+    }
 
     /** Return the string for this type in the header.
      *
@@ -119,7 +125,10 @@ public:
         : PlyProperty(name, is_list)
     {}
 
-    std::string type_str() const override { return "double"; }
+    std::string type_str() const override
+    {
+        return "double";
+    }
 
     void apply(PlyReader& reader,
                std::ifstream& stream,
@@ -158,7 +167,10 @@ public:
         : PlyProperty(name, is_list)
     {}
 
-    std::string type_str() const override { return "float"; }
+    std::string type_str() const override
+    {
+        return "float";
+    }
 
     void apply(PlyReader& reader,
                std::ifstream& stream,
@@ -197,7 +209,10 @@ public:
         : PlyProperty(name, is_list)
     {}
 
-    std::string type_str() const override { return "int"; }
+    std::string type_str() const override
+    {
+        return "int";
+    }
 
     void apply(PlyReader& reader,
                std::ifstream& stream,
@@ -236,7 +251,10 @@ public:
         : PlyProperty(name, is_list)
     {}
 
-    std::string type_str() const override { return "uint"; }
+    std::string type_str() const override
+    {
+        return "uint";
+    }
 
     void apply(PlyReader& reader,
                std::ifstream& stream,
@@ -275,7 +293,10 @@ public:
         : PlyProperty(name, is_list)
     {}
 
-    std::string type_str() const override { return "short"; }
+    std::string type_str() const override
+    {
+        return "short";
+    }
 
     void apply(PlyReader& reader,
                std::ifstream& stream,
@@ -314,7 +335,10 @@ public:
         : PlyProperty(name, is_list)
     {}
 
-    std::string type_str() const override { return "ushort"; }
+    std::string type_str() const override
+    {
+        return "ushort";
+    }
 
     void apply(PlyReader& reader,
                std::ifstream& stream,
@@ -353,7 +377,10 @@ public:
         : PlyProperty(name, is_list)
     {}
 
-    std::string type_str() const override { return "char"; }
+    std::string type_str() const override
+    {
+        return "char";
+    }
 
     void apply(PlyReader& reader,
                std::ifstream& stream,
@@ -392,7 +419,10 @@ public:
         : PlyProperty(name, is_list)
     {}
 
-    std::string type_str() const override { return "uchar"; }
+    std::string type_str() const override
+    {
+        return "uchar";
+    }
 
     void apply(PlyReader& reader,
                std::ifstream& stream,
@@ -453,9 +483,15 @@ public:
             return cpy;
         }
 
-        reference operator*() { return **_iter; }
+        reference operator*()
+        {
+            return **_iter;
+        }
 
-        bool operator!=(const iterator& rhs) { return _iter != rhs._iter; }
+        bool operator!=(const iterator& rhs)
+        {
+            return _iter != rhs._iter;
+        }
 
     private:
         unique_iter _iter;
@@ -490,7 +526,10 @@ public:
             return cpy;
         }
 
-        reference operator*() { return **_iter; }
+        reference operator*()
+        {
+            return **_iter;
+        }
 
         bool operator!=(const const_iterator& rhs)
         {
@@ -536,12 +575,18 @@ public:
     /** Return the name of the element.
      *
      */
-    const std::string& name() const { return _name; }
+    const std::string& name() const
+    {
+        return _name;
+    }
 
     /** Return the instance count of this element in file.
      *
      */
-    unsigned count() const { return _count; }
+    unsigned count() const
+    {
+        return _count;
+    }
 
     /** Add a property to this element.
      *
@@ -554,22 +599,34 @@ public:
     /** Get the property by index.
      *
      */
-    PlyProperty* property(size_t i) { return _properties[i].get(); }
+    PlyProperty* property(size_t i)
+    {
+        return _properties[i].get();
+    }
 
     /** Get the property by index.
      *
      */
-    const PlyProperty* property(size_t i) const { return _properties[i].get(); }
+    const PlyProperty* property(size_t i) const
+    {
+        return _properties[i].get();
+    }
 
     /** Return the size of the property list.
      *
      */
-    size_t n_props() const { return _properties.size(); }
+    size_t n_props() const
+    {
+        return _properties.size();
+    }
 
     /** Return the begin iterator of the property vector.
      *
      */
-    iterator begin() { return iterator(_properties.begin()); }
+    iterator begin()
+    {
+        return iterator(_properties.begin());
+    }
 
     /** Return the begin const_iterator of the property vector.
      *
@@ -582,12 +639,18 @@ public:
     /** Return the end iterator of the property vector.
      *
      */
-    iterator end() { return iterator(_properties.end()); }
+    iterator end()
+    {
+        return iterator(_properties.end());
+    }
 
     /** Return the end const_iterator of the property vector.
      *
      */
-    const_iterator end() const { return const_iterator(_properties.cend()); }
+    const_iterator end() const
+    {
+        return const_iterator(_properties.cend());
+    }
 
 private:
     std::string _name;
@@ -618,22 +681,34 @@ public:
     /** Return the format.
      *
      */
-    PlyFormat format() const { return _format; }
+    PlyFormat format() const
+    {
+        return _format;
+    }
 
     /** Set the format.
      *
      */
-    void set_format(PlyFormat format) { _format = format; }
+    void set_format(PlyFormat format)
+    {
+        _format = format;
+    }
 
     /** Get element by index.
      *
      */
-    PlyElement& element(size_t i) { return _elements[i]; }
+    PlyElement& element(size_t i)
+    {
+        return _elements[i];
+    }
 
     /** Get element by index.
      *
      */
-    const PlyElement& element(size_t i) const { return _elements[i]; }
+    const PlyElement& element(size_t i) const
+    {
+        return _elements[i];
+    }
 
     /** Add an element to this header.
      *
@@ -646,27 +721,42 @@ public:
     /** Return the number of elements in the header specification.
      *
      */
-    size_t n_elems() const { return _elements.size(); }
+    size_t n_elems() const
+    {
+        return _elements.size();
+    }
 
     /** Return the begin iterator of the elements.
      *
      */
-    decltype(auto) begin() { return _elements.cbegin(); }
+    decltype(auto) begin()
+    {
+        return _elements.cbegin();
+    }
 
     /** Return the begin iterator of the elements.
      *
      */
-    decltype(auto) begin() const { return _elements.begin(); }
+    decltype(auto) begin() const
+    {
+        return _elements.begin();
+    }
 
     /** Return the end iterator of the elements.
      *
      */
-    decltype(auto) end() { return _elements.end(); }
+    decltype(auto) end()
+    {
+        return _elements.end();
+    }
 
     /** Return the end iterator of the elements.
      *
      */
-    decltype(auto) end() const { return _elements.cend(); }
+    decltype(auto) end() const
+    {
+        return _elements.cend();
+    }
 
 private:
     PlyFormat _format;
@@ -975,7 +1065,9 @@ public:
                 "Size of texcoords not compatible with positions");
         }
         if (_colors != nullptr) {
-            if (_colors->size() == n * 3) { _has_alpha = false; }
+            if (_colors->size() == n * 3) {
+                _has_alpha = false;
+            }
             else if (_colors->size() == n * 4) {
                 _has_alpha = true;
             }

@@ -44,7 +44,9 @@ public:
     Rep tock()
     {
         auto t = std::chrono::high_resolution_clock::now();
-        if (!_started) { return Rep(0); }
+        if (!_started) {
+            return Rep(0);
+        }
         else {
             _started = false;
             return std::chrono::duration_cast<

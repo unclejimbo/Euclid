@@ -40,7 +40,9 @@ static inline void vkDestroyDebugUtilsMessengerEXT(
 {
     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
         instance, "vkDestroyDebugUtilsMessengerEXT");
-    if (func != nullptr) { func(instance, debugMessenger, pAllocator); }
+    if (func != nullptr) {
+        func(instance, debugMessenger, pAllocator);
+    }
 }
 
 static inline VkResult vkCreateRenderPass2KHR(
@@ -649,7 +651,9 @@ inline void Rasterizer::render_depth(const Eigen::Matrix4f& model,
         for (uint32_t x = 0; x < _width; x++) {
             auto d = *imagedata++;
             uint8_t color = 0;
-            if (linear) { color = 255 * linearize_depth(d) / camera.tfar; }
+            if (linear) {
+                color = 255 * linearize_depth(d) / camera.tfar;
+            }
             else {
                 color = 255 * d;
             }
@@ -1239,7 +1243,8 @@ inline void Rasterizer::_create_pipeline(uint32_t width,
         fragment_shader_path =
             std::string(DATA_DIR).append("shader/depth.frag.spv");
     } break;
-    default: return;
+    default:
+        return;
     }
 
     VkPipelineLayout layout;
@@ -1704,7 +1709,9 @@ inline void Rasterizer::_create_image(VkImage& image,
                                       uint32_t height,
                                       VkSampleCountFlagBits samples)
 {
-    if (image != VK_NULL_HANDLE) { _release_image(image, memory); }
+    if (image != VK_NULL_HANDLE) {
+        _release_image(image, memory);
+    }
 
     VkImageCreateInfo image_info{};
     image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1752,7 +1759,9 @@ inline void Rasterizer::_create_image_view(VkImageView& view,
                                            VkFormat format,
                                            VkImageAspectFlags aspect)
 {
-    if (view != VK_NULL_HANDLE) { vkDestroyImageView(_device, view, nullptr); }
+    if (view != VK_NULL_HANDLE) {
+        vkDestroyImageView(_device, view, nullptr);
+    }
 
     VkImageViewCreateInfo image_view_info{};
     image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

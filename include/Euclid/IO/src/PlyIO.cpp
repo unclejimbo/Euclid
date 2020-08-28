@@ -219,12 +219,18 @@ static PlyHeader read_ply_header(std::ifstream& stream)
 {
     std::string line;
     std::getline(stream, line);
-    if (line != "ply") { throw std::runtime_error("Bad ply file"); }
+    if (line != "ply") {
+        throw std::runtime_error("Bad ply file");
+    }
 
     PlyFormat format;
     auto words = read_ply_header_line(stream);
-    if (words[0] != "format") { throw std::runtime_error("Bad ply file"); }
-    if (words[1] == "ascii") { format = PlyFormat::ascii; }
+    if (words[0] != "format") {
+        throw std::runtime_error("Bad ply file");
+    }
+    if (words[1] == "ascii") {
+        format = PlyFormat::ascii;
+    }
     else if (words[1] == "binary_little_endian") {
         format = PlyFormat::binary_little_endian;
     }
@@ -341,7 +347,9 @@ static PlyHeader read_ply_header(std::ifstream& stream)
 static void write_ply_header(std::ofstream& stream, const PlyHeader& header)
 {
     stream << "ply" << std::endl << "format ";
-    if (header.format() == PlyFormat::ascii) { stream << "ascii "; }
+    if (header.format() == PlyFormat::ascii) {
+        stream << "ascii ";
+    }
     else if (header.format() == PlyFormat::binary_little_endian) {
         stream << "binary_little_endian ";
     }
@@ -353,7 +361,9 @@ static void write_ply_header(std::ofstream& stream, const PlyHeader& header)
         stream << "element " << e.name() << " " << e.count() << std::endl;
         for (const auto& p : e) {
             stream << "property ";
-            if (p.is_list()) { stream << "list uchar "; }
+            if (p.is_list()) {
+                stream << "list uchar ";
+            }
             stream << p.type_str() << " " << p.name() << std::endl;
         }
     }
@@ -1082,7 +1092,9 @@ void CommonPlyWriter<VN, FloatType, IndexType, ColorType>::_write_float(
     }
 
     auto v = static_cast<typename TPlyProperty::value_type>(value);
-    if (format == PlyFormat::ascii) { property->put_ascii(stream, v); }
+    if (format == PlyFormat::ascii) {
+        property->put_ascii(stream, v);
+    }
     else {
         property->put_binary(stream,
                              v,
@@ -1109,7 +1121,9 @@ void CommonPlyWriter<VN, FloatType, IndexType, ColorType>::_write_color(
     }
 
     auto v = static_cast<typename TPlyProperty::value_type>(value);
-    if (format == PlyFormat::ascii) { property->put_ascii(stream, v); }
+    if (format == PlyFormat::ascii) {
+        property->put_ascii(stream, v);
+    }
     else {
         property->put_binary(stream,
                              v,
@@ -1130,7 +1144,9 @@ void CommonPlyWriter<VN, FloatType, IndexType, ColorType>::_write_indices(
         EASSERT(_indices != nullptr);
 
         // Write vertex number
-        if (format == PlyFormat::ascii) { stream << VN << " "; }
+        if (format == PlyFormat::ascii) {
+            stream << VN << " ";
+        }
         else {
             auto vn = static_cast<char>(VN);
             stream.put(vn);
@@ -1141,7 +1157,9 @@ void CommonPlyWriter<VN, FloatType, IndexType, ColorType>::_write_indices(
             auto v = (*_indices)[_iiter++];
             if (format == PlyFormat::ascii) {
                 property->put_ascii(stream, v);
-                if (i < VN - 1) { stream << " "; }
+                if (i < VN - 1) {
+                    stream << " ";
+                }
             }
             else {
                 property->put_binary(stream,
@@ -1185,7 +1203,8 @@ inline void read_ply(const std::string& filename, PlyReader& reader)
         stream.open(filename, std::ios::binary);
         do {
             auto line = _impl::read_ply_header_line(stream);
-            if (line[0] == "end_header") break;
+            if (line[0] == "end_header")
+                break;
         } while (true);
     }
 
@@ -1279,7 +1298,9 @@ inline void write_ply(const std::string& filename,
                     stream << " ";
                 }
             }
-            if (format == PlyFormat::ascii) { stream << std::endl; }
+            if (format == PlyFormat::ascii) {
+                stream << std::endl;
+            }
         }
     }
 }

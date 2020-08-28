@@ -219,7 +219,9 @@ void write_obj(const std::string& filename,
                     stream << "//" << (*nindices)[i + j] + 1;
                 }
             }
-            if (j < N - 1) { stream << " "; }
+            if (j < N - 1) {
+                stream << " ";
+            }
         }
         stream << std::endl;
     }

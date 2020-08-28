@@ -20,5 +20,7 @@ TEST_CASE("Basic setup goes here")
 {
     // Create tmp directory if it doesn't exist
     fs::path tmpdir(TMP_DIR);
-    if (!fs::exists(tmpdir)) { fs::create_directory(tmpdir); }
+    if (!fs::exists(tmpdir)) {
+        fs::create_directory(tmpdir);
+    }
 }

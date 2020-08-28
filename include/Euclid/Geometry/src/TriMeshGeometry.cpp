@@ -27,7 +27,9 @@ Vector_3 vertex_normal(
             auto f = face(he, mesh);
             auto fn = face_normal(f, mesh);
 
-            if (weight == VertexNormal::uniform) { normal += fn; }
+            if (weight == VertexNormal::uniform) {
+                normal += fn;
+            }
             else if (weight == VertexNormal::face_area) {
                 auto area = face_area(f, mesh);
                 normal += area * fn;
@@ -66,7 +68,9 @@ Vector_3 vertex_normal(
             auto fi = get(fimap, f);
             auto fn = face_normals[fi];
 
-            if (weight == VertexNormal::uniform) { normal += fn; }
+            if (weight == VertexNormal::uniform) {
+                normal += fn;
+            }
             else if (weight == VertexNormal::face_area) {
                 auto area = face_area(f, mesh);
                 normal += area * fn;

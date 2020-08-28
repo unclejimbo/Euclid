@@ -16,14 +16,18 @@ void SpinImage<Mesh>::build(const Mesh& mesh,
 {
     this->mesh = &mesh;
 
-    if (vnormals != nullptr) { this->vnormals.reset(vnormals, false); }
+    if (vnormals != nullptr) {
+        this->vnormals.reset(vnormals, false);
+    }
     else {
         auto face_normals = Euclid::face_normals(mesh);
         auto vert_normals = Euclid::vertex_normals(mesh, face_normals);
         this->vnormals.reset(new std::vector<Vector_3>(vert_normals), true);
     }
 
-    if (resolution != 0.0) { this->resolution = resolution; }
+    if (resolution != 0.0) {
+        this->resolution = resolution;
+    }
     else {
         this->resolution = 0.0;
         for (auto e : edges(mesh)) {
@@ -60,16 +64,22 @@ void SpinImage<Mesh>::compute(Eigen::ArrayBase<Derived>& spin_img,
             auto ij = get(vimap, vj);
             auto pj = get(vpmap, vj);
 
-            if (ni * (*this->vnormals)[ij] < cos_range) { continue; }
+            if (ni * (*this->vnormals)[ij] < cos_range) {
+                continue;
+            }
 
             auto beta = ni * (pj - pi);
             auto alpha = std::sqrt((pj - pi).squared_length() - beta * beta);
 
             auto col = static_cast<int>(std::floor(alpha / bin_size));
-            if (col > image_width - 2) { continue; }
+            if (col > image_width - 2) {
+                continue;
+            }
             auto row =
                 static_cast<int>(std::floor((beta_max - beta) / bin_size));
-            if (row > image_width - 2 || row < 0) { continue; }
+            if (row > image_width - 2 || row < 0) {
+                continue;
+            }
 
             // Bilinear interpolation
             auto a = alpha / bin_size - col;

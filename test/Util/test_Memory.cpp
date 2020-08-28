@@ -42,7 +42,10 @@ public:
 #endif
     }
 
-    int get() const { return this->data; }
+    int get() const
+    {
+        return this->data;
+    }
 };
 
 TEST_CASE("Util, Memory", "[util][memory]")

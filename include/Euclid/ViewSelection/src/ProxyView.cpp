@@ -47,7 +47,9 @@ void proxy_view(const Mesh& mesh,
     for (size_t i = 0; i < projected_areas.size(); ++i) {
         OrthoRayCamera cam;
         auto view_dir = view_sphere.radius * obb.axis(i % 3);
-        if (i >= 3) { view_dir = -view_dir; }
+        if (i >= 3) {
+            view_dir = -view_dir;
+        }
         Eigen::Vector3f pos, focus, up;
         cgal_to_eigen(view_sphere.center + view_dir, pos);
         cgal_to_eigen(view_sphere.center, focus);
@@ -59,7 +61,9 @@ void proxy_view(const Mesh& mesh,
         raytracer.render_silhouette(pixels, cam, width, height);
         auto proj = 0;
         for (size_t j = 0; j < pixels.size(); ++j) {
-            if (pixels[j] != 0) { ++proj; }
+            if (pixels[j] != 0) {
+                ++proj;
+            }
         }
         projected_areas[i] = static_cast<float>(proj) / pixels.size();
     }
@@ -74,12 +78,24 @@ void proxy_view(const Mesh& mesh,
     std::vector<int> n_visible_facets(proxies, 0);
     for (const auto& f : faces(mesh)) {
         auto normal = face_normal(f, mesh);
-        if (normal * obb.axis(0) > least_visible) { ++n_visible_facets[0]; }
-        if (normal * obb.axis(1) > least_visible) { ++n_visible_facets[1]; }
-        if (normal * obb.axis(2) > least_visible) { ++n_visible_facets[2]; }
-        if (-normal * obb.axis(0) > least_visible) { ++n_visible_facets[3]; }
-        if (-normal * obb.axis(1) > least_visible) { ++n_visible_facets[4]; }
-        if (-normal * obb.axis(2) > least_visible) { ++n_visible_facets[5]; }
+        if (normal * obb.axis(0) > least_visible) {
+            ++n_visible_facets[0];
+        }
+        if (normal * obb.axis(1) > least_visible) {
+            ++n_visible_facets[1];
+        }
+        if (normal * obb.axis(2) > least_visible) {
+            ++n_visible_facets[2];
+        }
+        if (-normal * obb.axis(0) > least_visible) {
+            ++n_visible_facets[3];
+        }
+        if (-normal * obb.axis(1) > least_visible) {
+            ++n_visible_facets[4];
+        }
+        if (-normal * obb.axis(2) > least_visible) {
+            ++n_visible_facets[5];
+        }
     }
     float inv_nf = 1.0f / num_faces(mesh);
     std::transform(n_visible_facets.begin(),

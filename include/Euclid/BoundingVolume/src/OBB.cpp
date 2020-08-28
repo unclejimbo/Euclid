@@ -11,7 +11,9 @@ namespace Euclid
 template<typename Kernel>
 void OBB<Kernel>::build(const std::vector<FT>& positions)
 {
-    if (positions.empty()) { throw std::invalid_argument("Input is empty."); }
+    if (positions.empty()) {
+        throw std::invalid_argument("Input is empty.");
+    }
     if (positions.size() % 3 != 0) {
         throw std::runtime_error("Size of input is not divisble by 3.");
     }
@@ -42,7 +44,9 @@ template<typename Kernel>
 template<typename Derived>
 void OBB<Kernel>::build(const Eigen::MatrixBase<Derived>& v)
 {
-    if (v.rows() == 0) { throw std::invalid_argument("Input is empty."); }
+    if (v.rows() == 0) {
+        throw std::invalid_argument("Input is empty.");
+    }
 
     _build(v);
 }

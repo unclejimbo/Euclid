@@ -7,7 +7,9 @@ namespace Euclid
 template<typename Kernel>
 AABB<Kernel>::AABB(const std::vector<FT>& positions)
 {
-    if (positions.empty()) { throw std::invalid_argument("Input is empty"); }
+    if (positions.empty()) {
+        throw std::invalid_argument("Input is empty");
+    }
     if (positions.size() % 3 != 0) {
         throw std::invalid_argument("Size of input is not divisible by 3");
     }
@@ -41,7 +43,9 @@ AABB<Kernel>::AABB(const std::vector<FT>& positions)
 template<typename Kernel>
 AABB<Kernel>::AABB(const std::vector<Point_3>& points)
 {
-    if (points.empty()) { throw std::invalid_argument("Input is empty"); }
+    if (points.empty()) {
+        throw std::invalid_argument("Input is empty");
+    }
 
     auto xmin = points[0].x();
     auto xmax = xmin;
@@ -73,7 +77,9 @@ template<typename Kernel>
 template<typename ForwardIterator, typename VPMap>
 AABB<Kernel>::AABB(ForwardIterator first, ForwardIterator beyond, VPMap vpmap)
 {
-    if (first == beyond) { throw std::invalid_argument("Input is empty"); }
+    if (first == beyond) {
+        throw std::invalid_argument("Input is empty");
+    }
 
     auto p0 = get(vpmap, *first);
     auto xmin = p0.x();
@@ -171,9 +177,12 @@ typename AABB<Kernel>::Point_3 AABB<Kernel>::point(bool xlarge,
     auto x = _xlen;
     auto y = _ylen;
     auto z = _zlen;
-    if (!xlarge) x = -_xlen;
-    if (!ylarge) y = -_ylen;
-    if (!zlarge) z = -_zlen;
+    if (!xlarge)
+        x = -_xlen;
+    if (!ylarge)
+        y = -_ylen;
+    if (!zlarge)
+        z = -_zlen;
     return Point_3(_center.x() + x, _center.y() + y, _center.z() + z);
 }
 

@@ -272,7 +272,9 @@ std::vector<Vertex> nring_vertices(Vertex target, const Mesh& mesh, unsigned n)
                 if (visited.find(v) == visited.end()) {
                     visited.insert(v);
                     neighbors.push_back(v);
-                    if (m > 1) { targets.emplace(v, m - 1); }
+                    if (m > 1) {
+                        targets.emplace(v, m - 1);
+                    }
                 }
             }
         } while (!targets.empty());

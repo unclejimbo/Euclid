@@ -13,7 +13,9 @@ void colormap(const igl::ColorMapType& cm,
               bool inverse)
 {
     colors.clear();
-    if (!alpha) { colors.reserve(values.size() * 3); }
+    if (!alpha) {
+        colors.reserve(values.size() * 3);
+    }
     else {
         colors.reserve(values.size() * 4);
     }
@@ -21,7 +23,9 @@ void colormap(const igl::ColorMapType& cm,
     auto vdenom = static_cast<T1>(1.0) / (*vmax - *vmin);
     for (auto v : values) {
         T1 f;
-        if (!inverse) { f = (v - *vmin) * vdenom; }
+        if (!inverse) {
+            f = (v - *vmin) * vdenom;
+        }
         else {
             f = (*vmax - v) * vdenom;
         }
@@ -31,13 +35,17 @@ void colormap(const igl::ColorMapType& cm,
             colors.push_back(static_cast<T2>(r));
             colors.push_back(static_cast<T2>(g));
             colors.push_back(static_cast<T2>(b));
-            if (alpha) { colors.push_back(static_cast<T2>(1)); }
+            if (alpha) {
+                colors.push_back(static_cast<T2>(1));
+            }
         }
         else {
             colors.push_back(static_cast<T2>(255 * r));
             colors.push_back(static_cast<T2>(255 * g));
             colors.push_back(static_cast<T2>(255 * b));
-            if (alpha) { colors.push_back(static_cast<T2>(255)); }
+            if (alpha) {
+                colors.push_back(static_cast<T2>(255));
+            }
         }
     }
 }
@@ -46,7 +54,9 @@ template<typename T>
 void rnd_colors(unsigned n, std::vector<T>& colors, bool to255, bool alpha)
 {
     colors.clear();
-    if (!alpha) { colors.reserve(n * 3); }
+    if (!alpha) {
+        colors.reserve(n * 3);
+    }
     else {
         colors.reserve(n * 4);
     }
@@ -62,7 +72,9 @@ void rnd_colors(unsigned n, std::vector<T>& colors, bool to255, bool alpha)
             colors.push_back(r);
             colors.push_back(g);
             colors.push_back(b);
-            if (alpha) { colors.push_back(static_cast<T>(1)); }
+            if (alpha) {
+                colors.push_back(static_cast<T>(1));
+            }
         }
     }
     else {
@@ -74,7 +86,9 @@ void rnd_colors(unsigned n, std::vector<T>& colors, bool to255, bool alpha)
             colors.push_back(r);
             colors.push_back(g);
             colors.push_back(b);
-            if (alpha) { colors.push_back(static_cast<T>(255)); }
+            if (alpha) {
+                colors.push_back(static_cast<T>(255));
+            }
         }
     }
 }

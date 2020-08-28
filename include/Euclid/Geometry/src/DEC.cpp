@@ -15,7 +15,9 @@ int halfedge_orientation(
     auto t = target(h, mesh);
     auto sidx = get(vimap, s);
     auto tidx = get(vimap, t);
-    if (sidx < tidx) { return -1; }
+    if (sidx < tidx) {
+        return -1;
+    }
     else {
         return 1;
     }

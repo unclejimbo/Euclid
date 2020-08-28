@@ -77,7 +77,9 @@ T gaussian(const Mesh& mesh,
            EIMap eimap)
 {
     T k;
-    if (CGAL::is_border(v, mesh)) { k = boost::math::constants::pi<T>(); }
+    if (CGAL::is_border(v, mesh)) {
+        k = boost::math::constants::pi<T>();
+    }
     else {
         k = boost::math::constants::two_pi<T>();
     }
@@ -269,13 +271,17 @@ void embed_circle_packing_metric(const Mesh& mesh,
             auto hoppo = opposite(h, seam_mesh);
             if (!CGAL::is_border(hoppo, seam_mesh)) {
                 auto foppo_idx = get(fimap, face(hoppo.tmhd, mesh));
-                if (visited[foppo_idx]) { continue; }
+                if (visited[foppo_idx]) {
+                    continue;
+                }
                 visited[foppo_idx] = true;
                 queue.push(face(hoppo, seam_mesh));
                 ++nf;
 
                 auto vk = target(next(hoppo, seam_mesh), seam_mesh);
-                if (get(vpm, vk)) { continue; }
+                if (get(vpm, vk)) {
+                    continue;
+                }
                 put(vpm, vk, true);
                 ++nv;
 

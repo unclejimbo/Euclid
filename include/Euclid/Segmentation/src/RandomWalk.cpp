@@ -273,7 +273,9 @@ void random_walk_segmentation(const Mesh& mesh,
         ++inc;
     }
     for (auto& id : ids) {
-        if (id == -1) { id = inc++; }
+        if (id == -1) {
+            id = inc++;
+        }
     }
     SpMat A(n, n);
     SpMat B(n, m);

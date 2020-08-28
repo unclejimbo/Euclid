@@ -8,7 +8,9 @@ bool is_chain(const Mesh& mesh, const VertexChain<Mesh>& chain)
         auto v0 = chain[i];
         auto v1 = chain[i + 1];
         auto h = halfedge(v0, v1, mesh);
-        if (!h.second) { return false; }
+        if (!h.second) {
+            return false;
+        }
     }
     return true;
 }
