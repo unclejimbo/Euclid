@@ -230,6 +230,7 @@ decltype(auto) squared_edge_length(
     const CGAL::Dual<Mesh>& dual)
 {
     auto primal = dual.primal();
+    auto h = halfedge(e, dual);
     auto f0 = source(h, dual);
     auto f1 = target(h, dual);
     auto p0 = barycenter(f0, primal);
