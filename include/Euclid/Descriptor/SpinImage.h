@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vector>
-#include <CGAL/boost/graph/properties.h>
 #include <Eigen/Core>
+#include <Euclid/MeshUtil/MeshDefs.h>
 #include <Euclid/Util/Memory.h>
 
 namespace Euclid
@@ -27,13 +27,8 @@ template<typename Mesh>
 class SpinImage
 {
 public:
-    using VPMap =
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type;
-    using Point_3 = typename boost::property_traits<VPMap>::value_type;
-    using Kernel = typename CGAL::Kernel_traits<Point_3>::Kernel;
-    using Vector_3 = typename Kernel::Vector_3;
-    using FT = typename Kernel::FT;
-    using Vertex = typename boost::graph_traits<Mesh>::vertex_descriptor;
+    using Vector_3 = Vector_3_t<Mesh>;
+    using FT = FT_t<Mesh>;
 
 public:
     /** Build up the necessary computational components.

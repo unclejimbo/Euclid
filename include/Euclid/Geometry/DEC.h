@@ -17,7 +17,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/SparseCore>
-#include <CGAL/boost/graph/properties.h>
+#include <Euclid/MeshUtil/MeshDefs.h>
 
 namespace Euclid
 {
@@ -29,9 +29,7 @@ namespace Euclid
  * @param h Target halfedge.
  */
 template<typename Mesh>
-int halfedge_orientation(
-    const Mesh& mesh,
-    typename boost::graph_traits<const Mesh>::halfedge_descriptor h);
+int halfedge_orientation(const Mesh& mesh, halfedge_t<Mesh> h);
 
 /**Exterior derivative operator of 0-form.
  *

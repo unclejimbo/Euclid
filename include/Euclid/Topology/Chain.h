@@ -2,7 +2,7 @@
 #pragma once
 
 #include <vector>
-#include <boost/graph/graph_traits.hpp>
+#include <Euclid/MeshUtil/MeshDefs.h>
 
 namespace Euclid
 {
@@ -13,8 +13,7 @@ namespace Euclid
 /**@{ @ingroup PkgTopology*/
 
 template<typename Mesh>
-using VertexChain =
-    std::vector<typename boost::graph_traits<Mesh>::vertex_descriptor>;
+using VertexChain = std::vector<vertex_t<Mesh>>;
 
 template<typename Mesh>
 using VertexChains = std::vector<VertexChain<Mesh>>;

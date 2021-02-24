@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <CGAL/boost/graph/properties.h>
+#include <Euclid/MeshUtil/MeshDefs.h>
 
 namespace Euclid
 {
@@ -17,11 +17,8 @@ template<typename Mesh>
 class ViewSphere
 {
 public:
-    using Point_3 = typename boost::property_traits<
-        typename boost::property_map<Mesh,
-                                     boost::vertex_point_t>::type>::value_type;
-    using Kernel = typename CGAL::Kernel_traits<Point_3>::Kernel;
-    using FT = typename Kernel::FT;
+    using Point_3 = Point_3_t<Mesh>;
+    using FT = FT_t<Mesh>;
 
 public:
     /** Build a view sphere using subdivision.
@@ -75,6 +72,9 @@ public:
      *
      */
     FT scale;
+
+private:
+    using Kernel = Kernel_t<Mesh>;
 };
 
 /** @}*/

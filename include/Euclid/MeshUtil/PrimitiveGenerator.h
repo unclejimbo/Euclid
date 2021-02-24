@@ -7,6 +7,7 @@
 #pragma once
 
 #include <CGAL/boost/graph/helpers.h>
+#include <Euclid/MeshUtil/MeshDefs.h>
 
 namespace Euclid
 {
@@ -17,15 +18,11 @@ namespace Euclid
  *  Create a subdivision sphere from icosahedron
  *  using Loop subdivision method.
  */
-template<typename Mesh,
-         typename Point_3 = typename boost::property_traits<
-             typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-             value_type>
-void make_subdivision_sphere(
-    Mesh& mesh,
-    const Point_3& center = { 0.0, 0.0, 0.0 },
-    typename CGAL::Kernel_traits<Point_3>::Kernel::FT radius = 1.0,
-    int iterations = 4);
+template<typename Mesh>
+void make_subdivision_sphere(Mesh& mesh,
+                             const Point_3_t<Mesh>& center = { 0.0, 0.0, 0.0 },
+                             typename Kernel_t<Mesh>::FT radius = 1.0,
+                             int iterations = 4);
 
 /** @}*/
 } // namespace Euclid

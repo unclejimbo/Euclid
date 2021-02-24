@@ -1,9 +1,8 @@
 #pragma once
 
 #include <vector>
-#include <CGAL/boost/graph/properties.h>
-#include <CGAL/Kernel_traits.h>
 #include <Eigen/SparseCholesky>
+#include <Euclid/MeshUtil/MeshDefs.h>
 #include <Euclid/Util/Memory.h>
 
 namespace Euclid
@@ -23,11 +22,8 @@ template<typename Mesh>
 class GeodesicsInHeat
 {
 public:
-    using Kernel = typename CGAL::Kernel_traits<typename boost::property_traits<
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type>::
-                                                    value_type>::Kernel;
-    using FT = typename Kernel::FT;
-    using Vector_3 = typename Kernel::Vector_3;
+    using FT = FT_t<Mesh>;
+    using Vector_3 = Vector_3_t<Mesh>;
     using SpMat = Eigen::SparseMatrix<FT>;
 
 public:

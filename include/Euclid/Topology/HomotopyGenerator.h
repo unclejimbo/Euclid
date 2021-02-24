@@ -1,7 +1,7 @@
 #pragma once
 
-#include <boost/graph/graph_traits.hpp>
 #include <Euclid/Topology/Chain.h>
+#include <Euclid/MeshUtil/MeshDefs.h>
 
 namespace Euclid
 {
@@ -18,9 +18,8 @@ namespace Euclid
  * Greedy Optimal Homotopy and Homology Generators.
  */
 template<typename Mesh>
-VertexChains<Mesh> greedy_homotopy_generators(
-    const Mesh& mesh,
-    typename boost::graph_traits<const Mesh>::vertex_descriptor v);
+VertexChains<Mesh> greedy_homotopy_generators(const Mesh& mesh,
+                                              vertex_t<Mesh> v);
 
 /**@}*/
 } // namespace Euclid

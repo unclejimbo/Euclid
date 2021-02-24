@@ -14,14 +14,13 @@
 namespace Euclid
 {
 
-template<typename Mesh, typename Vector_3>
-Vector_3 vertex_normal(
-    typename boost::graph_traits<const Mesh>::vertex_descriptor v,
-    const Mesh& mesh,
-    const VertexNormal& weight)
+template<typename Mesh>
+Vector_3_t<Mesh> vertex_normal(vertex_t<Mesh> v,
+                               const Mesh& mesh,
+                               const VertexNormal& weight)
 {
     auto vpmap = get(boost::vertex_point, mesh);
-    Vector_3 normal(0.0, 0.0, 0.0);
+    Vector_3_t<Mesh> normal(0.0, 0.0, 0.0);
     for (auto he : CGAL::halfedges_around_source(v, mesh)) {
         if (!CGAL::is_border(he, mesh)) {
             auto f = face(he, mesh);
@@ -52,16 +51,16 @@ Vector_3 vertex_normal(
     return Euclid::normalized(normal);
 }
 
-template<typename Mesh, typename Vector_3>
-Vector_3 vertex_normal(
-    typename boost::graph_traits<const Mesh>::vertex_descriptor v,
+template<typename Mesh>
+Vector_3_t<Mesh> vertex_normal(
+    vertex_t<Mesh> v,
     const Mesh& mesh,
-    const std::vector<Vector_3>& face_normals,
+    const std::vector<Vector_3_t<Mesh>>& face_normals,
     const VertexNormal& weight)
 {
     auto vpmap = get(boost::vertex_point, mesh);
     auto fimap = get(boost::face_index, mesh);
-    Vector_3 normal(0.0, 0.0, 0.0);
+    Vector_3_t<Mesh> normal(0.0, 0.0, 0.0);
     for (auto he : CGAL::halfedges_around_source(v, mesh)) {
         if (!CGAL::is_border(he, mesh)) {
             auto f = face(he, mesh);
@@ -93,12 +92,13 @@ Vector_3 vertex_normal(
     return Euclid::normalized(normal);
 }
 
-template<typename Mesh, typename Vector_3>
-std::vector<Vector_3> vertex_normals(const Mesh& mesh,
-                                     const std::vector<Vector_3>& face_normals,
-                                     const VertexNormal& weight)
+template<typename Mesh>
+std::vector<Vector_3_t<Mesh>> vertex_normals(
+    const Mesh& mesh,
+    const std::vector<Vector_3_t<Mesh>>& face_normals,
+    const VertexNormal& weight)
 {
-    std::vector<Vector_3> vnormals;
+    std::vector<Vector_3_t<Mesh>> vnormals;
     vnormals.reserve(num_vertices(mesh));
     for (auto v : vertices(mesh)) {
         vnormals.push_back(vertex_normal(v, mesh, face_normals, weight));
@@ -106,11 +106,12 @@ std::vector<Vector_3> vertex_normals(const Mesh& mesh,
     return vnormals;
 }
 
-template<typename Mesh, typename T>
-T vertex_area(typename boost::graph_traits<const Mesh>::vertex_descriptor v,
-              const Mesh& mesh,
-              const VertexArea& method)
+template<typename Mesh>
+FT_t<Mesh> vertex_area(vertex_t<Mesh> v,
+                       const Mesh& mesh,
+                       const VertexArea& method)
 {
+    using T = FT_t<Mesh>;
     auto vpmap = get(boost::vertex_point, mesh);
     auto va = T(0);
     if (method == VertexArea::barycentric) {
@@ -171,10 +172,10 @@ T vertex_area(typename boost::graph_traits<const Mesh>::vertex_descriptor v,
     return va;
 }
 
-template<typename Mesh, typename T>
-std::vector<T> vertex_areas(const Mesh& mesh, const VertexArea& method)
+template<typename Mesh>
+std::vector<FT_t<Mesh>> vertex_areas(const Mesh& mesh, const VertexArea& method)
 {
-    std::vector<T> vareas;
+    std::vector<FT_t<Mesh>> vareas;
     vareas.reserve(num_vertices(mesh));
     for (auto v : vertices(mesh)) {
         vareas.push_back(vertex_area(v, mesh, method));
@@ -182,10 +183,9 @@ std::vector<T> vertex_areas(const Mesh& mesh, const VertexArea& method)
     return vareas;
 }
 
+// partial specialization for dual mesh
 template<typename Mesh>
-decltype(auto) edge_length(
-    typename boost::graph_traits<const Mesh>::halfedge_descriptor h,
-    const CGAL::Dual<Mesh>& dual)
+FT_t<Mesh> edge_length(halfedge_t<Mesh> h, const CGAL::Dual<Mesh>& dual)
 {
     auto primal = dual.primal();
     auto f0 = source(h, dual);
@@ -195,9 +195,8 @@ decltype(auto) edge_length(
     return length(p1 - p0);
 }
 
-template<typename Mesh, typename T>
-T edge_length(typename boost::graph_traits<const Mesh>::halfedge_descriptor he,
-              const Mesh& mesh)
+template<typename Mesh>
+FT_t<Mesh> edge_length(halfedge_t<Mesh> he, const Mesh& mesh)
 {
     auto vpmap = get(boost::vertex_point, mesh);
     auto p1 = get(vpmap, source(he, mesh));
@@ -205,18 +204,17 @@ T edge_length(typename boost::graph_traits<const Mesh>::halfedge_descriptor he,
     return length(p2 - p1);
 }
 
-template<typename Mesh, typename T>
-T edge_length(typename boost::graph_traits<const Mesh>::edge_descriptor e,
-              const Mesh& mesh)
+template<typename Mesh>
+FT_t<Mesh> edge_length(edge_t<Mesh> e, const Mesh& mesh)
 {
     auto he = halfedge(e, mesh);
     return edge_length(he, mesh);
 }
 
-template<typename Mesh, typename T>
-std::vector<T> edge_lengths(const Mesh& mesh)
+template<typename Mesh>
+std::vector<FT_t<Mesh>> edge_lengths(const Mesh& mesh)
 {
-    std::vector<T> elens;
+    std::vector<FT_t<Mesh>> elens;
     elens.reserve(num_edges(mesh));
     for (auto he : edges(mesh)) {
         elens.push_back(edge_length(he, mesh));
@@ -224,10 +222,9 @@ std::vector<T> edge_lengths(const Mesh& mesh)
     return elens;
 }
 
+// partial specialization for dual mesh
 template<typename Mesh>
-decltype(auto) squared_edge_length(
-    typename boost::graph_traits<const Mesh>::edge_descriptor e,
-    const CGAL::Dual<Mesh>& dual)
+FT_t<Mesh> squared_edge_length(edge_t<Mesh> e, const CGAL::Dual<Mesh>& dual)
 {
     auto primal = dual.primal();
     auto h = halfedge(e, dual);
@@ -238,10 +235,8 @@ decltype(auto) squared_edge_length(
     return (p1 - p0).squared_length();
 }
 
-template<typename Mesh, typename T>
-T squared_edge_length(
-    typename boost::graph_traits<const Mesh>::halfedge_descriptor he,
-    const Mesh& mesh)
+template<typename Mesh>
+FT_t<Mesh> squared_edge_length(halfedge_t<Mesh> he, const Mesh& mesh)
 {
     auto vpmap = get(boost::vertex_point, mesh);
     auto p1 = get(vpmap, source(he, mesh));
@@ -249,19 +244,17 @@ T squared_edge_length(
     return (p1 - p2).squared_length();
 }
 
-template<typename Mesh, typename T>
-T squared_edge_length(
-    typename boost::graph_traits<const Mesh>::edge_descriptor e,
-    const Mesh& mesh)
+template<typename Mesh>
+FT_t<Mesh> squared_edge_length(edge_t<Mesh> e, const Mesh& mesh)
 {
     auto he = halfedge(e, mesh);
     return squared_edge_length(he, mesh);
 }
 
-template<typename Mesh, typename T>
-std::vector<T> squared_edge_lengths(const Mesh& mesh)
+template<typename Mesh>
+std::vector<FT_t<Mesh>> squared_edge_lengths(const Mesh& mesh)
 {
-    std::vector<T> elens;
+    std::vector<FT_t<Mesh>> elens;
     elens.reserve(num_edges(mesh));
     for (auto he : edges(mesh)) {
         elens.push_back(squared_edge_length(he, mesh));
@@ -269,11 +262,10 @@ std::vector<T> squared_edge_lengths(const Mesh& mesh)
     return elens;
 }
 
-template<typename Mesh, typename Vector_3>
-Vector_3 face_normal(
-    typename boost::graph_traits<const Mesh>::face_descriptor f,
-    const Mesh& mesh)
+template<typename Mesh>
+Vector_3_t<Mesh> face_normal(face_t<Mesh> f, const Mesh& mesh)
 {
+    using Vector_3 = Vector_3_t<Mesh>;
     auto vpmap = get(boost::vertex_point, mesh);
     auto he = halfedge(f, mesh);
     auto p1 = get(vpmap, source(he, mesh));
@@ -291,10 +283,10 @@ Vector_3 face_normal(
     return result;
 }
 
-template<typename Mesh, typename Vector_3>
-std::vector<Vector_3> face_normals(const Mesh& mesh)
+template<typename Mesh>
+std::vector<Vector_3_t<Mesh>> face_normals(const Mesh& mesh)
 {
-    std::vector<Vector_3> fnormals;
+    std::vector<Vector_3_t<Mesh>> fnormals;
     fnormals.reserve(num_faces(mesh));
     for (auto f : faces(mesh)) {
         fnormals.push_back(face_normal(f, mesh));
@@ -302,9 +294,8 @@ std::vector<Vector_3> face_normals(const Mesh& mesh)
     return fnormals;
 }
 
-template<typename Mesh, typename T>
-T face_area(typename boost::graph_traits<const Mesh>::face_descriptor f,
-            const Mesh& mesh)
+template<typename Mesh>
+FT_t<Mesh> face_area(face_t<Mesh> f, const Mesh& mesh)
 {
     auto vpmap = get(boost::vertex_point, mesh);
     auto he = halfedge(f, mesh);
@@ -314,10 +305,10 @@ T face_area(typename boost::graph_traits<const Mesh>::face_descriptor f,
     return area(p1, p2, p3);
 }
 
-template<typename Mesh, typename T>
-std::vector<T> face_areas(const Mesh& mesh)
+template<typename Mesh>
+std::vector<FT_t<Mesh>> face_areas(const Mesh& mesh)
 {
-    std::vector<T> fareas;
+    std::vector<FT_t<Mesh>> fareas;
     fareas.reserve(num_faces(mesh));
     for (auto f : faces(mesh)) {
         fareas.push_back(face_area(f, mesh));
@@ -325,9 +316,8 @@ std::vector<T> face_areas(const Mesh& mesh)
     return fareas;
 }
 
-template<typename Mesh, typename Point_3>
-Point_3 barycenter(typename boost::graph_traits<const Mesh>::face_descriptor f,
-                   const Mesh& mesh)
+template<typename Mesh>
+Point_3_t<Mesh> barycenter(face_t<Mesh> f, const Mesh& mesh)
 {
     auto vpmap = get(boost::vertex_point, mesh);
     auto [vbeg, vend] = CGAL::vertices_around_face(halfedge(f, mesh), mesh);
@@ -337,10 +327,10 @@ Point_3 barycenter(typename boost::graph_traits<const Mesh>::face_descriptor f,
     return CGAL::centroid(p0, p1, p2);
 }
 
-template<typename Mesh, typename Point_3>
-std::vector<Point_3> barycenters(const Mesh& mesh)
+template<typename Mesh>
+std::vector<Point_3_t<Mesh>> barycenters(const Mesh& mesh)
 {
-    std::vector<Point_3> centroids;
+    std::vector<Point_3_t<Mesh>> centroids;
     centroids.reserve(num_faces(mesh));
     for (auto f : faces(mesh)) {
         centroids.push_back(barycenter(f, mesh));
@@ -348,14 +338,12 @@ std::vector<Point_3> barycenters(const Mesh& mesh)
     return centroids;
 }
 
-template<typename Mesh, typename T>
-T gaussian_curvature(
-    typename boost::graph_traits<const Mesh>::vertex_descriptor v,
-    const Mesh& mesh)
+template<typename Mesh>
+FT_t<Mesh> gaussian_curvature(vertex_t<Mesh> v, const Mesh& mesh)
 {
     auto vpmap = get(boost::vertex_point, mesh);
 
-    T angle_defect = boost::math::constants::two_pi<T>();
+    auto angle_defect = boost::math::constants::two_pi<FT_t<Mesh>>();
     for (auto he : CGAL::halfedges_around_target(v, mesh)) {
         if (!CGAL::is_border(he, mesh)) {
             auto vp = source(he, mesh);
@@ -367,10 +355,10 @@ T gaussian_curvature(
     return angle_defect / vertex_area(v, mesh);
 }
 
-template<typename Mesh, typename T>
-std::vector<T> gaussian_curvatures(const Mesh& mesh)
+template<typename Mesh>
+std::vector<FT_t<Mesh>> gaussian_curvatures(const Mesh& mesh)
 {
-    std::vector<T> curvatures;
+    std::vector<FT_t<Mesh>> curvatures;
     curvatures.reserve(num_vertices(mesh));
     for (auto v : vertices(mesh)) {
         curvatures.push_back(gaussian_curvature(v, mesh));
@@ -378,10 +366,11 @@ std::vector<T> gaussian_curvatures(const Mesh& mesh)
     return curvatures;
 }
 
-template<typename Mesh, typename T>
-std::tuple<Eigen::SparseMatrix<T>, Eigen::SparseMatrix<T>> adjacency_matrix(
-    const Mesh& mesh)
+template<typename Mesh>
+std::tuple<Eigen::SparseMatrix<FT_t<Mesh>>, Eigen::SparseMatrix<FT_t<Mesh>>>
+adjacency_matrix(const Mesh& mesh)
 {
+    using T = FT_t<Mesh>;
     using Triplet = Eigen::Triplet<T>;
     auto vimap = get(boost::vertex_index, mesh);
     const auto nv = num_vertices(mesh);
@@ -407,9 +396,10 @@ std::tuple<Eigen::SparseMatrix<T>, Eigen::SparseMatrix<T>> adjacency_matrix(
     return std::make_tuple(adj_mat, degree_mat);
 }
 
-template<typename Mesh, typename T>
-Eigen::SparseMatrix<T> graph_laplacian_matrix(const Mesh& mesh)
+template<typename Mesh>
+Eigen::SparseMatrix<FT_t<Mesh>> graph_laplacian_matrix(const Mesh& mesh)
 {
+    using T = FT_t<Mesh>;
     using Triplet = Eigen::Triplet<T>;
     auto vimap = get(boost::vertex_index, mesh);
     const auto nv = num_vertices(mesh);
@@ -433,10 +423,8 @@ Eigen::SparseMatrix<T> graph_laplacian_matrix(const Mesh& mesh)
     return L;
 }
 
-template<typename Mesh, typename T>
-T cotangent_weight(
-    typename boost::graph_traits<const Mesh>::halfedge_descriptor he,
-    const Mesh& mesh)
+template<typename Mesh>
+FT_t<Mesh> cotangent_weight(halfedge_t<Mesh> he, const Mesh& mesh)
 {
     auto vpmap = get(boost::vertex_point, mesh);
     auto vi = source(he, mesh);
@@ -445,20 +433,20 @@ T cotangent_weight(
     auto vb = target(next(opposite(he, mesh), mesh), mesh);
     auto cota = cotangent(get(vpmap, vi), get(vpmap, va), get(vpmap, vj));
     auto cotb = cotangent(get(vpmap, vi), get(vpmap, vb), get(vpmap, vj));
-    return static_cast<T>((cota + cotb) * 0.5);
+    return static_cast<FT_t<Mesh>>((cota + cotb) * 1.5);
 }
 
-template<typename Mesh, typename T>
-T cotangent_weight(typename boost::graph_traits<const Mesh>::edge_descriptor e,
-                   const Mesh& mesh)
+template<typename Mesh>
+FT_t<Mesh> cotangent_weight(edge_t<Mesh> e, const Mesh& mesh)
 {
     auto he = halfedge(e, mesh);
     return cotangent_weight(he, mesh);
 }
 
-template<typename Mesh, typename T>
-Eigen::SparseMatrix<T> cotangent_matrix(const Mesh& mesh)
+template<typename Mesh>
+Eigen::SparseMatrix<FT_t<Mesh>> cotangent_matrix(const Mesh& mesh)
 {
+    using T = FT_t<Mesh>;
     using Triplet = Eigen::Triplet<T>;
     auto vpmap = get(boost::vertex_point, mesh);
     auto vimap = get(boost::vertex_index, mesh);
@@ -502,9 +490,11 @@ Eigen::SparseMatrix<T> cotangent_matrix(const Mesh& mesh)
     return mat;
 }
 
-template<typename Mesh, typename T>
-Eigen::SparseMatrix<T> mass_matrix(const Mesh& mesh, const VertexArea& method)
+template<typename Mesh>
+Eigen::SparseMatrix<FT_t<Mesh>> mass_matrix(const Mesh& mesh,
+                                            const VertexArea& method)
 {
+    using T = FT_t<Mesh>;
     const auto nv = num_vertices(mesh);
     Eigen::SparseMatrix<T> mass(nv, nv);
     std::vector<Eigen::Triplet<T>> values;

@@ -30,8 +30,7 @@ namespace _impl
 {
 
 template<typename Mesh>
-using EdgeSet =
-    std::unordered_set<typename boost::graph_traits<Mesh>::edge_descriptor>;
+using EdgeSet = std::unordered_set<edge_t<Mesh>>;
 
 template<typename Mesh>
 double loop_length(const Mesh& mesh, const VertexChain<Mesh>& loop)
@@ -52,7 +51,7 @@ bool is_mesh_connected(const Mesh& mesh,
                        const EdgeSet<Mesh>& s2)
 {
     auto fimap = get(boost::face_index, mesh);
-    std::queue<typename boost::graph_traits<Mesh>::face_descriptor> queue;
+    std::queue<face_t<Mesh>> queue;
     std::vector<bool> touched(num_faces(mesh), false);
     size_t ntouched = 0;
 

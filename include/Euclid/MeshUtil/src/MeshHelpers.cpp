@@ -251,9 +251,12 @@ void extract_mesh(const Eigen::MatrixBase<DerivedV>& V,
     }
 }
 
-template<typename Mesh, typename Vertex>
-std::vector<Vertex> nring_vertices(Vertex target, const Mesh& mesh, unsigned n)
+template<typename Mesh>
+std::vector<vertex_t<Mesh>> nring_vertices(vertex_t<Mesh> target,
+                                           const Mesh& mesh,
+                                           unsigned n)
 {
+    using Vertex = vertex_t<Mesh>;
     std::vector<Vertex> neighbors;
     if (n == 1) {
         for (auto v : CGAL::vertices_around_target(target, mesh)) {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <boost/graph/graph_traits.hpp>
+#include <Euclid/MeshUtil/MeshDefs.h>
 
 namespace Euclid
 {
@@ -17,9 +17,12 @@ namespace Euclid
 template<typename Mesh>
 int num_boundaries(const Mesh& mesh);
 
+/**Find the boundary components.
+ *
+ * Each component can be retrived by a halfedge.
+ */
 template<typename Mesh>
-std::vector<typename boost::graph_traits<Mesh>::halfedge_descriptor>
-boundary_components(const Mesh& mesh);
+std::vector<halfedge_t<Mesh>> boundary_components(const Mesh& mesh);
 
 /**Euler characteristic.
  *

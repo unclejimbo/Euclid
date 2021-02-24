@@ -11,8 +11,7 @@ int num_boundaries(const Mesh& mesh)
 }
 
 template<typename Mesh>
-std::vector<typename boost::graph_traits<Mesh>::halfedge_descriptor>
-boundary_components(const Mesh& mesh)
+std::vector<halfedge_t<Mesh>> boundary_components(const Mesh& mesh)
 {
     // himap is not always available so compute it on the fly
     using hd = typename boost::graph_traits<Mesh>::halfedge_descriptor;

@@ -6,13 +6,13 @@
 namespace Euclid
 {
 
-template<typename Mesh, typename Point_3>
-void make_subdivision_sphere(
-    Mesh& mesh,
-    const Point_3& center,
-    typename CGAL::Kernel_traits<Point_3>::Kernel::FT radius,
-    int iterations)
+template<typename Mesh>
+void make_subdivision_sphere(Mesh& mesh,
+                             const Point_3_t<Mesh>& center,
+                             typename Kernel_t<Mesh>::FT radius,
+                             int iterations)
 {
+    using Point_3 = Point_3_t<Mesh>;
     CGAL::make_icosahedron(mesh, Point_3(0, 0, 0));
     CGAL::Subdivision_method_3::Loop_subdivision(
         mesh, CGAL::parameters::number_of_iterations(iterations));

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <CGAL/boost/graph/properties.h>
 #include <Eigen/Core>
+#include <Euclid/MeshUtil/MeshDefs.h>
 
 namespace Euclid
 {
@@ -22,12 +22,7 @@ template<typename Mesh>
 class HKS
 {
 public:
-    using VPMap =
-        typename boost::property_map<Mesh, boost::vertex_point_t>::type;
-    using Point_3 = typename boost::property_traits<VPMap>::value_type;
-    using Kernel = typename CGAL::Kernel_traits<Point_3>::Kernel;
-    using FT = typename Kernel::FT;
-    using Vertex = typename boost::graph_traits<Mesh>::vertex_descriptor;
+    using FT = FT_t<Mesh>;
     using Vec = Eigen::Matrix<FT, Eigen::Dynamic, 1>;
     using Mat = Eigen::Matrix<FT, Eigen::Dynamic, Eigen::Dynamic>;
 

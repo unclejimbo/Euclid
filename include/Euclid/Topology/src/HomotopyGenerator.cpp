@@ -13,16 +13,14 @@ namespace _impl
 {
 
 template<typename Mesh>
-std::vector<typename boost::graph_traits<Mesh>::vertex_descriptor>
-mark_shortest_path(
+std::vector<vertex_t<Mesh>> mark_shortest_path(
     const Mesh& mesh,
-    typename boost::graph_traits<const Mesh>::vertex_descriptor src,
+    vertex_t<Mesh> src,
     std::vector<bool>& on_shortest_path_tree)
 {
     auto vimap = get(boost::vertex_index, mesh);
     auto eimap = get(boost::edge_index, mesh);
-    std::vector<typename boost::graph_traits<const Mesh>::vertex_descriptor>
-        predecessors(num_vertices(mesh));
+    std::vector<vertex_t<Mesh>> predecessors(num_vertices(mesh));
     boost::dijkstra_shortest_paths(
         mesh,
         src,
@@ -47,7 +45,7 @@ void spanning_tree_on_dual_graph_not_cross_shortest_path_tree(
     const std::vector<bool>& on_shortest_path_tree,
     std::vector<bool>& cross_spanning_tree)
 {
-    using FD = typename boost::graph_traits<Mesh>::face_descriptor;
+    using FD = face_t<Mesh>;
     auto fimap = get(CGAL::face_index, mesh);
     auto eimap = get(CGAL::edge_index, mesh);
 
@@ -81,10 +79,9 @@ void spanning_tree_on_dual_graph_not_cross_shortest_path_tree(
 template<typename Mesh>
 VertexChain<Mesh> find_generator(
     const Mesh& mesh,
-    typename boost::graph_traits<Mesh>::edge_descriptor e,
-    typename boost::graph_traits<Mesh>::vertex_descriptor src,
-    const std::vector<typename boost::graph_traits<Mesh>::vertex_descriptor>&
-        predecessors)
+    edge_t<Mesh> e,
+    vertex_t<Mesh> src,
+    const std::vector<vertex_t<Mesh>>& predecessors)
 {
     auto vimap = get(boost::vertex_index, mesh);
     auto h = halfedge(e, mesh);
@@ -108,16 +105,15 @@ VertexChain<Mesh> find_generator(
 template<typename Mesh>
 VertexChains<Mesh> find_generators(
     const Mesh& mesh,
-    typename boost::graph_traits<Mesh>::vertex_descriptor src,
+    vertex_t<Mesh> src,
     const std::vector<bool>& on_shortest_path_tree,
     const std ::vector<bool>& cross_spanning_tree,
-    const std ::vector<typename boost::graph_traits<Mesh>::vertex_descriptor>&
-        predecessors)
+    const std ::vector<vertex_t<Mesh>>& predecessors)
 {
     auto eimap = get(boost::edge_index, mesh);
 
     // find edges not on shortest path tree and crossing spanning tree
-    std::vector<typename boost::graph_traits<Mesh>::edge_descriptor> left_edges;
+    std::vector<edge_t<Mesh>> left_edges;
     for (auto e : edges(mesh)) {
         auto eidx = get(eimap, e);
         if (!on_shortest_path_tree[eidx] && !cross_spanning_tree[eidx]) {
@@ -137,9 +133,8 @@ VertexChains<Mesh> find_generators(
 } // namespace _impl
 
 template<typename Mesh>
-VertexChains<Mesh> greedy_homotopy_generators(
-    const Mesh& mesh,
-    typename boost::graph_traits<const Mesh>::vertex_descriptor v)
+VertexChains<Mesh> greedy_homotopy_generators(const Mesh& mesh,
+                                              vertex_t<Mesh> v)
 {
     std::vector<bool> on_shortest_path_tree(num_edges(mesh), false);
     auto predecessors =

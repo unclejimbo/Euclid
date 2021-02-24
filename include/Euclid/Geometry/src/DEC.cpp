@@ -6,9 +6,7 @@ namespace Euclid
 {
 
 template<typename Mesh>
-int halfedge_orientation(
-    const Mesh& mesh,
-    typename boost::graph_traits<const Mesh>::halfedge_descriptor h)
+int halfedge_orientation(const Mesh& mesh, halfedge_t<Mesh> h)
 {
     auto vimap = get(boost::vertex_index, mesh);
     auto s = source(h, mesh);
