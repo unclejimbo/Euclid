@@ -4,7 +4,6 @@
 #include <string>
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
-#include <CGAL/boost/graph/Dual.h>
 #include <Euclid/IO/OffIO.h>
 #include <Euclid/MeshUtil/MeshHelpers.h>
 
@@ -31,17 +30,6 @@ TEST_CASE("Topology, HomotopyGenerator", "[topology][homotopygenerator]")
         REQUIRE(generators.size() == 2);
         for (const auto& g : generators) {
             REQUIRE(Euclid::is_loop(mesh, g));
-        }
-    }
-
-    SECTION("dual")
-    {
-        CGAL::Dual<Mesh> dual(mesh);
-        auto src = *(vertices(dual).first);
-        auto generators = Euclid::greedy_homotopy_generators(dual, src);
-        REQUIRE(generators.size() == 2);
-        for (const auto& g : generators) {
-            REQUIRE(Euclid::is_loop(dual, g));
         }
     }
 }

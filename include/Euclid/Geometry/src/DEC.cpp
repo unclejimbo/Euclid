@@ -27,7 +27,7 @@ template<typename Mesh, typename T>
 void d0(const Mesh& mesh, Eigen::SparseMatrix<T>& op)
 {
     using Triplet = Eigen::Triplet<T>;
-    using Triplets = std::vetor<Triplet>;
+    using Triplets = std::vector<Triplet>;
     using SpMat = Eigen::SparseMatrix<T>;
     auto vimap = get(boost::vertex_index, mesh);
     auto eimap = get(boost::edge_index, mesh);
@@ -53,7 +53,7 @@ template<typename Mesh, typename T>
 void d1(const Mesh& mesh, Eigen::SparseMatrix<T>& op)
 {
     using Triplet = Eigen::Triplet<T>;
-    using Triplets = std::vetor<Triplet>;
+    using Triplets = std::vector<Triplet>;
     using SpMat = Eigen::SparseMatrix<T>;
     auto eimap = get(boost::edge_index, mesh);
     auto fimap = get(boost::face_index, mesh);

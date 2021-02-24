@@ -43,7 +43,7 @@ void extract_seam_mesh(const CGAL::Seam_mesh<Mesh, SEM, SVM>& seam_mesh,
     indices.reserve(num_faces(seam_mesh) * 3);
 
     auto vpmap = get(boost::vertex_point, seam_mesh);
-    using vd = CGAL::Seam_mesh<Mesh, SEM, SVM>::vertex_descriptor;
+    using vd = typename CGAL::Seam_mesh<Mesh, SEM, SVM>::vertex_descriptor;
     std::map<vd, int> vimap;
     int cnt = 0;
 

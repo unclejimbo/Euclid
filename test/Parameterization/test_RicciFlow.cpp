@@ -1,5 +1,4 @@
 #include <catch2/catch.hpp>
-#include <Euclid/Parameterization/RicciFlow.h>
 
 #include <string>
 #include <unordered_map>
@@ -11,7 +10,8 @@
 #include <Euclid/IO/OffIO.h>
 #include <Euclid/IO/PlyIO.h>
 #include <Euclid/MeshUtil/MeshHelpers.h>
-#include <Euclid/Parameterization/SeamMesh.h>
+#include <Euclid/Parameterization/SeamMesh.h>  // include after SM
+#include <Euclid/Parameterization/RicciFlow.h> // include after SM
 
 #include <config.h>
 

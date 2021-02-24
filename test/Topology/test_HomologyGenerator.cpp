@@ -4,7 +4,6 @@
 #include <string>
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
-#include <CGAL/boost/graph/Dual.h>
 #include <Euclid/IO/OffIO.h>
 #include <Euclid/MeshUtil/MeshHelpers.h>
 
@@ -30,16 +29,6 @@ TEST_CASE("Topology, HomologyGenerator", "[topology][homologygenerator]")
         REQUIRE(generators.size() == 2);
         for (const auto& g : generators) {
             REQUIRE(Euclid::is_loop(mesh, g));
-        }
-    }
-
-    SECTION("dual")
-    {
-        CGAL::Dual<Mesh> dual(mesh);
-        auto generators = Euclid::greedy_homology_generators(dual);
-        REQUIRE(generators.size() == 2);
-        for (const auto& g : generators) {
-            REQUIRE(Euclid::is_loop(dual, g));
         }
     }
 }

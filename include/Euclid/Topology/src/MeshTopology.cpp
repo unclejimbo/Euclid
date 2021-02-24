@@ -1,5 +1,5 @@
 #include <map>
-#include <vector>
+#include <CGAL/boost/graph/helpers.h>
 
 namespace Euclid
 {

@@ -3,6 +3,8 @@
 #include <vector>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/property_map/property_map.hpp>
+#include <CGAL/boost/graph/iterator.h>
+#include <CGAL/boost/graph/properties.h>
 
 namespace Euclid
 {
@@ -46,8 +48,8 @@ void spanning_tree_on_dual_graph_not_cross_shortest_path_tree(
     std::vector<bool>& cross_spanning_tree)
 {
     using FD = typename boost::graph_traits<Mesh>::face_descriptor;
-    auto fimap = get(boost::face_index, mesh);
-    auto eimap = get(boost::edge_index, mesh);
+    auto fimap = get(CGAL::face_index, mesh);
+    auto eimap = get(CGAL::edge_index, mesh);
 
     auto frange = faces(mesh);
     auto froot = *frange.first;

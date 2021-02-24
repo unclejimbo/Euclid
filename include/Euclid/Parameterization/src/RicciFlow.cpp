@@ -329,7 +329,7 @@ void embed_circle_packing_metric(const Mesh& mesh,
 template<typename Mesh, typename VertexRadiusMap, typename EdgeWeightMap>
 void circle_packing_metric(Mesh& mesh, VertexRadiusMap vrm, EdgeWeightMap ewm)
 {
-    using Scalar = boost::property_traits<VertexRadiusMap>::value_type;
+    using Scalar = typename boost::property_traits<VertexRadiusMap>::value_type;
     auto eimap = get(boost::edge_index, mesh);
 
     // compute edge lengths
@@ -431,7 +431,7 @@ RicciFlowSolverStatus ricci_flow(Mesh& mesh,
         return RicciFlowSolverStatus::InvalidInput;
     }
 
-    using Scalar = boost::property_traits<VertexRadiusMap>::value_type;
+    using Scalar = typename boost::property_traits<VertexRadiusMap>::value_type;
     using SpMat = Eigen::SparseMatrix<Scalar>;
     using Vec = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
     auto vimap = get(boost::vertex_index, mesh);
