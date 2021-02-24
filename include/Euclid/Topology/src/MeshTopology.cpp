@@ -1,4 +1,5 @@
 #include <map>
+#include <vector>
 
 namespace Euclid
 {
@@ -14,7 +15,7 @@ std::vector<typename boost::graph_traits<Mesh>::halfedge_descriptor>
 boundary_components(const Mesh& mesh)
 {
     // himap is not always available so compute it on the fly
-    using hd = boost::graph_traits<Mesh>::halfedge_descriptor;
+    using hd = typename boost::graph_traits<Mesh>::halfedge_descriptor;
     std::map<hd, int> himap;
     int cnt = 0;
     for (auto h : halfedges(mesh)) {

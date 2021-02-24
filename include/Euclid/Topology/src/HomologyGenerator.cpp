@@ -6,6 +6,23 @@
 #include <Euclid/Topology/HomotopyGenerator.h>
 #include <Euclid/Topology/MeshTopology.h>
 
+// FIX CGAL BUG
+#include <CGAL/hash_openmesh.h>
+namespace std
+{
+template<>
+struct hash<CGAL::internal::OMesh_edge<OpenMesh::HalfedgeHandle>>
+    : public CGAL::cpp98::unary_function<OpenMesh::HalfedgeHandle, std::size_t>
+{
+
+    std::size_t operator()(
+        const CGAL::internal::OMesh_edge<OpenMesh::HalfedgeHandle>& h) const
+    {
+        return h.idx();
+    }
+};
+} // namespace std
+
 namespace Euclid
 {
 
@@ -47,7 +64,7 @@ bool is_mesh_connected(const Mesh& mesh,
     while (!queue.empty()) {
         auto f = queue.front();
         queue.pop();
-        for (auto h : halfedges_around_face(halfedge(f, mesh), mesh)) {
+        for (auto h : CGAL::halfedges_around_face(halfedge(f, mesh), mesh)) {
             auto e = edge(h, mesh);
             if (s1.find(e) == s1.end() && s2.find(e) == s2.end()) {
                 auto hoppo = opposite(h, mesh);
