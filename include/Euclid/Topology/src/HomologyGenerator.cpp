@@ -6,23 +6,6 @@
 #include <Euclid/Topology/HomotopyGenerator.h>
 #include <Euclid/Topology/MeshTopology.h>
 
-// FIX CGAL BUG
-#include <CGAL/hash_openmesh.h>
-namespace std
-{
-template<>
-struct hash<CGAL::internal::OMesh_edge<OpenMesh::HalfedgeHandle>>
-    : public CGAL::cpp98::unary_function<OpenMesh::HalfedgeHandle, std::size_t>
-{
-
-    std::size_t operator()(
-        const CGAL::internal::OMesh_edge<OpenMesh::HalfedgeHandle>& h) const
-    {
-        return h.idx();
-    }
-};
-} // namespace std
-
 namespace Euclid
 {
 
