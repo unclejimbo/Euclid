@@ -285,4 +285,19 @@ std::vector<vertex_t<Mesh>> nring_vertices(vertex_t<Mesh> target,
     return neighbors;
 }
 
+template<typename Mesh>
+std::pair<halfedge_t<Mesh>, halfedge_t<Mesh>> find_common_edge(const Mesh& mesh,
+                                                               face_t<Mesh> f1,
+                                                               face_t<Mesh> f2)
+{
+    for (auto h1 : CGAL::halfedges_around_face(halfedge(f1, mesh), mesh)) {
+        if (face(opposite(h1, mesh), mesh) == f2) {
+            auto h2 = halfedge(f2, mesh);
+            return std::make_pair(h1, h2);
+        }
+    }
+    halfedge_t<Mesh> h;
+    return std::make_pair(h, h);
+}
+
 } // namespace Euclid

@@ -134,4 +134,26 @@ TEST_CASE("MeshUtil, MeshHelpers", "[meshutil][meshhelpers]")
             REQUIRE(tworing.find(v) != tworing.end());
         }
     }
+
+    SECTION("common edge")
+    {
+        using Mesh = CGAL::Surface_mesh<Point_3>;
+        using Halfedge = Mesh::Halfedge_index;
+        Mesh mesh;
+        Euclid::make_mesh<3>(mesh, positions, indices);
+        Halfedge h1(0);
+        Halfedge h2(1);
+        Halfedge h3(100);
+        auto f1 = mesh.face(h1);
+        auto f2 = mesh.face(h2);
+        auto f3 = mesh.face(h3);
+
+        auto [ha, hb] = Euclid::find_common_edge(mesh, f1, f2);
+        REQUIRE(ha == h1);
+        REQUIRE(hb == h2);
+
+        auto [hc, hd] = Euclid::find_common_edge(mesh, f1, f3);
+        REQUIRE(!hc.is_valid());
+        REQUIRE(!hd.is_valid());
+    }
 }
