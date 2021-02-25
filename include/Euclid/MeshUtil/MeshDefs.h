@@ -1,3 +1,8 @@
+/**Type helpers for mesh related types.
+ *
+ * @defgroup PkgMeshDefs MeshDefs
+ * @ingroup PkgMeshUtil
+ */
 #pragma once
 
 #include <boost/graph/graph_traits.hpp>
@@ -6,6 +11,7 @@
 
 namespace Euclid
 {
+/** @{*/
 
 template<typename Mesh>
 using vpmap_t = typename boost::property_map<Mesh, CGAL::vertex_point_t>::type;
@@ -40,4 +46,5 @@ using edge_t = typename boost::graph_traits<Mesh>::edge_descriptor;
 template<typename Mesh>
 using face_t = typename boost::graph_traits<Mesh>::face_descriptor;
 
+/** @}*/
 } // namespace Euclid
