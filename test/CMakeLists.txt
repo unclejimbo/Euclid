@@ -9,6 +9,7 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/Distance/test_BiharmonicDistance.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Distance/test_DiffusionDistance.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Distance/test_GeodesicsInHeat.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/FeatureDetection/test_NativeHKS.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_Spectral.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/test_TriMeshGeometry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IO/test_ObjIO.cpp

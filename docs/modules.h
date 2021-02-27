@@ -15,6 +15,12 @@
  * @defgroup PkgDistance Distance
  */
 
+/**Feature point detection.
+ * This package provides algorithm to detect feature points on triangular
+ * meshes.
+ * @defgroup PkgFeature Feature Detection
+ */
+
 /**Geometric functionalities.
  * This package contains functions for spectral decomposition, differential
  * geometries, etc..
