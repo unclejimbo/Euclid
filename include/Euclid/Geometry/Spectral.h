@@ -19,6 +19,8 @@
  *  @ingroup PkgGeometry
  */
 #pragma once
+#include <Euclid/Config.h>
+#ifdef EUCLID_USE_SPECTRA
 
 #include <Eigen/Core>
 
@@ -93,3 +95,5 @@ unsigned spectrum(const Mesh& mesh,
 } // namespace Euclid
 
 #include "src/Spectral.cpp"
+
+#endif

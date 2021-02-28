@@ -18,6 +18,8 @@
  *  @ingroup PkgUtil
  */
 #pragma once
+#include <Euclid/Config.h>
+#ifdef EUCLID_USE_CEREAL
 
 #include <string>
 #include <vector>
@@ -44,3 +46,5 @@ void deserialize(const std::string& filename, T&... data);
 } // namespace Euclid
 
 #include "src/Serialize.cpp"
+
+#endif

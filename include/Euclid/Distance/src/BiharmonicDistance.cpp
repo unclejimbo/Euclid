@@ -1,5 +1,4 @@
 #include <cmath>
-#include <Euclid/Geometry/Spectral.h>
 
 namespace Euclid
 {

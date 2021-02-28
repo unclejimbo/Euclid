@@ -1,0 +1,10 @@
+#pragma once
+
+#cmakedefine EUCLID_USE_SPECTRA
+#cmakedefine EUCLID_USE_LIBIGL
+#cmakedefine EUCLID_USE_EMBREE
+#cmakedefine EUCLID_USE_VULKAN
+#cmakedefine EUCLID_USE_CEREAL
+#cmakedefine EUCLID_USE_BLAS
+#cmakedefine EUCLID_USE_LAPACK
+#cmakedefine EUCLID_USE_OPENMP
