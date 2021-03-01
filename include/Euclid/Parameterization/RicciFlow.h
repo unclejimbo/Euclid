@@ -37,7 +37,7 @@ void circle_packing_metric(Mesh& mesh, VertexRadiusMap vrm, EdgeWeightMap ewm);
  *
  * @param mesh Input mesh.
  * @param vrm Vertex radius property map.
- * @parma ewm Edge weight property map.
+ * @param ewm Edge weight property map.
  * @param seam_mesh The seam mesh.
  * @param uvm Vertex uv-coordinate property map.
  */
@@ -96,7 +96,7 @@ enum class RicciFlowSolverStatus
  * @param vrm Vertex radius property map.
  * @param ewm Edge weight property map.
  * @param vcm Vertex target curvature map.
- * @param setting Solver settings.
+ * @param settings Solver settings.
  */
 template<typename Mesh,
          typename VertexRadiusMap,
