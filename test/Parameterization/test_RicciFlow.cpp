@@ -9,7 +9,7 @@
 #include <CGAL/Polygon_mesh_processing/measure.h>
 #include <Euclid/IO/OffIO.h>
 #include <Euclid/IO/PlyIO.h>
-#include <Euclid/MeshUtil/MeshHelpers.h>
+#include <Euclid/MeshUtil/CGALMesh.h>
 #include <Euclid/Parameterization/SeamMesh.h>  // include after SM
 #include <Euclid/Parameterization/RicciFlow.h> // include after SM
 

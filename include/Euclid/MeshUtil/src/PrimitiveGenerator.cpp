@@ -1,4 +1,3 @@
-#include <Euclid/MeshUtil/MeshHelpers.h>
 #include <Euclid/Math/Vector.h>
 #include <CGAL/subdivision_method_3.h>
 #include <algorithm>

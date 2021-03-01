@@ -5,7 +5,7 @@
 
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
-#include <Euclid/MeshUtil/MeshHelpers.h>
+#include <Euclid/MeshUtil/CGALMesh.h>
 #include <Euclid/IO/OffIO.h>
 
 #include <config.h>

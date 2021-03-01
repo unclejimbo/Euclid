@@ -10,7 +10,7 @@
 #include <Euclid/Descriptor/Histogram.h>
 #include <Euclid/IO/OffIO.h>
 #include <Euclid/IO/PlyIO.h>
-#include <Euclid/MeshUtil/MeshHelpers.h>
+#include <Euclid/MeshUtil/CGALMesh.h>
 #include <Euclid/Geometry/Spectral.h>
 #include <Euclid/Util/Color.h>
 

@@ -6,7 +6,7 @@
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/boost/graph/Dual.h>
 #include <Euclid/IO/OffIO.h>
-#include <Euclid/MeshUtil/MeshHelpers.h>
+#include <Euclid/MeshUtil/CGALMesh.h>
 
 #include <config.h>
 

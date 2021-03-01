@@ -11,7 +11,8 @@
 #include <Eigen/SparseCholesky>
 #include <Euclid/IO/OffIO.h>
 #include <Euclid/IO/PlyIO.h>
-#include <Euclid/MeshUtil/MeshHelpers.h>
+#include <Euclid/MeshUtil/CGALMesh.h>
+#include <Euclid/MeshUtil/EigenMesh.h>
 #include <Euclid/Util/Color.h>
 #include <igl/invert_diag.h>
 

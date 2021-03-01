@@ -20,6 +20,8 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Statistics.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Transformation.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Math/test_Vector.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/MeshUtil/test_CGALMesh.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/MeshUtil/test_EigenMesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/MeshUtil/test_MeshHelpers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/MeshUtil/test_PrimitiveGenerator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Parameterization/test_HolomorphicOneForms.cpp
