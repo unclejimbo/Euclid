@@ -7,8 +7,6 @@
  *  @ingroup PkgRender
  */
 #pragma once
-#include <Euclid/Config.h>
-#ifdef EUCLID_USE_EMBREE
 
 #include <cmath>
 #include <limits>
@@ -460,5 +458,3 @@ private:
 } // namespace Euclid
 
 #include "src/RayTracer.cpp"
-
-#endif

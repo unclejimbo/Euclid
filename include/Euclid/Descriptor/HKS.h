@@ -1,6 +1,4 @@
 #pragma once
-#include <Euclid/Config.h>
-#ifdef EUCLID_USE_SPECTRA
 
 #include <Eigen/Core>
 #include <Euclid/MeshUtil/MeshDefs.h>
@@ -79,5 +77,3 @@ private:
 } // namespace Euclid
 
 #include "src/HKS.cpp"
-
-#endif

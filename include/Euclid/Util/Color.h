@@ -6,8 +6,6 @@
  *  @ingroup PkgUtil
  */
 #pragma once
-#include <Euclid/Config.h>
-#ifdef EUCLID_USE_LIBIGL
 
 #include <vector>
 #include <igl/colormap.h>
@@ -58,5 +56,3 @@ void rnd_colors(unsigned n,
 } // namespace Euclid
 
 #include "src/Color.cpp"
-
-#endif

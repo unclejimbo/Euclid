@@ -82,12 +82,6 @@ if(EUCLID_USE_OPENMP)
     target_link_libraries(Euclid OpenMP::OpenMP_CXX)
 endif()
 
-# configuration
-configure_file(
-    ${CMAKE_SOURCE_DIR}/include/Euclid/Config.h.in
-    ${CMAKE_BINARY_DIR}/include/Euclid/Config.h
-)
-
 # installation
 include(GNUInstallDirs)
 

@@ -7,8 +7,6 @@
  *  @ingroup PkgRender
  */
 #pragma once
-#include <Euclid/Config.h>
-#ifdef EUCLID_USE_VULKAN
 
 #include <vector>
 #include <boost/math/constants/constants.hpp>
@@ -516,5 +514,3 @@ private:
 } // namespace Euclid
 
 #include "src/Rasterizer.cpp"
-
-#endif
