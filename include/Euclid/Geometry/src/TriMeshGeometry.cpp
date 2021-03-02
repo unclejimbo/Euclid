@@ -448,7 +448,6 @@ Eigen::SparseMatrix<FT_t<Mesh>> cotangent_matrix(const Mesh& mesh)
 {
     using T = FT_t<Mesh>;
     using Triplet = Eigen::Triplet<T>;
-    auto vpmap = get(boost::vertex_point, mesh);
     auto vimap = get(boost::vertex_index, mesh);
     const auto nv = num_vertices(mesh);
 

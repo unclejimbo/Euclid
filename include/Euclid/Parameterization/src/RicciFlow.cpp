@@ -534,9 +534,9 @@ template<typename VertexUVMap,
 CGAL::Surface_mesh_parameterization::Error_code
 Ricci_flow_parameterizer3<Mesh, SEM, SVM>::parameterize(
     TriangleMesh& mesh,
-    halfedge_descriptor bhd,
+    halfedge_descriptor,
     VertexUVMap uvmap,
-    VertexIndexMap vimap,
+    VertexIndexMap,
     VertexParameterizedMap vpmap)
 {
     auto status = ricci_flow(_underlying_mesh, _vrpm, _ewpm, _vcpm, _settings);

@@ -91,7 +91,7 @@ void read_off(const std::string& filename,
                 throw std::runtime_error(err);
             }
 
-            for (size_t j = 0; j < N; ++j) {
+            for (int j = 0; j < N; ++j) {
                 auto idx = std::stoul(std::string(words[j + 1]));
                 (*findices)[N * i + j] = static_cast<IT>(idx);
             }
@@ -151,7 +151,7 @@ void write_off(const std::string& filename,
         for (size_t i = 0; i < nfaces; ++i) {
             stream << N << " ";
 
-            for (size_t j = 0; j < N; ++j) {
+            for (int j = 0; j < N; ++j) {
                 stream << (*findices)[N * i + j] << " ";
             }
 

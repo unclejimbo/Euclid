@@ -89,7 +89,7 @@ VertexChains<Mesh> greedy_homology_generators(const Mesh& mesh, double accept)
     });
 
     VertexChains<Mesh> generators;
-    const auto two_g = genus(mesh) * 2;
+    const size_t two_g = static_cast<size_t>(genus(mesh) * 2);
     _impl::EdgeSet<Mesh> added;
     for (const auto& l : loops) {
         _impl::EdgeSet<Mesh> running;

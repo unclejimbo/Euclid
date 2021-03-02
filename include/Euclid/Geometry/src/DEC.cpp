@@ -26,7 +26,6 @@ void d0(const Mesh& mesh, Eigen::SparseMatrix<T>& op)
 {
     using Triplet = Eigen::Triplet<T>;
     using Triplets = std::vector<Triplet>;
-    using SpMat = Eigen::SparseMatrix<T>;
     auto vimap = get(boost::vertex_index, mesh);
     auto eimap = get(boost::edge_index, mesh);
 
@@ -52,7 +51,6 @@ void d1(const Mesh& mesh, Eigen::SparseMatrix<T>& op)
 {
     using Triplet = Eigen::Triplet<T>;
     using Triplets = std::vector<Triplet>;
-    using SpMat = Eigen::SparseMatrix<T>;
     auto eimap = get(boost::edge_index, mesh);
     auto fimap = get(boost::face_index, mesh);
 
@@ -114,7 +112,6 @@ void star_wedge1(const Mesh& mesh,
     assert(w1.rows() == w2.rows());
     assert(w1.cols() == 1);
     assert(w2.cols() == 1);
-    using T = typename DerivedC::Scalar;
     auto eimap = get(boost::edge_index, mesh);
     auto fimap = get(boost::face_index, mesh);
 
@@ -124,7 +121,6 @@ void star_wedge1(const Mesh& mesh,
         for (auto h : halfedges_around_face(halfedge(f, mesh), mesh)) {
             auto e = edge(h, mesh);
             auto eidx = get(eimap, e);
-            auto sign = halfedge_orientation(mesh, h);
             s += w1(eidx) * w2(eidx) * cotangent_weight(e, mesh);
         }
         result(get(fimap, f), 0) = s * 0.5;

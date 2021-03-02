@@ -245,9 +245,9 @@ template<typename VertexUVMap,
 CGAL::Surface_mesh_parameterization::Error_code
 Holomorphic_one_forms_parameterizer3<Mesh, SEM, SVM>::parameterize(
     TriangleMesh& mesh,
-    halfedge_descriptor bhd,
+    halfedge_descriptor,
     VertexUVMap uvmap,
-    VertexIndexMap vimap,
+    VertexIndexMap,
     VertexParameterizedMap vpmap)
 {
     _impl::integrate_holomorphic_one_forms(
