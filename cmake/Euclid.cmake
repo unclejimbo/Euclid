@@ -50,6 +50,12 @@ if(EUCLID_USE_VULKAN)
     target_link_libraries(Euclid INTERFACE Vulkan::Vulkan)
 endif()
 
+option(EUCLID_USE_TTK "Use ttk" ON)
+if(EUCLID_USE_TTK)
+    find_package(TTKBase CONFIG REQUIRED)
+    target_link_libraries(Euclid INTERFACE ttk::base::baseAll)
+endif()
+
 option(EUCLID_USE_CEREAL "Use cereal" ON)
 if(EUCLID_USE_CEREAL)
     find_package(cereal CONFIG REQUIRED)

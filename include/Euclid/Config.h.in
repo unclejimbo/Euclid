@@ -4,6 +4,7 @@
 #cmakedefine EUCLID_USE_LIBIGL
 #cmakedefine EUCLID_USE_EMBREE
 #cmakedefine EUCLID_USE_VULKAN
+#cmakedefine EUCLID_USE_TTK
 #cmakedefine EUCLID_USE_CEREAL
 #cmakedefine EUCLID_USE_BLAS
 #cmakedefine EUCLID_USE_LAPACK
