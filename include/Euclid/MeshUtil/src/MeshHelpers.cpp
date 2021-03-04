@@ -46,7 +46,7 @@ std::pair<halfedge_t<Mesh>, halfedge_t<Mesh>> find_common_edge(const Mesh& mesh,
 {
     for (auto h1 : CGAL::halfedges_around_face(halfedge(f1, mesh), mesh)) {
         if (face(opposite(h1, mesh), mesh) == f2) {
-            auto h2 = halfedge(f2, mesh);
+            auto h2 = opposite(h1, mesh);
             return std::make_pair(h1, h2);
         }
     }
