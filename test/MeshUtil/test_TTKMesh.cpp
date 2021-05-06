@@ -16,11 +16,15 @@ TEST_CASE("MeshUtil, TTKMesh", "[meshutil][ttkmesh]")
     fin.append("bunny.off");
     Euclid::read_off<3>(fin, positions, nullptr, &indices, nullptr);
 
-    std::vector<long long> cells;
-    Euclid::make_cells(cells, indices, 3);
-
     ttk::ExplicitTriangulation mesh;
-    Euclid::make_mesh(mesh, positions, cells);
+#ifdef TTK_CELL_ARRAY_NEW
+    std::vector<long long> connectivity;
+    std::vector<long long> offset;
+    Euclid::make_mesh(mesh, connectivity, offset, positions, indices);
+#else
+    std::vector<long long> cells;
+    Euclid::make_mesh(mesh, cells, positions, indices);
+#endif
 
     ttk::ScalarFieldSmoother smoother;
     smoother.preconditionTriangulation(&mesh);
@@ -30,14 +34,10 @@ TEST_CASE("MeshUtil, TTKMesh", "[meshutil][ttkmesh]")
     smoother.smooth<double>(&mesh, 3);
 
     std::vector<double> smooth_positions;
-    std::vector<long long> smooth_cells;
-    Euclid::extract_mesh(mesh, smooth_positions, smooth_cells);
-
     std::vector<unsigned> smooth_indices;
-    Euclid::extract_cells(smooth_indices, smooth_cells);
+    Euclid::extract_mesh(mesh, smooth_positions, smooth_indices);
 
     REQUIRE(smooth_positions.size() == positions.size());
-    REQUIRE(smooth_cells.size() == cells.size());
     REQUIRE(smooth_indices.size() == indices.size());
 
     std::string fout(TMP_DIR);
