@@ -54,6 +54,8 @@ option(EUCLID_USE_TTK "Use ttk" ON)
 if(EUCLID_USE_TTK)
     find_package(TTKBase CONFIG REQUIRED)
     target_link_libraries(Euclid INTERFACE ttk::base::baseAll)
+    set_target_properties(ttk::base::dijkstra PROPERTIES INTERFACE_COMPILE_OPTIONS "")
+    set_target_properties(ttk::base::rangeMinimumQuery PROPERTIES INTERFACE_COMPILE_OPTIONS "")
 endif()
 
 option(EUCLID_USE_CEREAL "Use cereal" ON)
