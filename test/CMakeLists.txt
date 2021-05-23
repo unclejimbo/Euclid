@@ -27,6 +27,7 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/MeshUtil/test_TTKMesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Parameterization/test_HolomorphicOneForms.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Parameterization/test_RicciFlow.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Parameterization/test_SCP.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Parameterization/test_SeamMesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Render/test_Rasterizer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Render/test_RayTracer.cpp
