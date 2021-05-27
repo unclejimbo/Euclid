@@ -19,7 +19,6 @@ Vector_3_t<Mesh> vertex_normal(vertex_t<Mesh> v,
                                const Mesh& mesh,
                                const VertexNormal& weight)
 {
-    auto vpmap = get(boost::vertex_point, mesh);
     Vector_3_t<Mesh> normal(0.0, 0.0, 0.0);
     for (auto he : CGAL::halfedges_around_source(v, mesh)) {
         if (!CGAL::is_border(he, mesh)) {
@@ -34,16 +33,7 @@ Vector_3_t<Mesh> vertex_normal(vertex_t<Mesh> v,
                 normal += area * fn;
             }
             else { // incident_angle
-                auto he_next = next(he, mesh);
-                auto t = target(he, mesh);
-                auto s1 = source(he, mesh);
-                auto s2 = target(he_next, mesh);
-                auto pt = get(vpmap, t);
-                auto ps1 = get(vpmap, s1);
-                auto ps2 = get(vpmap, s2);
-                auto vec1 = normalized(ps1 - pt);
-                auto vec2 = normalized(ps2 - pt);
-                auto angle = std::acos(vec1 * vec2);
+                auto angle = corner_angle(he, mesh);
                 normal += angle * fn;
             }
         }
@@ -58,7 +48,6 @@ Vector_3_t<Mesh> vertex_normal(
     const std::vector<Vector_3_t<Mesh>>& face_normals,
     const VertexNormal& weight)
 {
-    auto vpmap = get(boost::vertex_point, mesh);
     auto fimap = get(boost::face_index, mesh);
     Vector_3_t<Mesh> normal(0.0, 0.0, 0.0);
     for (auto he : CGAL::halfedges_around_source(v, mesh)) {
@@ -75,16 +64,7 @@ Vector_3_t<Mesh> vertex_normal(
                 normal += area * fn;
             }
             else { // incident_angle
-                auto he_next = next(he, mesh);
-                auto t = target(he, mesh);
-                auto s1 = source(he, mesh);
-                auto s2 = target(he_next, mesh);
-                auto pt = get(vpmap, t);
-                auto ps1 = get(vpmap, s1);
-                auto ps2 = get(vpmap, s2);
-                auto vec1 = normalized(ps1 - pt);
-                auto vec2 = normalized(ps2 - pt);
-                auto angle = std::acos(vec1 * vec2);
+                auto angle = corner_angle(he, mesh);
                 normal += angle * fn;
             }
         }
@@ -263,6 +243,16 @@ std::vector<FT_t<Mesh>> squared_edge_lengths(const Mesh& mesh)
 }
 
 template<typename Mesh>
+FT_t<Mesh> corner_angle(halfedge_t<Mesh> h, const Mesh& mesh)
+{
+    auto vpmap = get(boost::vertex_point, mesh);
+    auto p1 = get(vpmap, source(h, mesh));
+    auto p2 = get(vpmap, target(h, mesh));
+    auto p3 = get(vpmap, target(next(h, mesh), mesh));
+    return CGAL::approximate_angle(p1, p2, p3);
+}
+
+template<typename Mesh>
 Vector_3_t<Mesh> face_normal(face_t<Mesh> f, const Mesh& mesh)
 {
     using Vector_3 = Vector_3_t<Mesh>;
@@ -341,15 +331,10 @@ std::vector<Point_3_t<Mesh>> barycenters(const Mesh& mesh)
 template<typename Mesh>
 FT_t<Mesh> gaussian_curvature(vertex_t<Mesh> v, const Mesh& mesh)
 {
-    auto vpmap = get(boost::vertex_point, mesh);
-
     auto angle_defect = boost::math::constants::two_pi<FT_t<Mesh>>();
     for (auto he : CGAL::halfedges_around_target(v, mesh)) {
         if (!CGAL::is_border(he, mesh)) {
-            auto vp = source(he, mesh);
-            auto vq = target(next(he, mesh), mesh);
-            angle_defect -= std::acos(
-                cosine(get(vpmap, vp), get(vpmap, v), get(vpmap, vq)));
+            angle_defect -= corner_angle(he, mesh);
         }
     }
     return angle_defect / vertex_area(v, mesh);
@@ -433,7 +418,7 @@ FT_t<Mesh> cotangent_weight(halfedge_t<Mesh> he, const Mesh& mesh)
     auto vb = target(next(opposite(he, mesh), mesh), mesh);
     auto cota = cotangent(get(vpmap, vi), get(vpmap, va), get(vpmap, vj));
     auto cotb = cotangent(get(vpmap, vi), get(vpmap, vb), get(vpmap, vj));
-    return static_cast<FT_t<Mesh>>((cota + cotb) * 1.5);
+    return static_cast<FT_t<Mesh>>((cota + cotb) * 0.5);
 }
 
 template<typename Mesh>

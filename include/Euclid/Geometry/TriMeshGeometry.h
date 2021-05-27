@@ -201,6 +201,12 @@ FT_t<Mesh> squared_edge_length(edge_t<Mesh> e, const Mesh& mesh);
 template<typename Mesh>
 std::vector<FT_t<Mesh>> squared_edge_lengths(const Mesh& mesh);
 
+/**Corner angle.
+ *
+ */
+template<typename Mesh>
+FT_t<Mesh> corner_angle(halfedge_t<Mesh> h, const Mesh& mesh);
+
 /** Normal of a face on the mesh.
  *
  */
