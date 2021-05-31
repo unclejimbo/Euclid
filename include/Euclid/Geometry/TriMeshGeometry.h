@@ -201,6 +201,12 @@ FT_t<Mesh> squared_edge_length(edge_t<Mesh> e, const Mesh& mesh);
 template<typename Mesh>
 std::vector<FT_t<Mesh>> squared_edge_lengths(const Mesh& mesh);
 
+/**Dihedral angle between adjacent faces.
+ *
+ */
+template<typename Mesh>
+FT_t<Mesh> dihedral_angle(edge_t<Mesh> e, const Mesh& mesh);
+
 /**Corner angle.
  *
  */

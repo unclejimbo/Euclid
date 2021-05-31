@@ -65,19 +65,11 @@ typename Kernel::FT sine(const CGAL::Vector_3<Kernel>& v1,
                          const CGAL::Vector_3<Kernel>& v2)
 {
     using FT = typename Kernel::FT;
-    FT sin = 0.0;
     auto l1 = length(v1);
     auto l2 = length(v2);
-    if (!Euclid::eq_abs_err(l1,
-                            static_cast<FT>(0.0),
-                            std::numeric_limits<FT>::epsilon() * 10) &&
-        !Euclid::eq_abs_err(l2,
-                            static_cast<FT>(0.0),
-                            std::numeric_limits<FT>::epsilon() * 10)) {
-        auto outer_prod = CGAL::cross_product(v1, v2);
-        sin = std::min(length(outer_prod) / (l1 * l2), static_cast<FT>(1.0));
-    }
-    return sin;
+    auto outer_prod = CGAL::cross_product(v1, v2);
+    auto sin = length(outer_prod) / (l1 * l2 + static_cast<FT>(1e-10));
+    return std::clamp(sin, static_cast<FT>(-1.0), static_cast<FT>(1.0));
 }
 
 template<typename Kernel>
@@ -93,19 +85,10 @@ typename Kernel::FT cosine(const CGAL::Vector_3<Kernel>& v1,
                            const CGAL::Vector_3<Kernel>& v2)
 {
     using FT = typename Kernel::FT;
-    FT cos = 1.0;
     auto l1 = length(v1);
     auto l2 = length(v2);
-    if (!Euclid::eq_abs_err(l1,
-                            static_cast<FT>(0.0),
-                            std::numeric_limits<FT>::epsilon() * 10) &&
-        !Euclid::eq_abs_err(l2,
-                            static_cast<FT>(0.0),
-                            std::numeric_limits<FT>::epsilon() * 10)) {
-        cos = v1 * v2 / (l1 * l2);
-        cos = std::clamp(cos, static_cast<FT>(-1.0), static_cast<FT>(1.0));
-    }
-    return cos;
+    auto cos = v1 * v2 / (l1 * l2 + static_cast<FT>(1e-10));
+    return std::clamp(cos, static_cast<FT>(-1.0), static_cast<FT>(1.0));
 }
 
 template<typename Kernel>
@@ -121,26 +104,8 @@ typename Kernel::FT tangent(const CGAL::Vector_3<Kernel>& v1,
                             const CGAL::Vector_3<Kernel>& v2)
 {
     using FT = typename Kernel::FT;
-    FT tan = 0.0;
-    auto l1 = v1.squared_length();
-    auto l2 = v2.squared_length();
-    if (!Euclid::eq_abs_err(l1,
-                            static_cast<FT>(0.0),
-                            std::numeric_limits<FT>::epsilon() * 10) &&
-        !Euclid::eq_abs_err(l2,
-                            static_cast<FT>(0.0),
-                            std::numeric_limits<FT>::epsilon() * 10)) {
-        auto inner_prod = v1 * v2;
-        auto squared_cos = inner_prod * inner_prod / (l1 * l2);
-        squared_cos = std::min(squared_cos, static_cast<FT>(1.0));
-        tan =
-            Euclid::eq_abs_err(squared_cos,
-                               static_cast<FT>(0.0),
-                               std::numeric_limits<FT>::epsilon() * 10)
-                ? NAN
-                : std::sqrt((static_cast<FT>(1.0) - squared_cos) / squared_cos);
-        tan = inner_prod < 0.0 ? -tan : tan;
-    }
+    auto tan = Euclid::length(CGAL::cross_product(v1, v2)) /
+               ((v1 * v2) + static_cast<FT>(1e-10));
     return tan;
 }
 
@@ -157,24 +122,8 @@ typename Kernel::FT cotangent(const CGAL::Vector_3<Kernel>& v1,
                               const CGAL::Vector_3<Kernel>& v2)
 {
     using FT = typename Kernel::FT;
-    FT cot = NAN;
-    auto l1 = v1.squared_length();
-    auto l2 = v2.squared_length();
-    if (!Euclid::eq_abs_err(l1,
-                            static_cast<FT>(0.0),
-                            std::numeric_limits<FT>::epsilon() * 10) &&
-        !Euclid::eq_abs_err(l2,
-                            static_cast<FT>(0.0),
-                            std::numeric_limits<FT>::epsilon() * 10)) {
-        auto inner_prod = v1 * v2;
-        auto squared_cos = inner_prod * inner_prod / (l1 * l2);
-        squared_cos = std::min(squared_cos, static_cast<FT>(1.0));
-        cot =
-            Euclid::eq_almost(squared_cos, static_cast<FT>(1.0))
-                ? NAN
-                : std::sqrt(squared_cos / (static_cast<FT>(1.0) - squared_cos));
-        cot = inner_prod < 0.0 ? -cot : cot;
-    }
+    auto cot = (v1 * v2) / (Euclid::length(CGAL::cross_product(v1, v2)) +
+                            static_cast<FT>(1e-10));
     return cot;
 }
 

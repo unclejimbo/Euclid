@@ -78,68 +78,60 @@ TEST_CASE("Math, Vector", "[math][vector]")
 
     SECTION("sine")
     {
-        REQUIRE(Euclid::sine(p1d, p1d, p1d) == 0.0);
-        REQUIRE(Euclid::sine(p2d, p1d, p3d) == 0.0);
-        REQUIRE(Euclid::sine(p2d, p1d, p4d) == 1.0);
-        REQUIRE(Euclid::sine(p2d, p1d, p5d) == 0.0);
+        REQUIRE(Euclid::sine(p1d, p1d, p1d) == Approx(0.0));
+        REQUIRE(Euclid::sine(p2d, p1d, p3d) == Approx(0.0));
+        REQUIRE(Euclid::sine(p2d, p1d, p4d) == Approx(1.0));
+        REQUIRE(Euclid::sine(p2d, p1d, p5d) == Approx(0.0));
         REQUIRE(Euclid::sine(p2d, p1d, p6d) == Approx(sqrt2_2));
         REQUIRE(Euclid::sine(p2d, p1d, p7d) == Approx(sqrt2_2));
 
-        REQUIRE(Euclid::sine(p1f, p1f, p1f) == 0.0f);
-        REQUIRE(Euclid::sine(p2f, p1f, p3f) == 0.0f);
-        REQUIRE(Euclid::sine(p2f, p1f, p4f) == 1.0f);
-        REQUIRE(Euclid::sine(p2f, p1f, p5f) == 0.0f);
+        REQUIRE(Euclid::sine(p1f, p1f, p1f) == Approx(0.0f));
+        REQUIRE(Euclid::sine(p2f, p1f, p3f) == Approx(0.0f));
+        REQUIRE(Euclid::sine(p2f, p1f, p4f) == Approx(1.0f));
+        REQUIRE(Euclid::sine(p2f, p1f, p5f) == Approx(0.0f));
         REQUIRE(Euclid::sine(p2f, p1f, p6f) == Approx(sqrt2_2));
         REQUIRE(Euclid::sine(p2f, p1f, p7f) == Approx(sqrt2_2));
     }
 
     SECTION("cosine")
     {
-        REQUIRE(Euclid::cosine(p1d, p1d, p1d) == 1.0);
-        REQUIRE(Euclid::cosine(p2d, p1d, p3d) == 1.0);
-        REQUIRE(Euclid::cosine(p2d, p1d, p4d) == 0.0);
-        REQUIRE(Euclid::cosine(p2d, p1d, p5d) == -1.0);
+        REQUIRE(Euclid::cosine(p1d, p1d, p1d) == Approx(0.0));
+        REQUIRE(Euclid::cosine(p2d, p1d, p3d) == Approx(1.0));
+        REQUIRE(Euclid::cosine(p2d, p1d, p4d) == Approx(0.0));
+        REQUIRE(Euclid::cosine(p2d, p1d, p5d) == Approx(-1.0));
         REQUIRE(Euclid::cosine(p2d, p1d, p6d) == Approx(sqrt2_2));
         REQUIRE(Euclid::cosine(p2d, p1d, p7d) == Approx(-sqrt2_2));
 
-        REQUIRE(Euclid::cosine(p1f, p1f, p1f) == 1.0f);
-        REQUIRE(Euclid::cosine(p2f, p1f, p3f) == 1.0f);
-        REQUIRE(Euclid::cosine(p2f, p1f, p4f) == 0.0f);
-        REQUIRE(Euclid::cosine(p2f, p1f, p5f) == -1.0f);
+        REQUIRE(Euclid::cosine(p1f, p1f, p1f) == Approx(0.0f));
+        REQUIRE(Euclid::cosine(p2f, p1f, p3f) == Approx(1.0f));
+        REQUIRE(Euclid::cosine(p2f, p1f, p4f) == Approx(0.0f));
+        REQUIRE(Euclid::cosine(p2f, p1f, p5f) == Approx(-1.0f));
         REQUIRE(Euclid::cosine(p2f, p1f, p6f) == Approx(sqrt2_2));
         REQUIRE(Euclid::cosine(p2f, p1f, p7f) == Approx(-sqrt2_2));
     }
 
     SECTION("tangent")
     {
-        REQUIRE(Euclid::tangent(p1d, p1d, p1d) == 0.0);
-        REQUIRE(Euclid::tangent(p2d, p1d, p3d) == 0.0);
-        REQUIRE(std::isnan(Euclid::tangent(p2d, p1d, p4d)));
-        REQUIRE(Euclid::tangent(p2d, p1d, p5d) == 0.0);
+        REQUIRE(Euclid::tangent(p1d, p1d, p1d) == Approx(0.0));
+        REQUIRE(Euclid::tangent(p2d, p1d, p3d) == Approx(0.0));
+        REQUIRE(Euclid::tangent(p2d, p1d, p5d) == Approx(0.0));
         REQUIRE(Euclid::tangent(p2d, p1d, p6d) == Approx(1.0));
         REQUIRE(Euclid::tangent(p2d, p1d, p7d) == Approx(-1.0));
 
-        REQUIRE(Euclid::tangent(p1f, p1f, p1f) == 0.0f);
-        REQUIRE(Euclid::tangent(p2f, p1f, p3f) == 0.0f);
-        REQUIRE(std::isnan(Euclid::tangent(p2f, p1f, p4f)));
-        REQUIRE(Euclid::tangent(p2f, p1f, p5f) == 0.0f);
+        REQUIRE(Euclid::tangent(p1f, p1f, p1f) == Approx(0.0f));
+        REQUIRE(Euclid::tangent(p2f, p1f, p3f) == Approx(0.0f));
+        REQUIRE(Euclid::tangent(p2f, p1f, p5f) == Approx(0.0f));
         REQUIRE(Euclid::tangent(p2f, p1f, p6f) == Approx(1.0));
         REQUIRE(Euclid::tangent(p2f, p1f, p7f) == Approx(-1.0));
     }
 
     SECTION("cotangent")
     {
-        REQUIRE(isnan(Euclid::cotangent(p1d, p1d, p1d)));
-        REQUIRE(isnan(Euclid::cotangent(p2d, p1d, p3d)));
-        REQUIRE(Euclid::cotangent(p2d, p1d, p4d) == 0.0);
-        REQUIRE(isnan(Euclid::cotangent(p2d, p1d, p5d)));
+        REQUIRE(Euclid::cotangent(p2d, p1d, p4d) == Approx(0.0));
         REQUIRE(Euclid::cotangent(p2d, p1d, p6d) == Approx(1.0));
         REQUIRE(Euclid::cotangent(p2d, p1d, p7d) == Approx(-1.0));
 
-        REQUIRE(isnan(Euclid::cotangent(p1f, p1f, p1f)));
-        REQUIRE(isnan(Euclid::cotangent(p2f, p1f, p3f)));
-        REQUIRE(Euclid::cotangent(p2f, p1f, p4f) == 0.0f);
-        REQUIRE(isnan(Euclid::cotangent(p2f, p1f, p5f)));
+        REQUIRE(Euclid::cotangent(p2f, p1f, p4f) == Approx(0.0f));
         REQUIRE(Euclid::cotangent(p2f, p1f, p6f) == Approx(1.0f));
         REQUIRE(Euclid::cotangent(p2f, p1f, p7f) == Approx(-1.0f));
     }

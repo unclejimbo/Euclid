@@ -243,6 +243,19 @@ std::vector<FT_t<Mesh>> squared_edge_lengths(const Mesh& mesh)
 }
 
 template<typename Mesh>
+FT_t<Mesh> dihedral_angle(edge_t<Mesh> e, const Mesh& mesh)
+{
+    auto h1 = halfedge(e, mesh);
+    auto h2 = opposite(h1, mesh);
+    auto f1 = face(h1, mesh);
+    auto f2 = face(h2, mesh);
+    auto n1 = face_normal(f1, mesh);
+    auto n2 = face_normal(f2, mesh);
+    return boost::math::constants::two_pi<FT_t<Mesh>>() -
+           std::acos(cosine(n1, n2));
+}
+
+template<typename Mesh>
 FT_t<Mesh> corner_angle(halfedge_t<Mesh> h, const Mesh& mesh)
 {
     auto vpmap = get(boost::vertex_point, mesh);
@@ -416,9 +429,13 @@ FT_t<Mesh> cotangent_weight(halfedge_t<Mesh> he, const Mesh& mesh)
     auto vj = target(he, mesh);
     auto va = target(next(he, mesh), mesh);
     auto vb = target(next(opposite(he, mesh), mesh), mesh);
-    auto cota = cotangent(get(vpmap, vi), get(vpmap, va), get(vpmap, vj));
-    auto cotb = cotangent(get(vpmap, vi), get(vpmap, vb), get(vpmap, vj));
-    return static_cast<FT_t<Mesh>>((cota + cotb) * 0.5);
+    auto pi = get(vpmap, vi);
+    auto pj = get(vpmap, vj);
+    auto pa = get(vpmap, va);
+    auto pb = get(vpmap, vb);
+    auto cota = cotangent(pi, pa, pj);
+    auto cotb = cotangent(pi, pb, pj);
+    return (cota + cotb) * static_cast<FT_t<Mesh>>(0.5);
 }
 
 template<typename Mesh>
