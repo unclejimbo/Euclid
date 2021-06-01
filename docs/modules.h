@@ -58,6 +58,12 @@
  * @defgroup PkgSegmentation Segmentation
  */
 
+/**Surface Delaunay.
+ * This package contains data structures and algorithms represent and compute
+ * Delaunay triangulations on surface meshes.
+ * @defgroup PkgSurfaceDelaunay Surface Delaunay.
+ */
+
 /**Topology.
  * This package provides topology related operations.
  * @defgroup PkgTopology Topology

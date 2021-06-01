@@ -251,8 +251,7 @@ FT_t<Mesh> dihedral_angle(edge_t<Mesh> e, const Mesh& mesh)
     auto f2 = face(h2, mesh);
     auto n1 = face_normal(f1, mesh);
     auto n2 = face_normal(f2, mesh);
-    return boost::math::constants::two_pi<FT_t<Mesh>>() -
-           std::acos(cosine(n1, n2));
+    return boost::math::constants::pi<FT_t<Mesh>>() - std::acos(cosine(n1, n2));
 }
 
 template<typename Mesh>

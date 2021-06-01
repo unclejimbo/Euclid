@@ -33,6 +33,7 @@ add_executable(run_test
     ${CMAKE_CURRENT_SOURCE_DIR}/Render/test_RayTracer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Render/test_RenderCore.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Segmentation/test_RandomWalk.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/SurfaceDelaunay/test_DelaunayMesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Topology/test_Chain.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Topology/test_MeshTopology.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Topology/test_HomologyGenerator.cpp
