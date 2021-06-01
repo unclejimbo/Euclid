@@ -3,9 +3,7 @@
 namespace Euclid
 {
 
-template<typename DerivedA,
-         typename DerivedB,
-         typename T = typename DerivedA::Scalar>
+template<typename DerivedA, typename DerivedB, typename T>
 T commute_time_distance(const Eigen::MatrixBase<DerivedA>& lambdas,
                         const Eigen::MatrixBase<DerivedB>& phis,
                         int x,
