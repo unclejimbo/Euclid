@@ -24,7 +24,7 @@ void set_input_cells(Triangulation& mesh,
 }
 #else
 template<typename Triangulation, typename IT>
-void set_input_cells(Triagulation& mesh,
+void set_input_cells(Triangulation& mesh,
                      std::vector<long long>& cells,
                      const std::vector<IT>& indices,
                      int n)
@@ -88,7 +88,7 @@ void make_mesh(Triangulation& mesh,
                const std::vector<IT>& indices)
 {
     mesh.setInputPoints(positions.size() / 3, positions.data(), true);
-    _impl::set_input_cells(mesh cells, indices, 3);
+    _impl::set_input_cells(mesh, cells, indices, 3);
 }
 
 #endif
