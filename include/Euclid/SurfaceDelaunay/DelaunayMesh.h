@@ -60,6 +60,72 @@ enum class RemeshDelaunayScheme
     FeaturePreserving,
 };
 
+/**The local mesh elements when splitting.
+ *
+ *     v             v
+ *    / \           /|\
+ *   /   \         / | \
+ *  p-----q ===>  p--s--q
+ *   \   /         \ | /
+ *    \ /           \|/
+ *     u             u
+ */
+template<typename Mesh>
+struct SplitSite
+{
+    edge_t<Mesh> epq;
+    vertex_t<Mesh> vs;
+    halfedge_t<Mesh> hps;
+    halfedge_t<Mesh> hqs;
+    halfedge_t<Mesh> hus;
+    halfedge_t<Mesh> hvs;
+};
+
+/**A dumb remesh delaunay visitor.
+ *
+ * Define your own visitor following this concept.
+ */
+template<typename Mesh>
+struct RemeshDelaunayVisitor
+{
+    /**Called before algorithm starts.
+     *
+     */
+    void on_started(Mesh&) {}
+
+    /**Called after algorithm finishes.
+     *
+     */
+    void on_finished(Mesh&) {}
+
+    /**Called before flipping an edge.
+     *
+     */
+    void on_flipping(Mesh&, const edge_t<Mesh>&) {}
+
+    /**Called after flipping an edge.
+     *
+     */
+    void on_flipped(Mesh&, const edge_t<Mesh>&) {}
+
+    /**Called if an edge is not flippable.
+     *
+     */
+    void on_nonflippable(Mesh&, const edge_t<Mesh>&) {}
+
+    /**Called before splitting an edge.
+     *
+     * Invalid for SimpleFlip scheme.
+     */
+    void on_splitting(Mesh&, const edge_t<Mesh>&) {}
+
+    /**Called after splitting an edge.
+     *
+     * Invalid for SimpleFlip scheme.
+     */
+    void on_split(Mesh&, const SplitSite<Mesh>&) {}
+};
+
 /**Remesh an arbitary mesh into Delaunay mesh.
  *
  * @param mesh Input mesh.
@@ -69,6 +135,20 @@ enum class RemeshDelaunayScheme
 template<typename Mesh>
 void remesh_delaunay(
     Mesh& mesh,
+    RemeshDelaunayScheme scheme = RemeshDelaunayScheme::SimpleFlip,
+    double dihedral_angle = 10.0);
+
+/**Remesh an arbitary mesh into Delaunay mesh.
+ *
+ * @param mesh Input mesh.
+ * @param visitor Remesh visitor.
+ * @param scheme Remesh scheme.
+ * @param dihedral_angle The threshold used for FeaturePreserving scheme.
+ */
+template<typename Mesh, typename Visitor>
+void remesh_delaunay(
+    Mesh& mesh,
+    Visitor& visitor,
     RemeshDelaunayScheme scheme = RemeshDelaunayScheme::SimpleFlip,
     double dihedral_angle = 10.0);
 

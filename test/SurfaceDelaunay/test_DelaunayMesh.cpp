@@ -8,6 +8,7 @@
 #include <CGAL/Surface_mesh.h>
 #include <Euclid/IO/OffIO.h>
 #include <Euclid/MeshUtil/CGALMesh.h>
+#include <Euclid/Util/Timer.h>
 
 #include <config.h>
 
@@ -16,8 +17,50 @@ using Point_3 = typename Kernel::Point_3;
 using Vector_3 = typename Kernel::Vector_3;
 using Mesh = CGAL::Surface_mesh<Point_3>;
 
+template<typename Mesh>
+class RemeshVisitor
+{
+public:
+    void on_started(Mesh&)
+    {
+        _nflipped = 0;
+        _nsplit = 0;
+        _timer.tick();
+    }
+
+    void on_finished(Mesh&)
+    {
+        auto t = _timer.tock();
+        std::cout << "Time used: " << t << " #flip: " << _nflipped
+                  << " #split: " << _nsplit << std::endl;
+    }
+
+    void on_flipping(Mesh&, const Euclid::edge_t<Mesh>&) {}
+
+    void on_flipped(Mesh&, const Euclid::edge_t<Mesh>&)
+    {
+        ++_nflipped;
+    }
+
+    void on_nonflippable(Mesh&, const Euclid::edge_t<Mesh>&) {}
+
+    void on_splitting(Mesh&, const Euclid::edge_t<Mesh>&) {}
+
+    void on_split(Mesh&, const Euclid::SplitSite<Mesh>&)
+    {
+        ++_nsplit;
+    }
+
+private:
+    Euclid::Timer _timer;
+    int _nflipped;
+    int _nsplit;
+};
+
 TEST_CASE("SurfaceDelaunay, DelaunayMesh", "[surfacedelaunay][delaunaymesh]")
 {
+    RemeshVisitor<Mesh> visitor;
+
     SECTION("a relatively good mesh")
     {
         std::string fmesh(DATA_DIR);
@@ -30,8 +73,8 @@ TEST_CASE("SurfaceDelaunay, DelaunayMesh", "[surfacedelaunay][delaunaymesh]")
 
         SECTION("simple flip")
         {
-            Euclid::remesh_delaunay(mesh,
-                                    Euclid::RemeshDelaunayScheme::SimpleFlip);
+            Euclid::remesh_delaunay(
+                mesh, visitor, Euclid::RemeshDelaunayScheme::SimpleFlip);
             REQUIRE(Euclid::is_delaunay(mesh));
 
             Euclid::extract_mesh<3>(mesh, positions, indices);
@@ -43,7 +86,9 @@ TEST_CASE("SurfaceDelaunay, DelaunayMesh", "[surfacedelaunay][delaunaymesh]")
         SECTION("geometry preserving")
         {
             Euclid::remesh_delaunay(
-                mesh, Euclid::RemeshDelaunayScheme::GeometryPreserving);
+                mesh,
+                visitor,
+                Euclid::RemeshDelaunayScheme::GeometryPreserving);
             REQUIRE(Euclid::is_delaunay(mesh));
 
             Euclid::extract_mesh<3>(mesh, positions, indices);
@@ -55,7 +100,7 @@ TEST_CASE("SurfaceDelaunay, DelaunayMesh", "[surfacedelaunay][delaunaymesh]")
         SECTION("feature preserving")
         {
             Euclid::remesh_delaunay(
-                mesh, Euclid::RemeshDelaunayScheme::FeaturePreserving);
+                mesh, visitor, Euclid::RemeshDelaunayScheme::FeaturePreserving);
             REQUIRE(Euclid::is_delaunay(mesh));
 
             Euclid::extract_mesh<3>(mesh, positions, indices);
@@ -77,8 +122,8 @@ TEST_CASE("SurfaceDelaunay, DelaunayMesh", "[surfacedelaunay][delaunaymesh]")
 
         SECTION("simple flip")
         {
-            Euclid::remesh_delaunay(mesh,
-                                    Euclid::RemeshDelaunayScheme::SimpleFlip);
+            Euclid::remesh_delaunay(
+                mesh, visitor, Euclid::RemeshDelaunayScheme::SimpleFlip);
             REQUIRE(!Euclid::is_delaunay(mesh));
 
             Euclid::extract_mesh<3>(mesh, positions, indices);
@@ -90,7 +135,9 @@ TEST_CASE("SurfaceDelaunay, DelaunayMesh", "[surfacedelaunay][delaunaymesh]")
         SECTION("geometry preserving")
         {
             Euclid::remesh_delaunay(
-                mesh, Euclid::RemeshDelaunayScheme::GeometryPreserving);
+                mesh,
+                visitor,
+                Euclid::RemeshDelaunayScheme::GeometryPreserving);
             REQUIRE(Euclid::is_delaunay(mesh));
 
             Euclid::extract_mesh<3>(mesh, positions, indices);
@@ -102,7 +149,10 @@ TEST_CASE("SurfaceDelaunay, DelaunayMesh", "[surfacedelaunay][delaunaymesh]")
         SECTION("feature preserving")
         {
             Euclid::remesh_delaunay(
-                mesh, Euclid::RemeshDelaunayScheme::FeaturePreserving, 20.0);
+                mesh,
+                visitor,
+                Euclid::RemeshDelaunayScheme::FeaturePreserving,
+                20.0);
             REQUIRE(Euclid::is_delaunay(mesh));
 
             Euclid::extract_mesh<3>(mesh, positions, indices);
