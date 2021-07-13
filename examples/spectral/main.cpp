@@ -116,13 +116,12 @@ int main()
     Vec lambdas_lbo, lambdas_gl;
     Mat phis_lbo, phis_gl;
     Euclid::spectrum(
-        mesh, k, lambdas_lbo, phis_lbo, Euclid::SpecOp::laplace_beltrami);
+        mesh, k, lambdas_lbo, phis_lbo, Euclid::SpecOp::mesh_laplacian);
     Euclid::spectrum(
         mesh, k, lambdas_gl, phis_gl, Euclid::SpecOp::graph_laplacian);
 
-    // gram-schmidt orthonormalisation
+    // eigenvectors of mesh laplacian need to be orthonormalized for recon
     phis_lbo = phis_lbo.householderQr().householderQ();
-    phis_gl = phis_gl.householderQr().householderQ();
 
     // output eigenfunctions to colors
     eigs_to_color("lbo", positions, indices, phis_lbo);
