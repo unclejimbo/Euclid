@@ -8,6 +8,7 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
 #include <Eigen/Core>
+#include <Euclid/Math/Numeric.h>
 #include <Euclid/MeshUtil/CGALMesh.h>
 #include <Euclid/IO/OffIO.h>
 
@@ -29,68 +30,44 @@ TEST_CASE("Geometry, Spectral", "[geometry][spectral]")
     Euclid::make_mesh<3>(mesh, positions, indices);
 
     int nv = positions.size() / 3;
-    unsigned k = 30;
-    double norm = Eigen::VectorXd::Ones(nv).normalized().norm();
+    unsigned k = 20;
+    Eigen::VectorXd lambdas1, lambdas2;
+    Eigen::MatrixXd phis1, phis2;
 
-    SECTION("Laplace-Beltrami")
-    {
-        Eigen::VectorXd lambdas1, lambdas2;
-        Eigen::MatrixXd phis1, phis2;
+    auto n1 = Euclid::spectrum(
+        mesh, k, lambdas1, phis1, Euclid::SpecOp::mesh_laplacian);
+    auto n2 = Euclid::spectrum(
+        mesh, k, lambdas2, phis2, Euclid::SpecOp::graph_laplacian);
 
-        // solve the symmetric matrix
-        auto n1 = Euclid::spectrum(mesh,
-                                   k,
-                                   lambdas1,
-                                   phis1,
-                                   Euclid::SpecOp::laplace_beltrami,
-                                   Euclid::SpecDecomp::symmetric);
+    // test size of outputs
+    REQUIRE(n1 == k);
+    REQUIRE(n2 == k);
+    REQUIRE(lambdas1.size() == k);
+    REQUIRE(lambdas2.size() == k);
+    REQUIRE(phis1.rows() == nv);
+    REQUIRE(phis1.cols() == k);
+    REQUIRE(phis2.rows() == nv);
+    REQUIRE(phis2.cols() == k);
 
-        // solve the generalized eigen problem
-        auto n2 = Euclid::spectrum(mesh,
-                                   k,
-                                   lambdas2,
-                                   phis2,
-                                   Euclid::SpecOp::laplace_beltrami,
-                                   Euclid::SpecDecomp::generalized);
+    // the first eigenvalue shoule be 0
+    REQUIRE(Euclid::eq_abs_err(lambdas1(0), 0.0, 1e-14));
+    REQUIRE(Euclid::eq_abs_err(lambdas2(0), 0.0, 1e-14));
 
-        REQUIRE(n1 == k);
-        REQUIRE(n2 == k);
-        REQUIRE(lambdas1.size() == k);
-        REQUIRE(lambdas1(k - 1) == Approx(lambdas2(k - 1)).epsilon(0.05));
-        REQUIRE(phis1.rows() == nv);
-        REQUIRE(phis1.cols() == k);
-        REQUIRE(phis1.col(0).normalized().norm() == Approx(norm));
-        REQUIRE(phis2.col(0).normalized().norm() == Approx(norm));
-    }
+    // the first eigenvector should be ones, but need to be scaled though,
+    // so we only test if the entries are equal
+    REQUIRE(Euclid::eq_abs_err(
+        phis1.col(0).maxCoeff(), phis1.col(0).minCoeff(), 1e-14));
+    REQUIRE(Euclid::eq_abs_err(
+        phis2.col(0).maxCoeff(), phis2.col(0).minCoeff(), 1e-14));
 
-    SECTION("graph Laplacian")
-    {
-        Eigen::VectorXd lambdas1, lambdas2;
-        Eigen::MatrixXd phis1, phis2;
+    // eigenvectors of the mesh laplacian are orthogonal wrt mass weighted
+    // inner product
+    auto D = Euclid::mass_matrix(mesh);
+    auto dot = (phis1.col(1).transpose() * D * phis1.col(10))(0);
+    REQUIRE(Euclid::eq_abs_err(dot, 0.0, 1e-14));
 
-        // solve the symmetric matrix
-        auto n1 = Euclid::spectrum(mesh,
-                                   k,
-                                   lambdas1,
-                                   phis1,
-                                   Euclid::SpecOp::graph_laplacian,
-                                   Euclid::SpecDecomp::symmetric);
-
-        // solve the generalized eigen problem
-        auto n2 = Euclid::spectrum(mesh,
-                                   k,
-                                   lambdas2,
-                                   phis2,
-                                   Euclid::SpecOp::graph_laplacian,
-                                   Euclid::SpecDecomp::generalized);
-
-        REQUIRE(n1 == k);
-        REQUIRE(n2 == k);
-        REQUIRE(lambdas1.size() == k);
-        REQUIRE(lambdas1(k - 1) == Approx(lambdas2(k - 1)).epsilon(0.05));
-        REQUIRE(phis1.rows() == nv);
-        REQUIRE(phis1.cols() == k);
-        REQUIRE(phis1.col(0).normalized().norm() == Approx(norm));
-        REQUIRE(phis2.col(0).normalized().norm() == Approx(norm));
-    }
+    // eigenvectors of the graph laplacian are orthonormal
+    REQUIRE(Euclid::eq_abs_err(phis2.col(1).dot(phis2.col(10)), 0.0, 1e-14));
+    REQUIRE(
+        Euclid::eq_abs_err(phis2.col(1).norm(), phis2.col(10).norm(), 1e-14));
 }

@@ -28,7 +28,7 @@ target_link_libraries(Euclid INTERFACE Eigen3::Eigen)
 # headers requiring these packages will be automatically disabled if dependencies are not set
 option(EUCLID_USE_SPECTRA "Use Spectra" ON)
 if(EUCLID_USE_SPECTRA)
-    find_package(Spectra REQUIRED)
+    find_package(Spectra REQUIRED 1.0)
     target_include_directories(Euclid INTERFACE ${Spectra_INCLUDE_DIRS})
 endif()
 

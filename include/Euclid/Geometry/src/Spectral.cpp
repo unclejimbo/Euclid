@@ -4,11 +4,11 @@
 #include <Eigen/SparseCore>
 #include <Euclid/Geometry/TriMeshGeometry.h>
 #include <Euclid/Util/Assert.h>
-#include <Spectra/MatOp/SparseCholesky.h>
 #include <Spectra/MatOp/SparseSymMatProd.h>
 #include <Spectra/MatOp/SparseSymShiftSolve.h>
+#include <Spectra/MatOp/SymShiftInvert.h>
 #include <Spectra/SymEigsShiftSolver.h>
-#include <Spectra/SymGEigsSolver.h>
+#include <Spectra/SymGEigsShiftSolver.h>
 
 namespace Euclid
 {
@@ -16,27 +16,8 @@ namespace Euclid
 namespace _impl
 {
 
-template<typename Mesh, typename T>
-void get_mat(const Mesh& mesh,
-             SpecOp op,
-             Eigen::SparseMatrix<T>& S,
-             Eigen::SparseMatrix<T>& D)
-{
-    if (op == SpecOp::laplace_beltrami) {
-        S = Euclid::cotangent_matrix(mesh);
-        D = Euclid::mass_matrix(mesh);
-    }
-    else {
-        auto result = Euclid::adjacency_matrix(mesh);
-        auto A = std::get<0>(result);
-        D = std::get<1>(result);
-        S = D - A;
-    }
-}
-
 template<typename T, typename DerivedA, typename DerivedB>
-unsigned sym_solve(const Eigen::SparseMatrix<T>& S,
-                   const Eigen::SparseMatrix<T>& D,
+unsigned sym_solve(const Eigen::SparseMatrix<T>& L,
                    int k,
                    int nv,
                    unsigned max_iter,
@@ -44,26 +25,22 @@ unsigned sym_solve(const Eigen::SparseMatrix<T>& S,
                    Eigen::MatrixBase<DerivedA>& lambdas,
                    Eigen::MatrixBase<DerivedB>& phis)
 {
-    Eigen::SparseMatrix<T> B =
-        D.unaryExpr([](T v) { return v == 0 ? 0 : 1 / std::sqrt(v); });
-    Eigen::SparseMatrix<T> L = B * S * B;
-
     // use shift-invert mode to get the smallest eigenvalues fast
     auto convergence = std::min(2 * k + 1, nv);
-    Spectra::SparseSymShiftSolve<T> op(L);
-    Spectra::SymEigsShiftSolver<T,
-                                Spectra::LARGEST_MAGN,
-                                Spectra::SparseSymShiftSolve<T>>
-        eigensolver(&op, k, convergence, 0.0f);
+    using Operator = Spectra::SparseSymShiftSolve<T>;
+    using Solver = Spectra::SymEigsShiftSolver<Operator>;
+    Operator op(L);
+    Solver eigensolver(op, k, convergence, -1.0);
     eigensolver.init();
-    unsigned n = eigensolver.compute(
-        max_iter, static_cast<T>(tolerance), Spectra::SMALLEST_MAGN);
-    if (eigensolver.info() != Spectra::SUCCESSFUL) {
-        throw std::runtime_error(
-            "Unable to compute eigen values of the Laplacian matrix.");
+    unsigned n = eigensolver.compute(Spectra::SortRule::LargestMagn,
+                                     max_iter,
+                                     static_cast<T>(tolerance),
+                                     Spectra::SortRule::SmallestMagn);
+    if (eigensolver.info() != Spectra::CompInfo::Successful) {
+        throw std::runtime_error("Eigen decomposition failed.");
     }
     lambdas = eigensolver.eigenvalues();
-    phis = B * eigensolver.eigenvectors();
+    phis = eigensolver.eigenvectors();
     return n;
 }
 
@@ -78,20 +55,22 @@ unsigned gen_solve(const Eigen::SparseMatrix<T>& S,
                    Eigen::MatrixBase<DerivedB>& phis)
 {
     int convergence = std::min(2 * k + 1, nv);
-    Spectra::SparseSymMatProd<T> op_a(S);
-    Spectra::SparseCholesky<T> op_b(D);
-    Spectra::SymGEigsSolver<T,
-                            Spectra::SMALLEST_MAGN,
-                            Spectra::SparseSymMatProd<T>,
-                            Spectra::SparseCholesky<T>,
-                            Spectra::GEIGS_MODE::GEIGS_CHOLESKY>
-        eigensolver(&op_a, &op_b, k, convergence);
+    using Operator = Spectra::SymShiftInvert<T, Eigen::Sparse, Eigen::Sparse>;
+    using BOperator = Spectra::SparseSymMatProd<T>;
+    using Solver =
+        Spectra::SymGEigsShiftSolver<Operator,
+                                     BOperator,
+                                     Spectra::GEigsMode::ShiftInvert>;
+    Operator op(S, D);
+    BOperator bop(D);
+    Solver eigensolver(op, bop, k, convergence, -1.0);
     eigensolver.init();
-    unsigned n = eigensolver.compute(
-        max_iter, static_cast<T>(tolerance), Spectra::SMALLEST_MAGN);
-    if (eigensolver.info() != Spectra::SUCCESSFUL) {
-        throw std::runtime_error(
-            "Unable to compute eigen values of the Laplacian matrix.");
+    unsigned n = eigensolver.compute(Spectra::SortRule::LargestMagn,
+                                     max_iter,
+                                     static_cast<T>(tolerance),
+                                     Spectra::SortRule::SmallestMagn);
+    if (eigensolver.info() != Spectra::CompInfo::Successful) {
+        throw std::runtime_error("Eigen decomposition failed.");
     }
     lambdas = eigensolver.eigenvalues();
     phis = eigensolver.eigenvectors();
@@ -106,7 +85,6 @@ unsigned spectrum(const Mesh& mesh,
                   Eigen::MatrixBase<DerivedA>& lambdas,
                   Eigen::MatrixBase<DerivedB>& phis,
                   SpecOp op,
-                  SpecDecomp decomp,
                   unsigned max_iter,
                   double tolerance)
 {
@@ -119,26 +97,30 @@ unsigned spectrum(const Mesh& mesh,
     if (k > nv) {
         std::string err("You've requested ");
         err.append(std::to_string(k));
-        err.append(" eigen values but there are only ");
+        err.append(" eigenvalues but there are only ");
         err.append(std::to_string(nv));
         err.append(" vertices in your mesh.");
         EWARNING(err);
         k = nv;
     }
 
-    SpMat S, D;
-    _impl::get_mat(mesh, op, S, D);
-
     unsigned n;
-    if (decomp == SpecDecomp::symmetric) {
-        n = _impl::sym_solve(S, D, k, nv, max_iter, tolerance, lambdas, phis);
+    if (op == SpecOp::mesh_laplacian) {
+        SpMat C = Euclid::cotangent_matrix(mesh);
+        SpMat D = Euclid::mass_matrix(mesh);
+        n = _impl::gen_solve(C, D, k, nv, max_iter, tolerance, lambdas, phis);
     }
     else {
-        n = _impl::gen_solve(S, D, k, nv, max_iter, tolerance, lambdas, phis);
+        auto result = Euclid::adjacency_matrix(mesh);
+        SpMat A = std::get<0>(result);
+        SpMat D = std::get<1>(result);
+        SpMat L = D - A;
+        n = _impl::sym_solve(L, k, nv, max_iter, tolerance, lambdas, phis);
     }
+
     if (n < k) {
         auto str = std::to_string(k);
-        str.append(" eigen values are requested, but only ");
+        str.append(" eigenvalues are requested, but only ");
         str.append(std::to_string(n));
         str.append(" values converged in computation.");
         EWARNING(str);

@@ -11,4 +11,4 @@ configure_file(
 )
 
 add_subdirectory(hello_world)
-add_subdirectory(spectral)
+# add_subdirectory(spectral)

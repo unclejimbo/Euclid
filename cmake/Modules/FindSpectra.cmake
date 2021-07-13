@@ -4,7 +4,7 @@
 # Spectra_FOUND
 # Spectra_INCLUDE_DIRS
 
-find_path(Spectra_INCLUDE_DIRS SymEigsSolver.h
+find_path(Spectra_INCLUDE_DIRS Spectra/SymEigsSolver.h
     /usr/include
     /usr/local/include
 )
