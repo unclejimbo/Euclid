@@ -9,10 +9,13 @@
 #include <Euclid/IO/PlyIO.h>
 #include <Euclid/Descriptor/Histogram.h>
 #include <Euclid/Util/Color.h>
-#include <Euclid/Util/Serialize.h>
 #include <stb_image_write.h>
 
 #include <config.h>
+
+#ifdef EUCLID_TEST_ENABLE_CEREAL
+#include <Euclid/Util/Serialize.h>
+#endif
 
 using Kernel = CGAL::Simple_cartesian<double>;
 using Vector_3 = Kernel::Vector_3;
@@ -51,10 +54,11 @@ TEST_CASE("Descriptor,HKS", "[descriptor][hks]")
     auto idx4 = 16807; // far away
 
     constexpr const int ne = 300;
-    std::string fcereal(TMP_DIR);
-    fcereal.append("dragon_eigs.cereal");
     Eigen::VectorXd eigenvalues;
     Eigen::MatrixXd eigenfunctions;
+#ifdef EUCLID_TEST_ENABLE_CEREAL
+    std::string fcereal(TMP_DIR);
+    fcereal.append("dragon_eigs.cereal");
     try {
         Euclid::deserialize(fcereal, eigenvalues, eigenfunctions);
         if (eigenvalues.rows() != ne ||
@@ -67,6 +71,9 @@ TEST_CASE("Descriptor,HKS", "[descriptor][hks]")
         Euclid::spectrum(mesh, ne, eigenvalues, eigenfunctions);
         Euclid::serialize(fcereal, eigenvalues, eigenfunctions);
     }
+#else
+    Euclid::spectrum(mesh, ne, eigenvalues, eigenfunctions);
+#endif
 
     Euclid::HKS<Mesh> hks;
     hks.build(mesh, &eigenvalues, &eigenfunctions);

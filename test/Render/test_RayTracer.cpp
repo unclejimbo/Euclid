@@ -8,7 +8,6 @@
 #include <Euclid/Math/Vector.h>
 #include <Euclid/Util/Color.h>
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 
 #include <config.h>

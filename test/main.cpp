@@ -5,6 +5,10 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 
+// Only define for once
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+
 // #ifdef CXX_STANDARD
 #ifdef __cpp_lib_filesystem
 #include <filesystem>

@@ -1,3 +1,5 @@
+find_package(Spectra REQUIRED 1.0)
+
 add_executable(spectral
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )
@@ -19,6 +21,7 @@ target_compile_definitions(spectral PRIVATE
 target_include_directories(spectral PRIVATE
     ${CMAKE_SOURCE_DIR}/3rdparty
     ${CMAKE_BINARY_DIR}/examples
+    ${Spectra_INCLUDE_DIRS}
 )
 
 target_link_libraries(spectral PRIVATE

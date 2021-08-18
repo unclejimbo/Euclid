@@ -11,17 +11,17 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 include(cmake/Euclid.cmake)
 
 # Optional targets
-option(BUILD_DOC "Build documentation" ON)
-if(BUILD_DOC)
+option(EUCLID_BUILD_DOC "Build documentation" ON)
+if(EUCLID_BUILD_DOC)
     add_subdirectory(docs)
 endif()
 
-option(BUILD_TEST "Build testing" ON)
-if(BUILD_TEST)
+option(EUCLID_BUILD_TEST "Build testing" ON)
+if(EUCLID_BUILD_TEST)
     add_subdirectory(test)
 endif()
 
-option(BUILD_EXAMPLE "Build examples" ON)
-if(BUILD_EXAMPLE)
+option(EUCLID_BUILD_EXAMPLE "Build examples" ON)
+if(EUCLID_BUILD_EXAMPLE)
     add_subdirectory(examples)
 endif()

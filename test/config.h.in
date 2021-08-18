@@ -1,2 +1,3 @@
 #define DATA_DIR "${CMAKE_SOURCE_DIR}/data/"
 #define TMP_DIR "${CMAKE_BINARY_DIR}/bin/test/"
+#cmakedefine EUCLID_TEST_ENABLE_CEREAL
