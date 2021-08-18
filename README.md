@@ -13,24 +13,26 @@ The purpose of Euclid is not to replace any of the above packages, but to glue t
 
 ## Dependencies
 
-Some simple third-party libraries has already been shipped with Euclid.
-However, you'll need the following libraries when you use headers in Euclid that work with them, including
+Different packages in Euclid may require a different set of dependencies. Although some are dependency free (like the IO module), but most of them rely on the following packages, which are also marked as 'REQUIRED' if you configure using CMake, including
 
-- [Boost](https://www.boost.org/).
-- [CGAL](https://www.cgal.org/index.html) for tons of data structures and algorithms.
-- [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) for matrix manipulation as well as solving linear systems.
-- [Spectra](https://spectralib.org/) for solving large scale eigen value problems.
-- [Libigl](http://libigl.github.io/libigl/) yet another simple but powerful geometry processing library in C++.
+- [Boost](https://www.boost.org/)
+- [CGAL](https://www.cgal.org/index.html)
+- [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page)
+- [Libigl](http://libigl.github.io/libigl/)
+
+Additional dependencies are required by some packages, including
+
+- [Spectra](https://spectralib.org/) for solving eigenvalue problems.
 - [Embree](http://embree.github.io) for fast cpu ray tracing.
-- [cereal](http://uscilab.github.io/cereal/index.html) for serialization.
-- [Doxygen](http://www.stack.nl/~dimitri/doxygen/) for generating documentations.
-- BLAS, LAPACK, and OpenMP for better performance.
+- [Vulkan](https://www.vulkan.org/) for headless gpu rendering.
+- [TTK](https://topology-tool-kit.github.io/) for topological shape analysis.
+- [Cereal](http://uscilab.github.io/cereal/index.html) for serialization.
 
-Different packages in Euclid may require a different set of dependencies, and some packages may not require any of the above libraries. Also, Euclid uses features in the C++17 standard, so you'll need a C++17 enabled compiler.
+Make sure you properly compile and link to the above libraries when they are used. Also, Euclid uses features in the C++17 standard, so you'll need a C++17 enabled compiler.
 
 ## Installation
 
-Since it's a header only library, the simpliest way to use Euclid is to include the needed headers. Although be sure to configure other dependencies properly, as some of them are not header only.
+Since it's a header only library, it is not mandatory to configure this project with CMake. Although be sure to configure other dependencies properly, as some of them are not header only.
 
 If you are using CMake, there are two ways to go:
 
@@ -48,8 +50,6 @@ Otherwise, you could configure Euclid using CMake first. It will output an Eucli
 find_package(Euclid)
 target_link_libraries(your-target Euclid::Euclid)
 ```
-
-and all the dependencies and compile options will be handled transitively by CMake.
 
 ## Getting Started
 
