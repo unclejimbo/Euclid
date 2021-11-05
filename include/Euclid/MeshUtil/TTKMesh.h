@@ -12,49 +12,71 @@
 #pragma once
 
 #include <vector>
+#include <ttk/base/DataTypes.h>
 
 namespace Euclid
 {
 /**@{*/
 
-/**Create the cell array from index array.
- *
- */
-template<typename IT>
-void make_cells(std::vector<long long>& cells,
-                const std::vector<IT>& indices,
-                int n);
+#ifdef TTK_CELL_ARRAY_NEW
 
-/**Extract the index array from cell array.
+/**Create a ttk triangulation from positions and indices.
  *
+ * Have to keep the internal buffers since they are not stored in mesh
+ * Using new (ttk>=0.9) layout.
  */
-template<typename IT>
-void extract_cells(std::vector<IT>& indices,
-                   const std::vector<long long>& cells);
-
-/**Create a ttk triangulation from positions and cells.
- *
- */
-template<typename Triangulation>
+template<typename Triangulation, typename IT>
 void make_mesh(Triangulation& mesh,
+               std::vector<ttk::LongSimplexId>& connectivity,
+               std::vector<ttk::LongSimplexId>& offset,
                const std::vector<float>& positions,
-               const std::vector<long long>& cells);
+               const std::vector<IT>& indices);
 
-/**Create a ttk triangulation from positions and cells.
+/**Create a ttk triangulation from positions and indices.
  *
+ * Have to keep the internal buffers since they are not stored in mesh
+ * Using new (ttk>=0.9) layout.
  */
-template<typename Triangulation>
+template<typename Triangulation, typename IT>
 void make_mesh(Triangulation& mesh,
+               std::vector<ttk::LongSimplexId>& connectivity,
+               std::vector<ttk::LongSimplexId>& offset,
                const std::vector<double>& positions,
-               const std::vector<long long>& cells);
+               const std::vector<IT>& indices);
 
-/**Extract positions and cells from the mesh.
+#else
+
+/**Create a ttk triangulation from positions and indices.
+ *
+ * Have to keep the internal buffers since they are not stored in mesh
+ * Using legacy (ttk<=0.8) layout.
+ */
+template<typename Triangulation, typename IT>
+void make_mesh(Triangulation& mesh,
+               std::vector<ttk::LongSimplexId>& cells,
+               const std::vector<float>& positions,
+               const std::vector<IT>& indices);
+
+/**Create a ttk triangulation from positions and indices.
+ *
+ * Have to keep the internal buffers since they are not stored in mesh
+ * Using legacy (ttk<=0.8) layout.
+ */
+template<typename Triangulation, typename IT>
+void make_mesh(Triangulation& mesh,
+               std::vector<ttk::LongSimplexId>& cells,
+               const std::vector<double>& positions,
+               const std::vector<IT>& indices);
+
+#endif
+
+/**Extract positions and indices from the ttk mesh.
  *
  */
-template<typename Triangulation, typename FT>
+template<typename Triangulation, typename FT, typename IT>
 void extract_mesh(const Triangulation& mesh,
                   std::vector<FT>& positions,
-                  std::vector<long long>& cells);
+                  std::vector<IT>& indices);
 
 /**@}*/
 } // namespace Euclid

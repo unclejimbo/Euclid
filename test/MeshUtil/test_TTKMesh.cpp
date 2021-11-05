@@ -18,8 +18,8 @@ TEST_CASE("MeshUtil, TTKMesh", "[meshutil][ttkmesh]")
 
     ttk::ExplicitTriangulation mesh;
 #ifdef TTK_CELL_ARRAY_NEW
-    std::vector<long long> connectivity;
-    std::vector<long long> offset;
+    std::vector<ttk::LongSimplexId> connectivity;
+    std::vector<ttk::LongSimplexId> offset;
     Euclid::make_mesh(mesh, connectivity, offset, positions, indices);
 #else
     std::vector<long long> cells;

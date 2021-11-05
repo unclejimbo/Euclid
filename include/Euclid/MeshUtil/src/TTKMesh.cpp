@@ -9,8 +9,8 @@ namespace _impl
 #ifdef TTK_CELL_ARRAY_NEW
 template<typename Triangulation, typename IT>
 void set_input_cells(Triangulation& mesh,
-                     std::vector<long long>& connectivity,
-                     std::vector<long long>& offset,
+                     std::vector<ttk::LongSimplexId>& connectivity,
+                     std::vector<ttk::LongSimplexId>& offset,
                      const std::vector<IT>& indices,
                      int n)
 {
@@ -25,7 +25,7 @@ void set_input_cells(Triangulation& mesh,
 #else
 template<typename Triangulation, typename IT>
 void set_input_cells(Triangulation& mesh,
-                     std::vector<long long>& cells,
+                     std::vector<ttk::LongSimplexId>& cells,
                      const std::vector<IT>& indices,
                      int n)
 {
@@ -46,11 +46,10 @@ void set_input_cells(Triangulation& mesh,
 
 #ifdef TTK_CELL_ARRAY_NEW
 
-// have to keep the internal buffers since they are not stored in mesh
 template<typename Triangulation, typename IT>
 void make_mesh(Triangulation& mesh,
-               std::vector<long long>& connectivity,
-               std::vector<long long>& offset,
+               std::vector<ttk::LongSimplexId>& connectivity,
+               std::vector<ttk::LongSimplexId>& offset,
                const std::vector<float>& positions,
                const std::vector<IT>& indices)
 {
@@ -60,8 +59,8 @@ void make_mesh(Triangulation& mesh,
 
 template<typename Triangulation, typename IT>
 void make_mesh(Triangulation& mesh,
-               std::vector<long long>& connectivity,
-               std::vector<long long>& offset,
+               std::vector<ttk::LongSimplexId>& connectivity,
+               std::vector<ttk::LongSimplexId>& offset,
                const std::vector<double>& positions,
                const std::vector<IT>& indices)
 {
@@ -73,7 +72,7 @@ void make_mesh(Triangulation& mesh,
 
 template<typename Triangulation, typename IT>
 void make_mesh(Triangulation& mesh,
-               std::vector<long long>& cells,
+               std::vector<ttk::LongSimplexId>& cells,
                const std::vector<float>& positions,
                const std::vector<IT>& indices)
 {
@@ -83,7 +82,7 @@ void make_mesh(Triangulation& mesh,
 
 template<typename Triangulation, typename IT>
 void make_mesh(Triangulation& mesh,
-               std::vector<long long>& cells,
+               std::vector<ttk::LongSimplexId>& cells,
                const std::vector<double>& positions,
                const std::vector<IT>& indices)
 {
