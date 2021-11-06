@@ -12,7 +12,7 @@
 #pragma once
 
 #include <vector>
-#include <ttk/base/DataTypes.h>
+#include <DataTypes.h>
 
 namespace Euclid
 {
